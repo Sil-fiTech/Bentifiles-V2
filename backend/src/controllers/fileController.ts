@@ -4,6 +4,7 @@ import { AuthRequest } from '../middleware/auth';
 import axios from 'axios';
 import FormData from 'form-data';
 import fs from 'fs';
+import path from 'path';
 
 export const uploadFile = async (req: AuthRequest, res: Response) => {
     try {
@@ -83,7 +84,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
         });
 
     } catch (error) {
-    console.log("error ==> ", error);
+        console.log("error ==> ", error);
         console.error('Upload error:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
@@ -106,3 +107,33 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 }
+
+export const getFileBase64 = async (req: AuthRequest, res: Response) => {
+    try {
+        const { url } = req.query;
+        if (!url || typeof url !== 'string') {
+            return res.status(400).json({ message: 'URL do arquivo não fornecida' });
+        }
+
+        const filename = url.replace('/uploads/', '');
+        const filePath = path.join(__dirname, '../../uploads', filename);
+
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({ message: 'Arquivo não encontrado' });
+        }
+
+        const fileBuffer = fs.readFileSync(filePath);
+        const base64 = fileBuffer.toString('base64');
+
+        const ext = path.extname(filename).toLowerCase();
+        let mimeType = 'application/octet-stream';
+        if (ext === '.pdf') mimeType = 'application/pdf';
+        else if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
+        else if (ext === '.png') mimeType = 'image/png';
+
+        res.json({ base64, mimeType });
+    } catch (error) {
+        console.error('Get file base64 error:', error);
+        res.status(500).json({ message: 'Erro interno ao converter arquivo' });
+    }
+};

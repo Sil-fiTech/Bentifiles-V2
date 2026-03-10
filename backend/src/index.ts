@@ -6,6 +6,7 @@ import multer from 'multer';
 import authRoutes from './routes/authRoutes';
 import fileRoutes from './routes/fileRoutes';
 import projectRoutes from './routes/projectRoutes';
+import documentRoutes from './routes/documentRoutes';
 import path from 'path';
 
 import helmet from 'helmet';
@@ -23,6 +24,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/documents', documentRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'O backend do BentiFiles está rodando' });
