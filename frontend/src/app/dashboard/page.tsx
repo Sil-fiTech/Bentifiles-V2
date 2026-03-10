@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { LogOut, Plus, Folder, Loader2 } from 'lucide-react';
+import { LogOut, Plus, Folder, Loader2, FileText } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 
 interface Project {
@@ -94,6 +94,14 @@ export default function Dashboard() {
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
                 <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>Meus Projetos</h1>
                 <div style={{ display: 'flex', gap: '16px' }}>
+                    <button
+                        onClick={() => router.push('/dashboard/documents')}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', padding: '8px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontWeight: 600, transition: 'background 0.2s' }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                    >
+                        <FileText size={18} /> Tipos de Documento
+                    </button>
                     <button
                         onClick={handleCreateProject}
                         disabled={creating}

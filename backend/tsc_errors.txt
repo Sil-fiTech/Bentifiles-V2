@@ -1,0 +1,21 @@
+FAILED\nsrc/controllers/documentController.ts(41,22): error TS2412: Type 'string | string[] | undefined' is not assignable to type 'string | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+src/controllers/documentController.ts(54,53): error TS2412: Type 'string | string[] | undefined' is not assignable to type 'string | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+src/controllers/documentController.ts(69,13): error TS2375: Type '{ projectId: string | undefined; }' is not assignable to type 'ProjectRequiredDocumentWhereInput' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'projectId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string | StringFilter<"ProjectRequiredDocument">'.
+      Type 'undefined' is not assignable to type 'string | StringFilter<"ProjectRequiredDocument">'.
+src/controllers/documentController.ts(90,13): error TS2375: Type '{ projectId: string | undefined; }' is not assignable to type 'ProjectRequiredDocumentWhereInput' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'projectId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string | StringFilter<"ProjectRequiredDocument">'.
+      Type 'undefined' is not assignable to type 'string | StringFilter<"ProjectRequiredDocument">'.
+src/controllers/documentController.ts(106,13): error TS2375: Type '{ projectId: string | undefined; }' is not assignable to type 'ProjectRequiredDocumentWhereInput' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Types of property 'projectId' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string | StringFilter<"ProjectRequiredDocument">'.
+      Type 'undefined' is not assignable to type 'string | StringFilter<"ProjectRequiredDocument">'.
+src/controllers/documentController.ts(232,22): error TS2412: Type 'string | string[] | undefined' is not assignable to type 'string | undefined' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the type of the target.
+src/controllers/documentController.ts(233,13): error TS2375: Type '{ status: any; rejectionReason: any; reviewedAt: Date; reviewedByUserId: string | undefined; }' is not assignable to type '(Without<ClientDocumentUpdateInput, ClientDocumentUncheckedUpdateInput> & ClientDocumentUncheckedUpdateInput) | (Without<...> & ClientDocumentUpdateInput)' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+  Type '{ status: any; rejectionReason: any; reviewedAt: Date; reviewedByUserId: string | undefined; }' is not assignable to type 'Without<ClientDocumentUncheckedUpdateInput, ClientDocumentUpdateInput> & ClientDocumentUpdateInput' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+    Type '{ status: any; rejectionReason: any; reviewedAt: Date; reviewedByUserId: string | undefined; }' is not assignable to type 'Without<ClientDocumentUncheckedUpdateInput, ClientDocumentUpdateInput>' with 'exactOptionalPropertyTypes: true'. Consider adding 'undefined' to the types of the target's properties.
+      Types of property 'reviewedByUserId' are incompatible.
+        Type 'string | undefined' is not assignable to type 'never'.
+          Type 'undefined' is not assignable to type 'never'.
