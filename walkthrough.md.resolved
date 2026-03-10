@@ -1,0 +1,37 @@
+# BentiFiles - Project Walkthrough
+
+BentiFiles is a complete SaaS platform for intelligent file management and document validation. It uses a Node.js backend to orchstrate file uploads and a Python microservice to validate image quality (blur, brightness) and extract text.
+
+## Features Implemented
+- **User Authentication**: Secure Login/Register flow with JWT and `bcryptjs`.
+- **Intelligent File Upload**: Drag-and-drop system that handles JPG, PNG, PDF, and DOCX.
+- **Image Validation**: 
+  - **Blur Detection**: Uses Laplacian variance to detect out-of-focus documents.
+  - **Brightness Check**: Detects overexposed or underexposed photos.
+  - **Text Detection (OCR)**: Uses Tesseract OCR to verify if the document contains readable text.
+  - **Automated Feedback**: Real-time status (APPROVED, CONDITIONAL, REJECTED) with specific recommendations.
+- **Modern UI**: Dark mode, glassmorphism, and responsive layout built with Next.js and Vanilla CSS.
+
+## Project Structure
+- `backend/`: Node.js/Express/TypeScript API.
+- `frontend/`: Next.js application.
+- `microservice/`: Python/FastAPI image analysis engine.
+
+## Verification Results
+We have successfully verified the following flow:
+1. **Registration**: User registered successfully via the API.
+2. **Authentication**: JWT token generated and stored.
+3. **Upload**: A test image was uploaded to the backend.
+4. **Validation**: The Python microservice analyzed the image and returned:
+   - **Score**: 80/100
+   - **Status**: CONDITIONAL
+   - **Reason**: "Image is too bright/overexposed" (Verified with a white dummy image).
+   - **Blur Score**: Computed correctly.
+
+## How to Run
+1. **Backend**: `cd backend && npm run dev` (Port 3001)
+2. **Microservice**: `cd microservice && venv\Scripts\python -m uvicorn main:app --reload` (Port 8000)
+3. **Frontend**: `cd frontend && npm run dev` (Port 3000)
+
+---
+*Developed by Antigravity*
