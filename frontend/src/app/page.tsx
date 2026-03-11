@@ -19,6 +19,7 @@ function HomeContent() {
   useEffect(() => {
     if (inviteToken) {
       setIsLogin(false);
+      localStorage.setItem('pendingInvite', inviteToken);
     }
   }, [inviteToken]);
 
@@ -28,7 +29,7 @@ function HomeContent() {
 
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const payload = isLogin ? { email, password } : { name, email, password, invite: inviteToken };
+      const payload = isLogin ? { email, password } : { name, email, password };
 
       const res = await axios.post(`http://localhost:3001${endpoint}`, payload);
 

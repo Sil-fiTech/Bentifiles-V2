@@ -366,9 +366,9 @@ export default function ProjectPage() {
                                                 <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Status:</span>
                                                 {getDocStatusBadge(myDoc.status)}
                                             </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Arquivo:</span>
-                                                <button onClick={() => handleViewFile(myDoc.file.url)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-light)', textDecoration: 'underline', fontWeight: 600, fontSize: '0.95rem', padding: 0 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>Arquivo:</span>
+                                                <button onClick={() => handleViewFile(myDoc.file.url)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-light)', textDecoration: 'underline', fontWeight: 600, fontSize: '0.95rem', padding: 0, textAlign: 'right', wordBreak: 'break-all' }}>
                                                     {myDoc.file.originalName}
                                                 </button>
                                             </div>
