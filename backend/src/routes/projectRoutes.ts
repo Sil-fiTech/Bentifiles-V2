@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getProjects, createProject, updateProjectName, getProjectDocuments } from '../controllers/projectController';
-import { createInvite, getMembers, updateMemberRole, removeMember } from '../controllers/membershipController';
+import { createInvite, getMembers, updateMemberRole, removeMember, joinProject } from '../controllers/membershipController';
 import { authenticateToken } from '../middleware/auth';
 import { checkRole } from '../middleware/roleMiddleware';
 
@@ -10,6 +10,7 @@ const router = Router();
 router.use(authenticateToken as any);
 
 // Project Rules
+router.post('/join', joinProject as any);
 router.get('/', getProjects as any);
 router.post('/', createProject as any);
 router.patch('/:id', checkRole(['ADMIN']) as any, updateProjectName as any);

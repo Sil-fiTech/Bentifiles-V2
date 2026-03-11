@@ -7,7 +7,11 @@ import { AuthRequest } from '../middleware/auth';
  */
 export const getDocumentTypes = async (req: AuthRequest, res: Response) => {
     try {
+        const userId = req.user?.userId;
+        if (!userId) return res.status(401).json({ message: 'Não autorizado' });
+
         const types = await prisma.documentType.findMany({
+            where: { userId },
             orderBy: { name: 'asc' }
         });
         res.json(types);
@@ -20,9 +24,12 @@ export const getDocumentTypes = async (req: AuthRequest, res: Response) => {
 export const createDocumentType = async (req: AuthRequest, res: Response) => {
     try {
         const { name, description } = req.body;
-        if (!name) return res.status(400).json({ message: 'Nome é obrigatório' });
+        const userId = req.user?.userId;
 
-        const data: any = { name };
+        if (!name) return res.status(400).json({ message: 'Nome é obrigatório' });
+        if (!userId) return res.status(401).json({ message: 'Não autorizado' });
+
+        const data: any = { name, userId };
         if (description !== undefined) data.description = description;
 
         const newType = await prisma.documentType.create({
@@ -35,14 +42,23 @@ export const createDocumentType = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const updateDocumentType = async (req: Request, res: Response) => {
+export const updateDocumentType = async (req: AuthRequest, res: Response) => {
     try {
         const id = req.params.id as string;
         const { name, description } = req.body;
+        const userId = req.user?.userId;
+
+        if (!userId) return res.status(401).json({ message: 'Não autorizado' });
 
         const data: any = {};
         if (name !== undefined) data.name = name;
         if (description !== undefined) data.description = description;
+
+        // Ensure the document type belongs to the user
+        const existing = await prisma.documentType.findUnique({ where: { id } });
+        if (!existing || existing.userId !== userId) {
+            return res.status(404).json({ message: 'Tipo de documento não encontrado' });
+        }
 
         const updatedType = await prisma.documentType.update({
             where: { id },
@@ -55,9 +71,19 @@ export const updateDocumentType = async (req: Request, res: Response) => {
     }
 };
 
-export const deleteDocumentType = async (req: Request, res: Response) => {
+export const deleteDocumentType = async (req: AuthRequest, res: Response) => {
     try {
         const id = req.params.id as string;
+        const userId = req.user?.userId;
+
+        if (!userId) return res.status(401).json({ message: 'Não autorizado' });
+
+        // Ensure the document type belongs to the user
+        const existing = await prisma.documentType.findUnique({ where: { id } });
+        if (!existing || existing.userId !== userId) {
+            return res.status(404).json({ message: 'Tipo de documento não encontrado' });
+        }
+
         await prisma.documentType.delete({ where: { id } });
         res.json({ message: 'Tipo de documento removido' });
     } catch (error) {

@@ -37,6 +37,32 @@ export default function Dashboard() {
     const fetchProjects = async (token: string) => {
         try {
             setLoading(true);
+
+            // Check for pending invite before fetching projects
+            const pendingInvite = localStorage.getItem('pendingInvite');
+            if (pendingInvite) {
+                try {
+                    const joinRes = await axios.post('http://localhost:3001/api/projects/join', {
+                        inviteToken: pendingInvite
+                    }, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+
+                    localStorage.removeItem('pendingInvite');
+                    toast.success(joinRes.data.message);
+
+                    // Redirect immediately to the project page
+                    if (joinRes.data.projectId) {
+                        router.push(`/projects/${joinRes.data.projectId}`);
+                        return; // Stop fetching projects since we're navigating away
+                    }
+                } catch (inviteError: any) {
+                    console.error('Failed to process invite:', inviteError);
+                    toast.error(inviteError.response?.data?.message || 'Falha ao processar convite');
+                    localStorage.removeItem('pendingInvite');
+                }
+            }
+
             const res = await axios.get('http://localhost:3001/api/projects', {
                 headers: { Authorization: `Bearer ${token}` }
             });

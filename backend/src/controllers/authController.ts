@@ -5,26 +5,10 @@ import prisma from '../prisma';
 
 export const register = async (req: Request, res: Response) => {
     try {
-        const { name, email, password, invite } = req.body;
+        const { name, email, password } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({ message: 'Campos obrigatórios ausentes' });
-        }
-
-        let validInvite = null;
-        if (invite) {
-            validInvite = await prisma.projectInvite.findUnique({
-                where: { token: invite },
-            });
-            if (!validInvite) {
-                return res.status(404).json({ message: 'Convite não encontrado ou inválido' });
-            }
-            if (validInvite.expiresAt < new Date()) {
-                return res.status(400).json({ message: 'Convite expirado' });
-            }
-            if (validInvite.usedCount >= validInvite.maxUses) {
-                return res.status(400).json({ message: 'Limite de uso do convite atingido' });
-            }
         }
 
         const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -41,20 +25,6 @@ export const register = async (req: Request, res: Response) => {
                 password: hashedPassword,
             },
         });
-
-        if (validInvite) {
-            await prisma.projectMembership.create({
-                data: {
-                    projectId: validInvite.projectId,
-                    userId: user.id,
-                    role: validInvite.role,
-                }
-            });
-            await prisma.projectInvite.update({
-                where: { id: validInvite.id },
-                data: { usedCount: validInvite.usedCount + 1 }
-            });
-        }
 
         const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'fallback-secret', {
             expiresIn: '24h',
