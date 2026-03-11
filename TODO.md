@@ -1,0 +1,1 @@
+Bloquear o upload de arquivos que não estão bem avaliados pelo OCR

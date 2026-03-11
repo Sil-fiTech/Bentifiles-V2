@@ -110,13 +110,23 @@ model ShareLink {
 model DocumentType {
   id          String                    @id @default(uuid())
   name        String
+  slug        String
   description String?
-  userId      String?
-  user        User?                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  isDefault   Boolean                   @default(false)
+  tenantId    String?
+  
+  createdById String?
+  createdBy   User?                     @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  
   requiredIn  ProjectRequiredDocument[]
   documents   ClientDocument[]
+  
+  deletedAt   DateTime?
   createdAt   DateTime                  @default(now())
   updatedAt   DateTime                  @updatedAt
+
+  @@unique([slug, tenantId]) // To prevent duplicates per tenant, and globally for defaults (tenantId = null)
 }
 
 model ProjectRequiredDocument {

@@ -211,7 +211,14 @@ export default function ProjectDocumentsPage() {
                                             style={{ width: '18px', height: '18px', cursor: 'pointer' }}
                                         />
                                         <div>
-                                            <span style={{ fontWeight: 600 }}>{type.name}</span>
+                                            <span style={{ fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                {type.name}
+                                                {type.isDefault && (
+                                                    <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '12px', color: 'var(--text-secondary)' }}>
+                                                        Sistema
+                                                    </span>
+                                                )}
+                                            </span>
                                             {type.description && <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{type.description}</p>}
                                         </div>
                                     </label>
