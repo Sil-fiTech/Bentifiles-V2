@@ -178,20 +178,20 @@ export default function ProjectDocumentsPage() {
     }
 
     return (
-        <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="project-container" style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
             <button onClick={() => router.push(`/projects/${id}`)} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', marginBottom: '24px' }}>
                 <ArrowLeft size={18} /> Voltar ao Projeto
             </button>
-            <header style={{ marginBottom: '40px' }}>
+            <header className="project-header" style={{ marginBottom: '40px' }}>
                 <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>Gestão de Documentos</h1>
                 <p style={{ color: 'var(--text-secondary)' }}>{project?.name}</p>
             </header>
 
-            <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
+            <div className="docs-layout" style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
 
                 {/* ADMIN CONFIG SECTION */}
                 {isAdmin && (
-                    <div className="glass-panel" style={{ padding: '24px', flex: '1', minWidth: '300px', alignSelf: 'flex-start' }}>
+                    <div className="glass-panel docs-section-left" style={{ padding: '24px', flex: '1', minWidth: '300px', alignSelf: 'flex-start' }}>
                         <h2 style={{ fontSize: '1.2rem', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <FileText size={20} color="var(--accent-light)" />
                             Configuração de Documentos
@@ -230,7 +230,7 @@ export default function ProjectDocumentsPage() {
                 )}
 
                 {/* USER/ADMIN DOCUMENTS VIEW */}
-                <div style={{ flex: '2', minWidth: '400px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                <div className="docs-section-right" style={{ flex: '2', minWidth: '400px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
 
                     {/* User upload section */}
                     {!isAdmin && (
@@ -242,14 +242,14 @@ export default function ProjectDocumentsPage() {
                                     const userDoc = clientDocs.find(cd => cd.documentTypeId === rd.documentTypeId && cd.ownerUserId === currentUser?.userId);
 
                                     return (
-                                        <div key={rd.id} style={{ padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                                        <div key={rd.id} className="admin-doc-item" style={{ padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                                             <div>
                                                 <h3 style={{ fontWeight: 600 }}>{rd.documentType.name}</h3>
                                                 {rd.documentType.description && <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{rd.documentType.description}</p>}
                                             </div>
 
                                             {userDoc ? (
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                                <div className="doc-file-row" style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                                     {getStatusBadge(userDoc.status)}
                                                     <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>{userDoc.file.originalName}</span>
                                                     {userDoc.status === 'rejected' && (
@@ -259,7 +259,7 @@ export default function ProjectDocumentsPage() {
                                                     )}
                                                 </div>
                                             ) : (
-                                                <div>
+                                                <div className="admin-doc-upload">
                                                     <DropzoneUploader
                                                         onUpload={(files) => handleUploadDocument(files, rd.documentTypeId)}
                                                         isUploading={uploadingDocType === rd.documentTypeId}
@@ -281,8 +281,8 @@ export default function ProjectDocumentsPage() {
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                 {clientDocs.length === 0 && <p style={{ color: 'var(--text-secondary)' }}>Nenhum documento enviado ainda.</p>}
                                 {clientDocs.map(doc => (
-                                    <div key={doc.id} style={{ padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                    <div key={doc.id} className="admin-doc-item" style={{ padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
+                                        <div className="doc-file-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                                             <div>
                                                 <p style={{ fontSize: '0.85rem', color: 'var(--accent-light)', fontWeight: 600 }}>{doc.documentType.name}</p>
                                                 <h3 style={{ fontWeight: 600 }}>{doc.file.originalName}</h3>
@@ -294,7 +294,7 @@ export default function ProjectDocumentsPage() {
                                         </div>
 
                                         {doc.status === 'pending' && (
-                                            <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+                                            <div className="admin-doc-actions" style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
                                                 <button onClick={() => updateDocStatus(doc.id, 'approved')} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--success)', color: 'white', padding: '6px 12px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.9rem' }}>
                                                     <Check size={16} /> Aprovar
                                                 </button>

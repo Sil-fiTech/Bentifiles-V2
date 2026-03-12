@@ -10,7 +10,7 @@
   --text-secondary: #94a3b8;
   --card-bg: rgba(30, 41, 59, 0.7);
   --card-border: rgba(255, 255, 255, 0.1);
-  
+
   --success: #10b981;
   --warning: #f59e0b;
   --danger: #ef4444;
@@ -102,4 +102,102 @@ button {
 .input-field:focus {
   border-color: var(--accent-light);
   box-shadow: 0 0 0 2px var(--accent-glow);
+}
+
+/* Mobile Responsiveness for Project Page */
+@media (max-width: 768px) {
+  .project-container {
+    padding: 16px !important;
+  }
+  .project-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 16px !important;
+    margin-bottom: 24px !important;
+  }
+  .project-header-actions {
+    width: 100% !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+  }
+  .project-header h1 {
+    font-size: 1.5rem !important;
+  }
+  .doc-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .doc-file-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 4px !important;
+  }
+  .doc-file-row button {
+    text-align: left !important;
+  }
+  .admin-doc-item {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+  .admin-doc-upload {
+    width: 100% !important;
+    margin-top: 12px !important;
+  }
+  .admin-doc-actions {
+    flex-wrap: wrap !important;
+  }
+  .admin-doc-actions button {
+    flex: 1 !important;
+    justify-content: center !important;
+    padding: 8px 10px !important;
+  }
+  .glass-panel2 {
+    padding: 24px 16px !important;
+  }
+  .modal-header-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .modal-invite-row {
+    flex-direction: column !important;
+  }
+  .modal-invite-row button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 12px !important;
+  }
+  .member-item {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+  }
+  .member-actions {
+    width: 100% !important;
+    justify-content: space-between !important;
+  }
+  .member-actions button {
+    padding: 8px !important;
+  }
+  
+  /* Login specific */
+  .login-panel {
+    padding: 24px 16px !important;
+  }
+  .login-title {
+    font-size: 2.2rem !important;
+  }
+  
+  /* Project Documents Page specific */
+  .docs-layout {
+    flex-direction: column !important;
+    gap: 24px !important;
+  }
+  .docs-section-left {
+    min-width: 100% !important;
+    width: 100% !important;
+  }
+  .docs-section-right {
+    min-width: 100% !important;
+    width: 100% !important;
+  }
 }

@@ -116,10 +116,10 @@ export default function Dashboard() {
     };
 
     return (
-        <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+        <div className="project-container" style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
+            <header className="project-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
                 <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>Meus Projetos</h1>
-                <div style={{ display: 'flex', gap: '16px' }}>
+                <div className="project-header-actions" style={{ display: 'flex', gap: '16px' }}>
                     <button
                         onClick={() => router.push('/dashboard/documents')}
                         style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', padding: '8px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontWeight: 600, transition: 'background 0.2s' }}
@@ -151,7 +151,7 @@ export default function Dashboard() {
                     <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)' }}>Você ainda não tem nenhum projeto.</p>
                 </div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
+                <div className="doc-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
                     {projects.map((project) => (
                         <div
                             key={project.id}
