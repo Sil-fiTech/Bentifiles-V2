@@ -4,5 +4,7 @@ opencv-python
 numpy
 pytesseract
 pydantic
+pydantic-settings
 python-multipart
 easyocr
+python-dotenv
