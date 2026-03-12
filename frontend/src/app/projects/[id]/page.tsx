@@ -321,13 +321,13 @@ export default function ProjectPage() {
     }
 
     return (
-        <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
+        <div className="project-container" style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
             <button onClick={() => router.push('/dashboard')} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', marginBottom: '24px' }}>
                 <ArrowLeft size={18} /> Voltar ao Painel
             </button>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+            <header className="project-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
                 <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>{project?.name || 'Projeto'}</h1>
-                <div style={{ display: 'flex', gap: '16px' }}>
+                <div className="project-header-actions" style={{ display: 'flex', gap: '16px' }}>
                     <button
                         onClick={() => router.push(`/projects/${id}/documents`)}
                         style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, transition: 'background 0.2s' }}
@@ -351,7 +351,7 @@ export default function ProjectPage() {
             {requiredDocs.length > 0 && !isAdmin && (
                 <div style={{ marginBottom: '40px' }}>
                     <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '20px' }}>Documentos Necessários</h2>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
+                    <div className="doc-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
                         {requiredDocs.map(rd => {
                             // Find if this user has uploaded this doc
                             const userDoc = clientDocs.find(cd => cd.documentTypeId === rd.documentTypeId && (isAdmin ? false : cd.ownerUserId === currentUser?.userId));
@@ -380,7 +380,7 @@ export default function ProjectPage() {
                                                 <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Status:</span>
                                                 {getDocStatusBadge(myDoc.status)}
                                             </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
+                                            <div className="doc-file-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
                                                 <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>Arquivo:</span>
                                                 <button onClick={() => handleViewFile(myDoc.file.url)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-light)', textDecoration: 'underline', fontWeight: 600, fontSize: '0.95rem', padding: 0, textAlign: 'right', wordBreak: 'break-all' }}>
                                                     {myDoc.file.originalName}
@@ -448,7 +448,7 @@ export default function ProjectPage() {
                                             const doc = clientDocs.find(cd => cd.documentTypeId === rd.documentTypeId && cd.ownerUserId === member.userId);
 
                                             return (
-                                                <div key={rd.id} style={{
+                                                <div key={rd.id} className="admin-doc-item" style={{
                                                     padding: '16px',
                                                     background: 'rgba(255,255,255,0.03)',
                                                     borderRadius: '8px',
@@ -477,7 +477,7 @@ export default function ProjectPage() {
                                                         )}
 
                                                         {doc?.status === 'pending' && (
-                                                            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                                                            <div className="admin-doc-actions" style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
                                                                 <button onClick={() => handleViewFile(doc.file.url)} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'blue', color: 'white', padding: '4px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}>
                                                                     <Eye size={14} /> Visualizar
                                                                 </button>
@@ -500,7 +500,7 @@ export default function ProjectPage() {
                                                         )}
                                                     </div>
 
-                                                    <div style={{ minWidth: '180px' }}>
+                                                    <div className="admin-doc-upload" style={{ minWidth: '180px' }}>
                                                         <DropzoneUploader
                                                             onUpload={(files) => handleUploadSpecificDocument(files, rd.documentTypeId, member.userId)}
                                                             isUploading={uploadingDocType === `${rd.documentTypeId}-${member.userId}`}
@@ -607,14 +607,14 @@ export default function ProjectPage() {
                         </div>
 
                         <div style={{ marginBottom: '32px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                            <div className="modal-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                                 <h3>Convidar novo usuário</h3>
                                 <button onClick={generateInvite} style={{ background: 'var(--accent-light)', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem' }}>Gerar Link</button>
                             </div>
                             {inviteLink && (
-                                <div style={{ display: 'flex', gap: '8px' }}>
+                                <div className="modal-invite-row" style={{ display: 'flex', gap: '8px' }}>
                                     <input type="text" readOnly value={inviteLink} style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-primary)' }} />
-                                    <button onClick={copyInvite} style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer' }}><LinkIcon size={18} /></button>
+                                    <button onClick={copyInvite} style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><LinkIcon size={18} /></button>
                                 </div>
                             )}
                         </div>
@@ -625,12 +625,12 @@ export default function ProjectPage() {
                                 {members.map((m: any) => {
                                     const isAdmin = m.permissions?.includes('PROJECT_EDIT');
                                     return (
-                                        <div key={m.userId} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
+                                        <div key={m.userId} className="member-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
                                             <div>
                                                 <p style={{ fontWeight: 600 }}>{m.user.name}</p>
                                                 <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{m.user.email}</p>
                                             </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <div className="member-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                 <span style={{ fontSize: '0.8rem', padding: '4px 8px', borderRadius: '12px', background: isAdmin ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255,255,255,0.1)', color: isAdmin ? 'var(--accent-light)' : 'var(--text-secondary)' }}>
                                                     {isAdmin ? 'Admin' : 'Membro'}
                                                 </span>

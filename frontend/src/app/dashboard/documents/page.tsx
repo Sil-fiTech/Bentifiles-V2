@@ -113,8 +113,8 @@ export default function DocumentTypesDashboard() {
     };
 
     return (
-        <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
-            <header style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
+        <div className="project-container" style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
+            <header className="project-header" style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '40px' }}>
                 <button
                     onClick={() => router.push('/dashboard')}
                     style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
