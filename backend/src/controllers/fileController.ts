@@ -9,9 +9,8 @@ import path from 'path';
 export const uploadFile = async (req: AuthRequest, res: Response) => {
     try {
         const file = req.file;
-        console.log("file ==> ", file);
+        console.log(file);
         const userId = req.user?.userId;
-        console.log("userId ==> ", userId);
         const { projectId } = req.body;
 
         if (!file) {
@@ -26,7 +25,47 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
             return res.status(401).json({ message: 'Não autorizado' });
         }
 
-        // Save file metadata to database
+        let analysisData: any = null;
+
+        // If it's an image, send to Python microservice for validation MINDFULLY BEFORE SAVING TO DB
+        if (file.mimetype.startsWith('image/')) {
+            try {
+                const formData = new FormData();
+                formData.append('file', fs.createReadStream(file.path));
+                const pythonResponse = await axios.post('http://localhost:8000/analyze', formData, {
+                    headers: {
+                        ...formData.getHeaders(),
+                    },
+                });
+
+                analysisData = pythonResponse.data;
+                console.log(analysisData);
+                if (!analysisData.approved) {
+                    fs.unlinkSync(file.path);
+                    return res.status(400).json({
+                        success: false,
+                        message: "A imagem não atende aos critérios mínimos de qualidade",
+                        analysis: {
+                            approved: analysisData.approved,
+                            score: analysisData.score,
+                            minScore: analysisData.minScore,
+                            reasons: analysisData.reasons
+                        }
+                    });
+                }
+            } catch (microserviceError) {
+                console.error('Microservice error:', microserviceError);
+                if (fs.existsSync(file.path)) {
+                    fs.unlinkSync(file.path);
+                }
+                return res.status(503).json({
+                    success: false,
+                    message: "Falha ao validar a imagem. O serviço de análise pode estar indisponível."
+                });
+            }
+        }
+
+        // Save file metadata to database only AFTER validation passes
         const dbFile = await prisma.file.create({
             data: {
                 filename: file.filename,
@@ -39,37 +78,20 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
             },
         });
 
-        // If it's an image, send to Python microservice for validation
-        if (file.mimetype.startsWith('image/')) {
-            try {
-                const formData = new FormData();
-                formData.append('file', fs.createReadStream(file.path));
-
-                const pythonResponse = await axios.post('http://localhost:8000/analyze', formData, {
-                    headers: {
-                        ...formData.getHeaders(),
-                    },
-                });
-
-                const analysisData = pythonResponse.data;
-
-                await prisma.verificationResult.create({
-                    data: {
-                        fileId: dbFile.id,
-                        score: analysisData.score,
-                        status: analysisData.status,
-                        blurScore: analysisData.blurScore,
-                        brightness: analysisData.brightness,
-                        textDetected: analysisData.textDetected,
-                        usefulAreaPct: analysisData.usefulAreaPct,
-                        recommendation: analysisData.recommendation,
-                    }
-                });
-
-            } catch (microserviceError) {
-                console.error('Microservice error:', microserviceError);
-                // We still return success for the upload, but log that validation failed
-            }
+        if (analysisData) {
+            await prisma.verificationResult.create({
+                data: {
+                    fileId: dbFile.id,
+                    score: analysisData.score,
+                    status: analysisData.status,
+                    blurScore: analysisData.blurScore,
+                    brightness: analysisData.brightness,
+                    textDetected: analysisData.textDetected,
+                    usefulAreaPct: analysisData.usefulAreaPct,
+                    // Handle fallback gracefully to not break backwards compat in DB
+                    recommendation: analysisData.recommendation || (analysisData.reasons ? analysisData.reasons.join(" | ") : null),
+                }
+            });
         }
 
         // Return the created file and any results
@@ -79,12 +101,17 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
         });
 
         res.status(201).json({
-            message: 'Arquivo enviado com sucesso',
-            file: resultingFile
+            success: true,
+            message: 'Upload realizado com sucesso',
+            analysis: analysisData ? {
+                approved: analysisData.approved,
+                score: analysisData.score
+            } : undefined,
+            document: resultingFile,
+            file: resultingFile // Manter compatibilidade com código frontend antigo
         });
 
     } catch (error) {
-        console.log("error ==> ", error);
         console.error('Upload error:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }

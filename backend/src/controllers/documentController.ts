@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../prisma';
 import { AuthRequest } from '../middleware/auth';
+import { generateSlug } from '../utils/slugify';
 
 /**
  * Global Document Types
@@ -11,8 +12,17 @@ export const getDocumentTypes = async (req: AuthRequest, res: Response) => {
         if (!userId) return res.status(401).json({ message: 'Não autorizado' });
 
         const types = await prisma.documentType.findMany({
-            where: { userId },
-            orderBy: { name: 'asc' }
+            where: {
+                deletedAt: null,
+                OR: [
+                    { isDefault: true },
+                    { tenantId: userId } // Presumindo que tenantId == userId atualmente
+                ]
+            },
+            orderBy: [
+                { isDefault: 'desc' }, // Defaults primeiro
+                { name: 'asc' }        // O resto em ordem alfabética
+            ]
         });
         res.json(types);
     } catch (error) {
@@ -29,12 +39,35 @@ export const createDocumentType = async (req: AuthRequest, res: Response) => {
         if (!name) return res.status(400).json({ message: 'Nome é obrigatório' });
         if (!userId) return res.status(401).json({ message: 'Não autorizado' });
 
-        const data: any = { name, userId };
-        if (description !== undefined) data.description = description;
+        const slug = generateSlug(name);
 
-        const newType = await prisma.documentType.create({
-            data
+        // Check verification (blocks if default document or document belonging to the tenant already exists)
+        const existing = await prisma.documentType.findFirst({
+            where: {
+                slug,
+                // Include soft-deleted ones out of caution, or optionally just block active ones
+                deletedAt: null,
+                OR: [
+                    { isDefault: true },
+                    { tenantId: userId }
+                ]
+            }
         });
+
+        if (existing) {
+            return res.status(400).json({ message: 'Já existe um tipo de documento com este nome' });
+        }
+
+        const data: any = { 
+            name, 
+            slug,
+            description,
+            isDefault: false,
+            createdById: userId,
+            tenantId: userId 
+        };
+
+        const newType = await prisma.documentType.create({ data });
         res.status(201).json(newType);
     } catch (error) {
         console.error('Error creating document type:', error);
@@ -50,15 +83,33 @@ export const updateDocumentType = async (req: AuthRequest, res: Response) => {
 
         if (!userId) return res.status(401).json({ message: 'Não autorizado' });
 
-        const data: any = {};
-        if (name !== undefined) data.name = name;
-        if (description !== undefined) data.description = description;
-
-        // Ensure the document type belongs to the user
         const existing = await prisma.documentType.findUnique({ where: { id } });
-        if (!existing || existing.userId !== userId) {
+        if (!existing || existing.tenantId !== userId) {
             return res.status(404).json({ message: 'Tipo de documento não encontrado' });
         }
+
+        if (existing.isDefault) {
+            return res.status(403).json({ message: 'Tipos de documento padrão não podem ser editados' });
+        }
+
+        const data: any = {};
+        if (name !== undefined && name !== existing.name) {
+            const slug = generateSlug(name);
+            const slugExists = await prisma.documentType.findFirst({
+                where: {
+                    slug,
+                    id: { not: id },
+                    deletedAt: null,
+                    OR: [{ isDefault: true }, { tenantId: userId }]
+                }
+            });
+            if (slugExists) {
+                return res.status(400).json({ message: 'Já existe um tipo de documento com este nome' });
+            }
+            data.name = name;
+            data.slug = slug;
+        }
+        if (description !== undefined) data.description = description;
 
         const updatedType = await prisma.documentType.update({
             where: { id },
@@ -80,11 +131,19 @@ export const deleteDocumentType = async (req: AuthRequest, res: Response) => {
 
         // Ensure the document type belongs to the user
         const existing = await prisma.documentType.findUnique({ where: { id } });
-        if (!existing || existing.userId !== userId) {
+        if (!existing || existing.tenantId !== userId) {
             return res.status(404).json({ message: 'Tipo de documento não encontrado' });
         }
 
-        await prisma.documentType.delete({ where: { id } });
+        if (existing.isDefault) {
+            return res.status(403).json({ message: 'Tipos de documento padrão não podem ser excluídos' });
+        }
+
+        await prisma.documentType.update({ 
+            where: { id },
+            data: { deletedAt: new Date() }
+        });
+        
         res.json({ message: 'Tipo de documento removido' });
     } catch (error) {
         console.error('Error deleting document type:', error);

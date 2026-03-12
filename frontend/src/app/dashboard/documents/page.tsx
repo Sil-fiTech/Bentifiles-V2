@@ -10,6 +10,7 @@ interface DocumentType {
     id: string;
     name: string;
     description: string | null;
+    isDefault?: boolean;
 }
 
 export default function DocumentTypesDashboard() {
@@ -63,8 +64,8 @@ export default function DocumentTypesDashboard() {
             setNewName('');
             setNewDescription('');
             toast.success('Tipo de documento criado');
-        } catch (error) {
-            toast.error('Falha ao criar tipo de documento');
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Falha ao criar tipo de documento');
         } finally {
             setIsCreating(false);
         }
@@ -149,6 +150,11 @@ export default function DocumentTypesDashboard() {
                         Adicionar
                     </button>
                 </div>
+                {newName.trim().length >= 3 && documentTypes.some(d => d.name.toLowerCase().includes(newName.toLowerCase())) && (
+                    <div style={{ marginTop: '12px', fontSize: '0.9rem', color: 'var(--warning)', padding: '8px 12px', background: 'rgba(234, 179, 8, 0.1)', borderRadius: '6px' }}>
+                        Nota: Já existem documentos semelhantes (<span style={{fontWeight: 'bold'}}>{documentTypes.filter(d => d.name.toLowerCase().includes(newName.toLowerCase())).map(d => d.name).join(', ')}</span>). Evite criar duplicatas.
+                    </div>
+                )}
             </div>
 
             {loading ? (
@@ -180,7 +186,14 @@ export default function DocumentTypesDashboard() {
                                 </div>
                             ) : (
                                 <div>
-                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 600 }}>{doc.name}</h3>
+                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        {doc.name}
+                                        {doc.isDefault && (
+                                            <span style={{ fontSize: '0.7rem', background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '12px', color: 'var(--text-secondary)' }}>
+                                                Sistema
+                                            </span>
+                                        )}
+                                    </h3>
                                     {doc.description && <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginTop: '4px' }}>{doc.description}</p>}
                                 </div>
                             )}
@@ -195,7 +208,7 @@ export default function DocumentTypesDashboard() {
                                             <X size={18} />
                                         </button>
                                     </>
-                                ) : (
+                                ) : !doc.isDefault ? (
                                     <>
                                         <button onClick={() => startEdit(doc)} style={{ padding: '8px', background: 'rgba(255,255,255,0.1)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
                                             <Edit2 size={18} />
@@ -204,7 +217,7 @@ export default function DocumentTypesDashboard() {
                                             <Trash2 size={18} />
                                         </button>
                                     </>
-                                )}
+                                ) : null}
                             </div>
                         </div>
                     ))}

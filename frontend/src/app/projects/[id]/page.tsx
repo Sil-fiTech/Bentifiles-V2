@@ -27,6 +27,7 @@ export default function ProjectPage() {
     const [requiredDocs, setRequiredDocs] = useState<any[]>([]);
     const [clientDocs, setClientDocs] = useState<any[]>([]);
     const [uploadingDocType, setUploadingDocType] = useState<string | null>(null);
+    const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
     const [currentUser, setCurrentUser] = useState<any>(null);
 
     const { data: session, status } = useSession();
@@ -143,10 +144,13 @@ export default function ProjectPage() {
         if (acceptedFiles.length === 0) return;
 
         const ownerId = targetUserId || currentUser?.userId;
-        setUploadingDocType(`${docTypeId}-${ownerId}`);
+        const uploadKey = `${docTypeId}-${ownerId}`;
+        setUploadingDocType(uploadKey);
+        setUploadProgress(prev => ({ ...prev, [uploadKey]: 0 }));
 
         const file = acceptedFiles[0];
         const token = session?.user?.token || localStorage.getItem('token');
+        const toastId = toast.loading(`Enviando ${file.name}...`);
 
         try {
             const formData = new FormData();
@@ -157,6 +161,15 @@ export default function ProjectPage() {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
+                },
+                onUploadProgress: (progressEvent) => {
+                    const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || file.size));
+                    setUploadProgress(prev => ({ ...prev, [uploadKey]: percentCompleted }));
+                    if (percentCompleted === 100) {
+                        toast.loading(`Analisando a qualidade de ${file.name}... Isso pode levar alguns segundos.`, { id: toastId });
+                    } else {
+                        toast.loading(`Enviando ${file.name}... ${percentCompleted}%`, { id: toastId });
+                    }
                 }
             });
 
@@ -171,11 +184,12 @@ export default function ProjectPage() {
             });
 
             setClientDocs(prev => [clientDocRes.data, ...prev]);
-            toast.success('Documento enviado com sucesso!');
+            toast.success('Documento analisado e enviado com sucesso!', { id: toastId });
         } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Falha ao enviar documento');
+            toast.error(error.response?.data?.message || 'Falha ao enviar documento', { id: toastId });
         } finally {
             setUploadingDocType(null);
+            setUploadProgress(prev => ({ ...prev, [uploadKey]: 0 }));
         }
     };
 
@@ -383,6 +397,7 @@ export default function ProjectPage() {
                                                     <DropzoneUploader
                                                         onUpload={(files) => handleUploadSpecificDocument(files, rd.documentTypeId)}
                                                         isUploading={uploadingDocType === `${rd.documentTypeId}-${currentUser?.userId}`}
+                                                        progress={uploadProgress[`${rd.documentTypeId}-${currentUser?.userId}`]}
                                                         label="Re-enviar"
                                                     />
                                                 </div>
@@ -397,6 +412,7 @@ export default function ProjectPage() {
                                             <DropzoneUploader
                                                 onUpload={(files) => handleUploadSpecificDocument(files, rd.documentTypeId)}
                                                 isUploading={uploadingDocType === `${rd.documentTypeId}-${currentUser?.userId}`}
+                                                progress={uploadProgress[`${rd.documentTypeId}-${currentUser?.userId}`]}
                                                 label="Fazer Upload"
                                             />
                                         </div>
@@ -488,6 +504,7 @@ export default function ProjectPage() {
                                                         <DropzoneUploader
                                                             onUpload={(files) => handleUploadSpecificDocument(files, rd.documentTypeId, member.userId)}
                                                             isUploading={uploadingDocType === `${rd.documentTypeId}-${member.userId}`}
+                                                            progress={uploadProgress[`${rd.documentTypeId}-${member.userId}`]}
                                                             label={doc ? "Substituir arquivo" : "Fazer Upload"}
                                                         />
                                                     </div>
@@ -636,7 +653,7 @@ export default function ProjectPage() {
     );
 }
 
-function DropzoneUploader({ onUpload, isUploading, label = 'Fazer Upload' }: { onUpload: (files: File[]) => void, isUploading: boolean, label?: string }) {
+function DropzoneUploader({ onUpload, isUploading, label = 'Fazer Upload', progress }: { onUpload: (files: File[]) => void, isUploading: boolean, label?: string, progress?: number }) {
     const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
         onDrop: onUpload,
         maxFiles: 1,
@@ -664,12 +681,19 @@ function DropzoneUploader({ onUpload, isUploading, label = 'Fazer Upload' }: { o
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                color: 'var(--text-secondary)'
+                color: 'var(--text-secondary)',
+                position: 'relative',
+                overflow: 'hidden'
             }}
         >
-            <input {...getInputProps()} />
-            {isUploading ? <Loader2 size={18} className="animate-spin" /> : <UploadCloud size={18} color="var(--accent-light)" />}
-            <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>{isUploading ? 'Enviando...' : label}</span>
+            {isUploading && progress !== undefined && (
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${progress}%`, background: 'rgba(139, 92, 246, 0.15)', transition: 'width 0.2s', zIndex: 0 }} />
+            )}
+            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input {...getInputProps()} />
+                {isUploading ? <Loader2 size={18} className="animate-spin" /> : <UploadCloud size={18} color="var(--accent-light)" />}
+                <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>{isUploading ? `Enviando... ${progress !== undefined && progress > 0 ? progress + '%' : ''}` : label}</span>
+            </div>
         </div>
     );
 }
