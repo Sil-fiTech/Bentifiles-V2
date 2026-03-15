@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import multer from 'multer';
+import prisma from './prisma';
 
 import authRoutes from './routes/authRoutes';
 import fileRoutes from './routes/fileRoutes';
@@ -12,7 +13,6 @@ import path from 'path';
 import helmet from 'helmet';
 
 dotenv.config();
-
 const app = express();
 const port = process.env.PORT || 3001;
 
@@ -32,6 +32,13 @@ app.get('/health', (req, res) => {
 
 const server = app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
+});
+
+prisma.$connect().then(() => {
+    console.log('Connected to database');
+}).catch((error) => {
+    console.error('Failed to connect to database:', error);
+    process.exit(1);
 });
 
 // Keep-alive to prevent silent exit in some environments

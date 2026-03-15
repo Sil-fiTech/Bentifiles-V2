@@ -34,54 +34,43 @@ export default function ProjectPage() {
 
     useEffect(() => {
         if (status === 'loading') return;
+        
         const localToken = localStorage.getItem('token');
         const activeToken = session?.user?.token || localToken;
+        
         if (!activeToken) {
             router.push('/');
             return;
         }
-        fetchData(activeToken as string);
-    }, [id, status, session]);
+
+        // Avoid fetching if we already have the basic project data and it's the right project
+        // but since we need real-time data for documents, we usually fetch on mount or id change.
+        // We add a check for status stable.
+        if (status === 'authenticated' || (status === 'unauthenticated' && localToken)) {
+            fetchData(activeToken as string);
+        }
+    }, [id, status]); // Removed session from dependencies to avoid extra triggers if it changes but token is same
 
     const fetchData = async (token: string) => {
         try {
             setLoading(true);
             const headers = { Authorization: `Bearer ${token}` };
 
-            // Get files
-            const filesRes = await axios.get(`http://localhost:3001/api/projects/${id}/documents`, { headers });
-            setFiles(filesRes.data.files);
+            const response = await axios.get(`http://localhost:3001/api/projects/${id}/details`, { headers });
+            const { project, files, members, requiredDocuments, clientDocuments, currentUserPermissions } = response.data;
 
-            // Get members and find current user permissions
+            setProject(project);
+            setFiles(files);
+            setMembers(members);
+            setRequiredDocs(requiredDocuments);
+            setClientDocs(clientDocuments);
+            setCurrentUserPermissions(currentUserPermissions);
+
+            // Decode token to get current user ID (for legacy uses if any)
             try {
-                const membersRes = await axios.get(`http://localhost:3001/api/projects/${id}/members`, { headers });
-                setMembers(membersRes.data.members);
-
-                // Decode token to get current user ID
                 const payload = JSON.parse(atob((token || '').split('.')[1]));
                 setCurrentUser(payload);
-                const me = membersRes.data.members.find((m: any) => m.userId === payload.userId);
-                if (me) setCurrentUserPermissions(me.permissions || []);
-            } catch (err) {
-                // If not allowed to fetch members, we just assume basic permissions
-                setCurrentUserPermissions(['DOCUMENT_VIEW', 'DOCUMENT_UPLOAD']);
-            }
-
-            // Get required and client docs
-            try {
-                const reqDocsRes = await axios.get(`http://localhost:3001/api/projects/${id}/required-documents`, { headers });
-                setRequiredDocs(reqDocsRes.data);
-
-                const clientDocsRes = await axios.get(`http://localhost:3001/api/projects/${id}/client-documents`, { headers });
-                setClientDocs(clientDocsRes.data);
-            } catch (err) {
-                console.error("Falha ao buscar documentos exigidos", err);
-            }
-
-            // Get project details
-            const projsRes = await axios.get(`http://localhost:3001/api/projects`, { headers });
-            const currentProj = projsRes.data.projects.find((p: any) => p.id === id);
-            setProject(currentProj);
+            } catch (e) {}
 
         } catch (error) {
             toast.error('Falha ao carregar projeto');
@@ -153,6 +142,7 @@ export default function ProjectPage() {
         const toastId = toast.loading(`Enviando ${file.name}...`);
 
         try {
+            console.log("file");
             const formData = new FormData();
             formData.append('file', file);
             formData.append('projectId', id as string);
