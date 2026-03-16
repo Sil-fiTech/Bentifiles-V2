@@ -10,7 +10,7 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-TEMP_DIR = "./temp"
+TEMP_DIR = "/tmp/microservice"
 os.makedirs(TEMP_DIR, exist_ok=True)
 
 @router.post("/analyze", response_model=AnalysisResult)

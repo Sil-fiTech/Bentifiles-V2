@@ -31,7 +31,7 @@ function HomeContent() {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
       const payload = isLogin ? { email, password } : { name, email, password };
 
-      const res = await axios.post(`http://localhost:3001${endpoint}`, payload);
+      const res = await axios.post(`http://localhost:4000${endpoint}`, payload);
 
       localStorage.setItem('token', res.data.token);
       toast.success(res.data.message);

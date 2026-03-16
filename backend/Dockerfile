@@ -48,6 +48,8 @@ COPY --from=builder /app/dist ./dist
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 appuser
 
+
+
 USER appuser
 
 EXPOSE 4000

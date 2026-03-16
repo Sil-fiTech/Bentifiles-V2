@@ -24,7 +24,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (account?.provider === 'google' && user) {
                 try {
                     // Chama o backend para criar ou buscar o usuário do banco
-                    const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/auth/google`, {
+                    const res = await fetch(`${process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/auth/google`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

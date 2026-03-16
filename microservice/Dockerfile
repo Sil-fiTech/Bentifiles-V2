@@ -7,11 +7,11 @@ WORKDIR /app
 
 # Install system dependencies for OpenCV and EasyOCR
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libgl1-mesa-glx \
+    libgl1 \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
-    libxrender-dev \
+    libxrender1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies (cached layer)
@@ -21,7 +21,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-RUN addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+RUN addgroup --system appgroup && adduser --system --ingroup appgroup --home /home/appuser appuser
+RUN mkdir -p /home/appuser/.EasyOCR/model && chown -R appuser:appgroup /home/appuser
 
 USER appuser
 

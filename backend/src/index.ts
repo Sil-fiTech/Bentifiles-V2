@@ -1,14 +1,14 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import multer from 'multer';
+
 import prisma from './prisma';
 
 import authRoutes from './routes/authRoutes';
 import fileRoutes from './routes/fileRoutes';
 import projectRoutes from './routes/projectRoutes';
 import documentRoutes from './routes/documentRoutes';
-import path from 'path';
+
 
 import helmet from 'helmet';
 
@@ -19,7 +19,7 @@ const port = process.env.PORT || 3001;
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
-app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
+
 
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);

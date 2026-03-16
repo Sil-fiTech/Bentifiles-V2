@@ -40,7 +40,7 @@ export default function DocumentTypesDashboard() {
     const fetchDocumentTypes = async (token: string) => {
         try {
             setLoading(true);
-            const res = await axios.get('http://localhost:3001/api/documents/types', {
+            const res = await axios.get('http://localhost:4000/api/documents/types', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setDocumentTypes(res.data);
@@ -56,7 +56,7 @@ export default function DocumentTypesDashboard() {
         try {
             setIsCreating(true);
             const token = session?.user?.token || localStorage.getItem('token');
-            const res = await axios.post('http://localhost:3001/api/documents/types',
+            const res = await axios.post('http://localhost:4000/api/documents/types',
                 { name: newName, description: newDescription },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -75,7 +75,7 @@ export default function DocumentTypesDashboard() {
         if (!confirm('Tem certeza? Isso pode afetar os projetos configurados.')) return;
         try {
             const token = session?.user?.token || localStorage.getItem('token');
-            await axios.delete(`http://localhost:3001/api/documents/types/${id}`, {
+            await axios.delete(`http://localhost:4000/api/documents/types/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setDocumentTypes(prev => prev.filter(t => t.id !== id));
@@ -100,7 +100,7 @@ export default function DocumentTypesDashboard() {
     const saveEdit = async (id: string) => {
         try {
             const token = session?.user?.token || localStorage.getItem('token');
-            const res = await axios.put(`http://localhost:3001/api/documents/types/${id}`,
+            const res = await axios.put(`http://localhost:4000/api/documents/types/${id}`,
                 { name: editName, description: editDescription },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
