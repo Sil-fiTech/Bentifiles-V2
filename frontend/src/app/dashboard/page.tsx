@@ -42,7 +42,7 @@ export default function Dashboard() {
             const pendingInvite = localStorage.getItem('pendingInvite');
             if (pendingInvite) {
                 try {
-                    const joinRes = await axios.post('http://localhost:3001/api/projects/join', {
+                    const joinRes = await axios.post('http://localhost:4000/api/projects/join', {
                         inviteToken: pendingInvite
                     }, {
                         headers: { Authorization: `Bearer ${token}` }
@@ -63,7 +63,7 @@ export default function Dashboard() {
                 }
             }
 
-            const res = await axios.get('http://localhost:3001/api/projects', {
+            const res = await axios.get('http://localhost:4000/api/projects', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setProjects(res.data.projects);
@@ -89,7 +89,7 @@ export default function Dashboard() {
         try {
             setCreating(true);
             const token = session?.user?.token || localStorage.getItem('token');
-            const res = await axios.post('http://localhost:3001/api/projects', { name: 'Novo Projeto' }, {
+            const res = await axios.post('http://localhost:4000/api/projects', { name: 'Novo Projeto' }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setProjects(prev => [...prev, res.data.project]);
@@ -105,7 +105,7 @@ export default function Dashboard() {
         if (!newName.trim()) return;
         try {
             const token = session?.user?.token || localStorage.getItem('token');
-            await axios.patch(`http://localhost:3001/api/projects/${id}`, { name: newName }, {
+            await axios.patch(`http://localhost:4000/api/projects/${id}`, { name: newName }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success('Projeto salvo');

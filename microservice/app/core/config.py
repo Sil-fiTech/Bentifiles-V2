@@ -1,6 +1,7 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+    port: int = 8000
     PROJECT_NAME: str = "BentiFiles Quality Microservice"
     
     # Thresholds
@@ -21,7 +22,10 @@ class Settings(BaseSettings):
     WEIGHT_FRAMING: float = 25.0
     WEIGHT_OCR: float = 20.0
 
-    class Config:
-        env_file = ".env"
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore",
+        case_sensitive=False
+    )
 
 settings = Settings()

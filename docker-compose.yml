@@ -7,7 +7,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:4000
+      - INTERNAL_API_URL=http://backend:4000
+      - AUTH_TRUST_HOST=true
+    env_file:
+      - ./frontend/.env.local
     depends_on:
       - backend
     restart: unless-stopped
@@ -23,9 +26,7 @@ services:
       - "4000:4000"
     env_file:
       - ./backend/.env
-    environment:
-      - PORT=4000
-      - PYTHON_MICROSERVICE_URL=http://python-microservice:8000
+
     depends_on:
       - python-microservice
     restart: unless-stopped
@@ -48,3 +49,4 @@ services:
 networks:
   bentifiles-network:
     driver: bridge
+

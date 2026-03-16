@@ -4,9 +4,17 @@ import { AuthRequest } from '../middleware/auth';
 import axios from 'axios';
 import FormData from 'form-data';
 import { upload } from '../middleware/upload';
-import fs from 'fs';
-import path from 'path';
+import crypto from 'crypto';
+import { Readable } from 'stream';
 import { uploadToR2, getFileUrl, getFileFromR2 } from '../services/r2Service';
+
+// Map allowed MIME types to secure, hardcoded extensions
+const mimeToExt: Record<string, string> = {
+    'image/jpeg': '.jpg',
+    'image/png': '.png',
+    'application/pdf': '.pdf',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx'
+};
 
 export const uploadFile = async (req: AuthRequest, res: Response) => {
     try {
@@ -33,6 +41,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
             return res.status(401).json({ message: 'Não autorizado' });
         }
 
+        const fileBuffer = file.buffer;
         let analysisData: any = null;
 
         // If it's an image, send to Python microservice for validation
@@ -40,7 +49,12 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
             console.log('[Upload] Image detected, sending for analysis...');
             try {
                 const formData = new FormData();
-                formData.append('file', fs.createReadStream(file.path));
+                const stream = Readable.from(fileBuffer);
+                formData.append('file', stream, {
+                    filename: file.originalname,
+                    contentType: file.mimetype,
+                    knownLength: fileBuffer.length,
+                });
                 const pythonResponse = await axios.post('http://localhost:8000/analyze', formData, {
                     headers: {
                         ...formData.getHeaders(),
@@ -52,7 +66,6 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
 
                 if (!analysisData.approved) {
                     console.log('[Upload] Image rejected by analysis service');
-                    fs.unlinkSync(file.path);
                     return res.status(400).json({
                         success: false,
                         message: "A imagem não atende aos critérios mínimos de qualidade",
@@ -67,9 +80,6 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                 console.log('[Upload] Image approved');
             } catch (microserviceError) {
                 console.error('[Upload] Microservice error:', microserviceError);
-                if (fs.existsSync(file.path)) {
-                    fs.unlinkSync(file.path);
-                }
                 return res.status(503).json({
                     success: false,
                     message: "Falha ao validar a imagem. O serviço de análise pode estar indisponível."
@@ -77,16 +87,13 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
             }
         }
 
-        console.log('[Upload] Saving file to R2...');
-        const fileBuffer = fs.readFileSync(file.path);
-        const savedFilename = await uploadToR2(fileBuffer, file.mimetype, file.originalname);
-        console.log(`[Upload] File saved to R2 as: ${savedFilename}`);
+        // Generate secure filename
+        const ext = mimeToExt[file.mimetype] || '.bin';
+        const savedFilename = `${crypto.randomUUID()}${ext}`;
 
-        // Remove from local disk after upload
-        if (fs.existsSync(file.path)) {
-            fs.unlinkSync(file.path);
-            console.log("[Upload] Temporary local file deleted");
-        }
+        console.log('[Upload] Saving file to R2...');
+        await uploadToR2(fileBuffer, file.mimetype, savedFilename);
+        console.log(`[Upload] File saved to R2 as: ${savedFilename}`);
 
         console.log('[Upload] Creating database record...');
         const dbFile = await prisma.file.create({
@@ -165,9 +172,7 @@ export const getFileBase64 = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: 'URL do arquivo não fornecida' });
         }
 
-        // The URL could be a public URL, a presigned URL, or an old local path.
-        // What we need is the object key/filename.
-        // Usually, the filename is the last part of the URL before query params.
+        // Extract filename from URL (last segment before query params)
         const urlWithoutQuery = url.split('?')[0];
         const filename = urlWithoutQuery ? urlWithoutQuery.split('/').pop() : null;
 
@@ -179,26 +184,12 @@ export const getFileBase64 = async (req: AuthRequest, res: Response) => {
         let mimeType: string;
 
         try {
-            // Try fetching from R2 first
             const r2Data = await getFileFromR2(filename);
             fileBuffer = r2Data.buffer;
             mimeType = r2Data.contentType;
         } catch (r2Error) {
-            // Fallback for older local files
-            console.log(`Failed to fetch ${filename} from R2, falling back to local file system.`, r2Error);
-            const filePath = path.join(__dirname, '../../uploads', filename);
-
-            if (!fs.existsSync(filePath)) {
-                return res.status(404).json({ message: 'Arquivo não encontrado' });
-            }
-
-            fileBuffer = fs.readFileSync(filePath);
-            
-            const ext = path.extname(filename).toLowerCase();
-            mimeType = 'application/octet-stream';
-            if (ext === '.pdf') mimeType = 'application/pdf';
-            else if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
-            else if (ext === '.png') mimeType = 'image/png';
+            console.error(`Failed to fetch ${filename} from R2:`, r2Error);
+            return res.status(404).json({ message: 'Arquivo não encontrado' });
         }
 
         const base64 = fileBuffer.toString('base64');
