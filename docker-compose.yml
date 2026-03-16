@@ -1,0 +1,50 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: bentifiles-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:4000
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - bentifiles-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bentifiles-backend
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - PORT=4000
+      - PYTHON_MICROSERVICE_URL=http://python-microservice:8000
+    depends_on:
+      - python-microservice
+    restart: unless-stopped
+    networks:
+      - bentifiles-network
+
+  python-microservice:
+    build:
+      context: ./microservice
+      dockerfile: Dockerfile
+    container_name: bentifiles-python-microservice
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+    restart: unless-stopped
+    networks:
+      - bentifiles-network
+
+networks:
+  bentifiles-network:
+    driver: bridge
