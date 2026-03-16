@@ -1,0 +1,12 @@
+﻿src/controllers/documentController.ts(18,23): error TS2353: Object literal may only specify known properties, and 'isDefault' does not exist in type 'DocumentTypeWhereInput'.
+src/controllers/documentController.ts(19,23): error TS2353: Object literal may only specify known properties, and 'tenantId' does not exist in type 'DocumentTypeWhereInput'.
+src/controllers/documentController.ts(23,19): error TS2353: Object literal may only specify known properties, and 'isDefault' does not exist in type 'DocumentTypeOrderByWithRelationInput'.
+src/controllers/documentController.ts(51,23): error TS2353: Object literal may only specify known properties, and 'isDefault' does not exist in type 'DocumentTypeWhereInput'.
+src/controllers/documentController.ts(52,23): error TS2353: Object literal may only specify known properties, and 'tenantId' does not exist in type 'DocumentTypeWhereInput'.
+src/controllers/documentController.ts(87,35): error TS2339: Property 'tenantId' does not exist on type '{ name: string; id: string; createdAt: Date; updatedAt: Date; userId: string | null; description: string | null; }'.
+src/controllers/documentController.ts(91,22): error TS2339: Property 'isDefault' does not exist on type '{ name: string; id: string; createdAt: Date; updatedAt: Date; userId: string | null; description: string | null; }'.
+src/controllers/documentController.ts(103,28): error TS2353: Object literal may only specify known properties, and 'isDefault' does not exist in type 'DocumentTypeWhereInput'.
+src/controllers/documentController.ts(103,49): error TS2353: Object literal may only specify known properties, and 'tenantId' does not exist in type 'DocumentTypeWhereInput'.
+src/controllers/documentController.ts(134,35): error TS2339: Property 'tenantId' does not exist on type '{ name: string; id: string; createdAt: Date; updatedAt: Date; userId: string | null; description: string | null; }'.
+src/controllers/documentController.ts(138,22): error TS2339: Property 'isDefault' does not exist on type '{ name: string; id: string; createdAt: Date; updatedAt: Date; userId: string | null; description: string | null; }'.
+src/controllers/documentController.ts(144,21): error TS2353: Object literal may only specify known properties, and 'deletedAt' does not exist in type '(Without<DocumentTypeUpdateInput, DocumentTypeUncheckedUpdateInput> & DocumentTypeUncheckedUpdateInput) | (Without<...> & DocumentTypeUpdateInput)'.

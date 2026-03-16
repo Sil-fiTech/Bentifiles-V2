@@ -1,0 +1,50 @@
+# Dependencies
+node_modules
+.venv
+venv
+__pycache__
+
+# Build outputs
+.next
+dist
+build
+
+# Version control
+.git
+.gitignore
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE and OS
+.vscode
+.idea
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
+
+# Logs
+*.log
+ts_errors.log
+tsc_errors.txt
+tsc_output.txt
+
+# Uploads (handled by Cloudflare R2)
+uploads
+
+# Tests and dev files
+test_flow.py
+test_api.py
+*.test.*
+*.spec.*
+
+# Database
+prisma/dev.db
+
+# Misc
+README.md
+TODO.md
+walkthrough.md.resolved

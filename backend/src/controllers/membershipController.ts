@@ -16,9 +16,9 @@ export const createInvite = async (req: AuthRequest, res: Response) => {
 
         if (!userId) return res.status(401).json({ message: 'Não autorizado' });
 
-        // Set expiration for 7 days
+        // Set expiration for 1 day
         const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7);
+        expiresAt.setDate(expiresAt.getDate() + 1);
 
         const invite = await prisma.projectInvite.create({
             data: {
@@ -153,5 +153,73 @@ export const removeMember = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error('Error removing member:', error);
         res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const joinProject = async (req: AuthRequest, res: Response) => {
+    try {
+        const { inviteToken } = req.body;
+        const userId = req.user?.userId;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'Usuário não autenticado' });
+        }
+
+        if (!inviteToken) {
+            return res.status(400).json({ message: 'Token de convite ausente' });
+        }
+
+        const validInvite = await prisma.projectInvite.findUnique({
+            where: { token: inviteToken },
+        });
+
+        if (!validInvite) {
+            return res.status(404).json({ message: 'Convite não encontrado ou inválido' });
+        }
+        if (validInvite.expiresAt < new Date()) {
+            return res.status(400).json({ message: 'Convite expirado' });
+        }
+
+        // Check if user is already a member
+        const existingMembership = await prisma.projectMembership.findUnique({
+            where: {
+                projectId_userId: {
+                    projectId: validInvite.projectId,
+                    userId: userId,
+                }
+            }
+        });
+
+        if (existingMembership) {
+            // Already a member, just return success (idempotent)
+            return res.status(200).json({
+                message: 'Usuário já é membro deste projeto',
+                projectId: validInvite.projectId
+            });
+        }
+
+        // Create membership
+        await prisma.projectMembership.create({
+            data: {
+                projectId: validInvite.projectId,
+                userId: userId,
+                role: validInvite.role,
+            }
+        });
+
+        // Increment invite usage count
+        await prisma.projectInvite.update({
+            where: { id: validInvite.id },
+            data: { usedCount: validInvite.usedCount + 1 }
+        });
+
+        res.status(200).json({
+            message: 'Entrou no projeto com sucesso',
+            projectId: validInvite.projectId
+        });
+
+    } catch (error) {
+        console.error('Error joining project via invite:', error);
+        res.status(500).json({ message: 'Erro interno ao processar convite' });
     }
 };

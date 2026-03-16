@@ -33,5 +33,3 @@ We have successfully verified the following flow:
 2. **Microservice**: `cd microservice && venv\Scripts\python -m uvicorn main:app --reload` (Port 8000)
 3. **Frontend**: `cd frontend && npm run dev` (Port 3000)
 
----
-*Developed by Antigravity*

@@ -11,6 +11,7 @@ export interface AuthRequest extends Request {
 
 export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
     const authHeader = req.headers['authorization'];
+    console.log(`[Auth] Verifying token for request to ${req.path}`);
     const token = authHeader && authHeader.split(' ')[1];
 
     if (!token) {
@@ -24,9 +25,10 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
 
     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
-        console.log("err ==> ", err);
+            console.log("[Auth] Token verification failed:", err.message);
             return res.status(403).json({ message: 'Token inválido ou expirado' });
         }
+        console.log(`[Auth] User authenticated: ${decoded && typeof decoded === 'object' ? (decoded as any).userId : 'unknown'}`);
         req.user = decoded as { userId: string };
         next();
     });

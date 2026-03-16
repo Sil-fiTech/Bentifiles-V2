@@ -19,6 +19,7 @@ function HomeContent() {
   useEffect(() => {
     if (inviteToken) {
       setIsLogin(false);
+      localStorage.setItem('pendingInvite', inviteToken);
     }
   }, [inviteToken]);
 
@@ -28,7 +29,7 @@ function HomeContent() {
 
     try {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
-      const payload = isLogin ? { email, password } : { name, email, password, invite: inviteToken };
+      const payload = isLogin ? { email, password } : { name, email, password };
 
       const res = await axios.post(`http://localhost:3001${endpoint}`, payload);
 
@@ -55,13 +56,13 @@ function HomeContent() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '20px' }}>
       <div style={{ marginBottom: '40px', textAlign: 'center' }}>
-        <h1 style={{ fontSize: '3rem', fontWeight: 800, background: 'linear-gradient(to right, #a78bfa, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+        <h1 className="login-title" style={{ fontSize: '3rem', fontWeight: 800, background: 'linear-gradient(to right, #a78bfa, #c084fc)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           BentiFiles
         </h1>
         <p style={{ color: 'var(--text-secondary)', marginTop: '10px', fontSize: '1.1rem' }}>Validação Inteligente & Armazenamento de Documentos</p>
       </div>
 
-      <div className="glass-panel" style={{ width: '100%', maxWidth: '400px', padding: '32px' }}>
+      <div className="glass-panel login-panel" style={{ width: '100%', maxWidth: '400px', padding: '32px' }}>
         <h2 style={{ marginBottom: '24px', fontSize: '1.5rem', fontWeight: 600 }}>
           {isLogin ? 'Bem-vindo de volta' : 'Crie uma conta'}
         </h2>

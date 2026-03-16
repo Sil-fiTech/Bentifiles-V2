@@ -3,22 +3,46 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum VerificationStatus {
+  APPROVED
+  CONDITIONAL
+  REJECTED
+}
+
+enum DocumentStatus {
+  pending
+  approved
+  rejected
 }
 
 model User {
-  id          String              @id @default(uuid())
-  email       String              @unique
-  password    String?
-  name        String
-  image       String?
-  provider    String?
-  providerId  String?
-  files       File[]
-  projects    ProjectMembership[]
-  createdAt DateTime            @default(now())
-  updatedAt DateTime            @updatedAt
+  id         String              @id @default(uuid())
+  email      String              @unique
+  password   String?
+  name       String
+  image      String?
+  provider   String?
+  providerId String?
+  files      File[]
+  projects   ProjectMembership[]
+
+  clientDocsOwned    ClientDocument[] @relation("DocumentOwner")
+  clientDocsUploaded ClientDocument[] @relation("DocumentUploader")
+  clientDocsReviewed ClientDocument[] @relation("DocumentReviewer")
+  documentTypes      DocumentType[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Project {
@@ -28,8 +52,12 @@ model Project {
   members         ProjectMembership[]
   invites         ProjectInvite[]
   files           File[]
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
+
+  requiredDocuments ProjectRequiredDocument[]
+  clientDocuments   ClientDocument[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model ProjectMembership {
@@ -38,7 +66,7 @@ model ProjectMembership {
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role      String   // "ADMIN" | "USER"
+  role      Role // "ADMIN" | "USER"
   createdAt DateTime @default(now())
 
   @@unique([projectId, userId])
@@ -49,7 +77,7 @@ model ProjectInvite {
   projectId String
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   token     String   @unique @default(uuid())
-  role      String   // "ADMIN" | "USER"
+  role      Role // "ADMIN" | "USER"
   expiresAt DateTime
   maxUses   Int      @default(1)
   usedCount Int      @default(0)
@@ -69,22 +97,23 @@ model File {
   project             Project              @relation(fields: [projectId], references: [id], onDelete: Cascade)
   verificationResults VerificationResult[]
   shareLinks          ShareLink[]
+  clientDocuments     ClientDocument[]
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
 }
 
 model VerificationResult {
-  id             String   @id @default(uuid())
+  id             String             @id @default(uuid())
   fileId         String
-  file           File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  file           File               @relation(fields: [fileId], references: [id], onDelete: Cascade)
   score          Float
-  status         String   // APPROVED, CONDITIONAL, REJECTED
+  status         VerificationStatus // APPROVED, CONDITIONAL, REJECTED
   blurScore      Float?
   brightness     Float?
   textDetected   Boolean
   usefulAreaPct  Float?
   recommendation String?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime           @default(now())
 }
 
 model ShareLink {
@@ -94,4 +123,68 @@ model ShareLink {
   token     String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
+}
+
+model DocumentType {
+  id          String  @id @default(uuid())
+  name        String
+  slug        String
+  description String?
+
+  isDefault Boolean @default(false)
+  tenantId  String?
+
+  createdById String?
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  requiredIn ProjectRequiredDocument[]
+  documents  ClientDocument[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@unique([slug, tenantId]) // To prevent duplicates per tenant, and globally for defaults (tenantId = null)
+}
+
+model ProjectRequiredDocument {
+  id             String       @id @default(uuid())
+  projectId      String
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  documentTypeId String
+  documentType   DocumentType @relation(fields: [documentTypeId], references: [id], onDelete: Cascade)
+  required       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@unique([projectId, documentTypeId])
+}
+
+model ClientDocument {
+  id        String  @id @default(uuid())
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  ownerUserId String
+  ownerUser   User   @relation("DocumentOwner", fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  uploadedByUserId String
+  uploadedByUser   User   @relation("DocumentUploader", fields: [uploadedByUserId], references: [id])
+
+  documentTypeId String
+  documentType   DocumentType @relation(fields: [documentTypeId], references: [id], onDelete: Cascade)
+
+  fileId String
+  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  status          DocumentStatus @default(pending) // pending, approved, rejected
+  rejectionReason String?
+
+  uploadedAt       DateTime  @default(now())
+  reviewedAt       DateTime?
+  reviewedByUserId String?
+  reviewedByUser   User?     @relation("DocumentReviewer", fields: [reviewedByUserId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

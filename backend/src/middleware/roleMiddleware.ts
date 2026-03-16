@@ -7,6 +7,7 @@ export const checkRole = (allowedRoles: string[]) => {
         try {
             const userId = req.user?.userId;
             const projectId = req.params?.id || req.body?.projectId || req.query?.projectId;
+            console.log(`[Role] Checking access - Project: ${projectId}, User: ${userId}, Allowed: ${allowedRoles.join(',')}`);
 
             if (!userId) {
                 return res.status(401).json({ message: 'Não autorizado: Usuário não autenticado' });
@@ -36,7 +37,7 @@ export const checkRole = (allowedRoles: string[]) => {
             // Attach context to request
             req.projectId = projectId;
             req.projectRole = membership.role as 'ADMIN' | 'USER';
-
+            
             next();
         } catch (error) {
         console.log("error ==> ", error);

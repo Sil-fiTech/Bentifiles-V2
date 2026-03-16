@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { LogOut, Plus, Folder, Loader2 } from 'lucide-react';
+import { LogOut, Plus, Folder, Loader2, FileText } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 
 interface Project {
@@ -37,6 +37,32 @@ export default function Dashboard() {
     const fetchProjects = async (token: string) => {
         try {
             setLoading(true);
+
+            // Check for pending invite before fetching projects
+            const pendingInvite = localStorage.getItem('pendingInvite');
+            if (pendingInvite) {
+                try {
+                    const joinRes = await axios.post('http://localhost:3001/api/projects/join', {
+                        inviteToken: pendingInvite
+                    }, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+
+                    localStorage.removeItem('pendingInvite');
+                    toast.success(joinRes.data.message);
+
+                    // Redirect immediately to the project page
+                    if (joinRes.data.projectId) {
+                        router.push(`/projects/${joinRes.data.projectId}`);
+                        return; // Stop fetching projects since we're navigating away
+                    }
+                } catch (inviteError: any) {
+                    console.error('Failed to process invite:', inviteError);
+                    toast.error(inviteError.response?.data?.message || 'Falha ao processar convite');
+                    localStorage.removeItem('pendingInvite');
+                }
+            }
+
             const res = await axios.get('http://localhost:3001/api/projects', {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -90,10 +116,18 @@ export default function Dashboard() {
     };
 
     return (
-        <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+        <div className="project-container" style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
+            <header className="project-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
                 <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>Meus Projetos</h1>
-                <div style={{ display: 'flex', gap: '16px' }}>
+                <div className="project-header-actions" style={{ display: 'flex', gap: '16px' }}>
+                    <button
+                        onClick={() => router.push('/dashboard/documents')}
+                        style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)', padding: '8px 16px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', fontWeight: 600, transition: 'background 0.2s' }}
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                    >
+                        <FileText size={18} /> Tipos de Documento
+                    </button>
                     <button
                         onClick={handleCreateProject}
                         disabled={creating}
@@ -117,7 +151,7 @@ export default function Dashboard() {
                     <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)' }}>Você ainda não tem nenhum projeto.</p>
                 </div>
             ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
+                <div className="doc-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
                     {projects.map((project) => (
                         <div
                             key={project.id}
