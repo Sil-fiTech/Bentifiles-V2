@@ -3,8 +3,26 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum VerificationStatus {
+  APPROVED
+  CONDITIONAL
+  REJECTED
+}
+
+enum DocumentStatus {
+  pending
+  approved
+  rejected
 }
 
 model User {
@@ -48,7 +66,7 @@ model ProjectMembership {
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role      String // "ADMIN" | "USER"
+  role      Role // "ADMIN" | "USER"
   createdAt DateTime @default(now())
 
   @@unique([projectId, userId])
@@ -59,7 +77,7 @@ model ProjectInvite {
   projectId String
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   token     String   @unique @default(uuid())
-  role      String // "ADMIN" | "USER"
+  role      Role // "ADMIN" | "USER"
   expiresAt DateTime
   maxUses   Int      @default(1)
   usedCount Int      @default(0)
@@ -85,17 +103,17 @@ model File {
 }
 
 model VerificationResult {
-  id             String   @id @default(uuid())
+  id             String             @id @default(uuid())
   fileId         String
-  file           File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  file           File               @relation(fields: [fileId], references: [id], onDelete: Cascade)
   score          Float
-  status         String // APPROVED, CONDITIONAL, REJECTED
+  status         VerificationStatus // APPROVED, CONDITIONAL, REJECTED
   blurScore      Float?
   brightness     Float?
   textDetected   Boolean
   usefulAreaPct  Float?
   recommendation String?
-  createdAt      DateTime @default(now())
+  createdAt      DateTime           @default(now())
 }
 
 model ShareLink {
@@ -108,23 +126,23 @@ model ShareLink {
 }
 
 model DocumentType {
-  id          String                    @id @default(uuid())
+  id          String  @id @default(uuid())
   name        String
   slug        String
   description String?
-  
-  isDefault   Boolean                   @default(false)
-  tenantId    String?
-  
+
+  isDefault Boolean @default(false)
+  tenantId  String?
+
   createdById String?
-  createdBy   User?                     @relation(fields: [createdById], references: [id], onDelete: Cascade)
-  
-  requiredIn  ProjectRequiredDocument[]
-  documents   ClientDocument[]
-  
-  deletedAt   DateTime?
-  createdAt   DateTime                  @default(now())
-  updatedAt   DateTime                  @updatedAt
+  createdBy   User?   @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  requiredIn ProjectRequiredDocument[]
+  documents  ClientDocument[]
+
+  deletedAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@unique([slug, tenantId]) // To prevent duplicates per tenant, and globally for defaults (tenantId = null)
 }
@@ -159,7 +177,7 @@ model ClientDocument {
   fileId String
   file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
-  status          String  @default("pending") // pending, approved, rejected
+  status          DocumentStatus @default(pending) // pending, approved, rejected
   rejectionReason String?
 
   uploadedAt       DateTime  @default(now())
