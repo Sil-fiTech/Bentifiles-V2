@@ -18,12 +18,12 @@ const port = process.env.PORT || 4000;
 
 app.use(helmet());
 app.use(cors({
-  origin: "http://localhost:3000",
+  origin: ['https://bentifiles.tech', 'https://www.bentifiles.tech', 'http://localhost:3000'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
 
 app.use(express.json());
-
 
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
@@ -34,9 +34,9 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'O backend do BentiFiles está rodando' });
 });
 
-const server = app.listen(port, () => {
+const server = app.listen(port, '0.0.0.0', () => {
     console.log(`Server is running on port ${port}`);
-});
+}); 
 
 prisma.$connect().then(() => {
     console.log('Connected to database');
