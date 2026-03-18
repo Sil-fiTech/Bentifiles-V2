@@ -1,0 +1,64 @@
+# Walkthrough — Docker Setup para Bentifiles-V2
+
+## O que foi feito
+
+Criados todos os arquivos Docker para containerizar o projeto com três serviços, sem containers de banco de dados (Supabase remoto) nem volumes de upload (Cloudflare R2).
+
+## Arquitetura
+
+```mermaid
+graph LR
+    subgraph Docker Network - bentifiles-network
+        FE["frontend<br/>:3000"]
+        BE["backend<br/>:4000"]
+        PY["python-microservice<br/>:8000"]
+    end
+
+    FE -->|http://backend:4000| BE
+    BE -->|http://python-microservice:8000| PY
+    BE -->|DATABASE_URL| SUPA["☁️ Supabase PostgreSQL"]
+    BE -->|R2 SDK| R2["☁️ Cloudflare R2"]
+
+    style SUPA fill:#3ECF8E,color:#fff
+    style R2 fill:#F6821F,color:#fff
+```
+
+## Arquivos criados/modificados
+
+| Arquivo | Descrição |
+|---------|-----------|
+| [frontend/Dockerfile](file:///c:/Users/dudub/Desktop/Bentifiles-V2/frontend/Dockerfile) | Multi-stage build: deps → build → runner (node:20-alpine, standalone) |
+| [backend/Dockerfile](file:///c:/Users/dudub/Desktop/Bentifiles-V2/backend/Dockerfile) | Multi-stage build: deps → build (Prisma + TSC) → runner (node:20-alpine) |
+| [microservice/Dockerfile](file:///c:/Users/dudub/Desktop/Bentifiles-V2/microservice/Dockerfile) | python:3.11-slim com deps de sistema para OpenCV/EasyOCR |
+| [docker-compose.yml](file:///c:/Users/dudub/Desktop/Bentifiles-V2/docker-compose.yml) | Orquestração dos 3 serviços com rede bridge compartilhada |
+| [.dockerignore](file:///c:/Users/dudub/Desktop/Bentifiles-V2/.dockerignore) | Exclui node_modules, .git, .env, __pycache__, .next, dist, etc. |
+| [.env.example](file:///c:/Users/dudub/Desktop/Bentifiles-V2/.env.example) | Template de variáveis para todos os serviços |
+| [next.config.ts](file:///c:/Users/dudub/Desktop/Bentifiles-V2/frontend/next.config.ts) | Adicionado `output: "standalone"` |
+
+## Boas práticas aplicadas
+
+- ✅ **Multi-stage builds** — imagens finais leves, sem devDependencies
+- ✅ **Cache de dependências** — `COPY package*.json` antes do código
+- ✅ **Imagens leves** — `node:20-alpine` e `python:3.11-slim`
+- ✅ **Usuário não-root** — todos os containers rodam com user restrito
+- ✅ **Restart automático** — `restart: unless-stopped`
+- ✅ **Rede interna** — comunicação entre serviços via nomes DNS do Docker
+- ✅ **Sem volumes desnecessários** — persistência via Supabase e R2
+
+## Como rodar
+
+```bash
+# 1. Copie o arquivo de exemplo e preencha as variáveis
+cp .env.example backend/.env
+
+# 2. Suba todos os serviços
+docker compose up --build
+
+# 3. Acesse
+# Frontend:     http://localhost:3000
+# Backend:      http://localhost:4000
+# Microservice: http://localhost:8000
+```
+
+> [!IMPORTANT]
+> Certifique-se de preencher as variáveis em [backend/.env](file:///c:/Users/dudub/Desktop/Bentifiles-V2/backend/.env) com os valores reais do Supabase e Cloudflare R2 antes de rodar.

@@ -1,5 +1,5 @@
 'use client';
-import axios from 'axios';
+import api from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -40,7 +40,7 @@ export default function DocumentTypesDashboard() {
     const fetchDocumentTypes = async (token: string) => {
         try {
             setLoading(true);
-            const res = await axios.get('/api/documents/types', {
+            const res = await api.get('/api/documents/types', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setDocumentTypes(res.data);
@@ -56,7 +56,7 @@ export default function DocumentTypesDashboard() {
         try {
             setIsCreating(true);
             const token = session?.user?.token || localStorage.getItem('token');
-            const res = await axios.post('/api/documents/types',
+            const res = await api.post('/api/documents/types',
                 { name: newName, description: newDescription },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -75,7 +75,7 @@ export default function DocumentTypesDashboard() {
         if (!confirm('Tem certeza? Isso pode afetar os projetos configurados.')) return;
         try {
             const token = session?.user?.token || localStorage.getItem('token');
-            await axios.delete(`/api/documents/types/${id}`, {
+            await api.delete(`/api/documents/types/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setDocumentTypes(prev => prev.filter(t => t.id !== id));
@@ -100,7 +100,7 @@ export default function DocumentTypesDashboard() {
     const saveEdit = async (id: string) => {
         try {
             const token = session?.user?.token || localStorage.getItem('token');
-            const res = await axios.put(`/api/documents/types/${id}`,
+            const res = await api.put(`/api/documents/types/${id}`,
                 { name: editName, description: editDescription },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

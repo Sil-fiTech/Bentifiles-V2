@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import axios from 'axios';
+import api from '@/lib/api';
 import { toast } from 'sonner';
 import { signIn } from 'next-auth/react';
 
@@ -31,7 +31,7 @@ function HomeContent() {
       const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
       const payload = isLogin ? { email, password } : { name, email, password };
 
-      const res = await axios.post(`http://localhost:4000${endpoint}`, payload);
+      const res = await api.post(endpoint, payload);
 
       localStorage.setItem('token', res.data.token);
       toast.success(res.data.message);
