@@ -23,7 +23,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-
+app.set('trust proxy', 1);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
