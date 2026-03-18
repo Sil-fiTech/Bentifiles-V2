@@ -1,6 +1,6 @@
 'use client';
 
-import axios from 'axios';
+import api from '@/lib/api';
 import { signOut } from 'next-auth/react';
 import { toast } from 'sonner';
 
@@ -8,7 +8,7 @@ let isInterceptorSetup = false;
 
 if (typeof window !== 'undefined' && !isInterceptorSetup) {
     isInterceptorSetup = true;
-    axios.interceptors.response.use(
+    api.interceptors.response.use(
         (response) => response,
         async (error) => {
             if (error.response?.status === 401 || error.response?.status === 403) {
