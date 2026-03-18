@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
+import api from '@/lib/api';
 import axios from 'axios';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -27,7 +28,7 @@ export default function Dashboard() {
 
     const fetchFiles = async (token: string) => {
         try {
-            const res = await axios.get('/api/files', {
+            const res = await api.get('/api/files', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setFiles(res.data);
@@ -58,7 +59,7 @@ export default function Dashboard() {
             formData.append('file', file);
 
             try {
-                const res = await axios.post('/api/files/upload', formData, {
+                const res = await api.post('/api/files/upload', formData, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'multipart/form-data'

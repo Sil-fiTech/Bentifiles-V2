@@ -1,4 +1,5 @@
 'use client';
+import api from '@/lib/api';
 import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -42,7 +43,7 @@ export default function Dashboard() {
             const pendingInvite = localStorage.getItem('pendingInvite');
             if (pendingInvite) {
                 try {
-                    const joinRes = await axios.post('/api/projects/join', {
+                    const joinRes = await api.post('/api/projects/join', {
                         inviteToken: pendingInvite
                     }, {
                         headers: { Authorization: `Bearer ${token}` }
@@ -63,7 +64,7 @@ export default function Dashboard() {
                 }
             }
 
-            const res = await axios.get('/api/projects', {
+            const res = await api.get('/api/projects', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setProjects(res.data.projects);
@@ -89,7 +90,7 @@ export default function Dashboard() {
         try {
             setCreating(true);
             const token = session?.user?.token || localStorage.getItem('token');
-            const res = await axios.post('/api/projects', { name: 'Novo Projeto' }, {
+            const res = await api.post('/api/projects', { name: 'Novo Projeto' }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setProjects(prev => [...prev, res.data.project]);
@@ -105,7 +106,7 @@ export default function Dashboard() {
         if (!newName.trim()) return;
         try {
             const token = session?.user?.token || localStorage.getItem('token');
-            await axios.patch(`/api/projects/${id}`, { name: newName }, {
+            await api.patch(`/api/projects/${id}`, { name: newName }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success('Projeto salvo');
