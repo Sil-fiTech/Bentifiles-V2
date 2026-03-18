@@ -56,7 +56,7 @@ export default function ProjectPage() {
             setLoading(true);
             const headers = { Authorization: `Bearer ${token}` };
 
-            const response = await axios.get(`http://localhost:4000/api/projects/${id}/details`, { headers });
+            const response = await axios.get(`/api/projects/${id}/details`, { headers });
             const { project, files, members, requiredDocuments, clientDocuments, currentUserPermissions } = response.data;
 
             setProject(project);
@@ -83,7 +83,7 @@ export default function ProjectPage() {
     const generateInvite = async () => {
         try {
             const token = session?.user?.token || localStorage.getItem('token');
-            const res = await axios.post(`http://localhost:4000/api/projects/${id}/invites`, {}, {
+            const res = await axios.post(`/api/projects/${id}/invites`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const link = `${window.location.origin}/?invite=${res.data.invite.token}`;
@@ -101,7 +101,7 @@ export default function ProjectPage() {
     const removeMember = async (userId: string) => {
         try {
             const token = session?.user?.token || localStorage.getItem('token');
-            await axios.delete(`http://localhost:4000/api/projects/${id}/members/${userId}`, {
+            await axios.delete(`/api/projects/${id}/members/${userId}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success('Membro removido');
@@ -114,7 +114,7 @@ export default function ProjectPage() {
     const promoteToAdmin = async (userId: string) => {
         try {
             const token = session?.user?.token || localStorage.getItem('token');
-            const res = await axios.patch(`http://localhost:4000/api/projects/${id}/members/${userId}`, { role: 'ADMIN' }, {
+            const res = await axios.patch(`/api/projects/${id}/members/${userId}`, { role: 'ADMIN' }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             toast.success('Membro promovido a ADMIN');
@@ -147,7 +147,7 @@ export default function ProjectPage() {
             formData.append('file', file);
             formData.append('projectId', id as string);
 
-            const uploadRes = await axios.post('http://localhost:4000/api/files/upload', formData, {
+            const uploadRes = await axios.post('/api/files/upload', formData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
@@ -165,7 +165,7 @@ export default function ProjectPage() {
 
             const dbFile = uploadRes.data.file;
 
-            const clientDocRes = await axios.post(`http://localhost:4000/api/projects/${id}/client-documents`, {
+            const clientDocRes = await axios.post(`/api/projects/${id}/client-documents`, {
                 documentTypeId: docTypeId,
                 ownerUserId: ownerId,
                 fileId: dbFile.id
@@ -186,7 +186,7 @@ export default function ProjectPage() {
     const updateDocStatus = async (docId: string, statusText: string, reason?: string) => {
         try {
             const token = session?.user?.token || localStorage.getItem('token');
-            const res = await axios.patch(`http://localhost:4000/api/documents/${docId}/status`, {
+            const res = await axios.patch(`/api/documents/${docId}/status`, {
                 status: statusText,
                 rejectionReason: reason,
                 projectId: id // Adicionado projectId necessário pelo checkRole middleware
@@ -227,7 +227,7 @@ export default function ProjectPage() {
             formData.append('projectId', id as string);
 
             try {
-                const res = await axios.post('http://localhost:4000/api/files/upload', formData, {
+                const res = await axios.post('/api/files/upload', formData, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'multipart/form-data'
@@ -274,7 +274,7 @@ export default function ProjectPage() {
     const handleViewFile = async (url: string) => {
         try {
             const token = session?.user?.token || localStorage.getItem('token');
-            const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+            const backendUrl = process.env.NEXT_PUBLIC_API_URL || '';
 
             toast.loading('Carregando arquivo...', { id: 'loading-file' });
 
