@@ -49,12 +49,12 @@ export default function ProjectDocumentsPage() {
             const headers = { Authorization: `Bearer ${token}` };
 
             // 1. Get project details and user role
-            const projsRes = await axios.get(`http://localhost:4000/api/projects`, { headers });
+            const projsRes = await axios.get(`/api/projects`, { headers });
             const currentProj = projsRes.data.projects.find((p: any) => p.id === id);
             setProject(currentProj);
 
             try {
-                const membersRes = await axios.get(`http://localhost:4000/api/projects/${id}/members`, { headers });
+                const membersRes = await axios.get(`/api/projects/${id}/members`, { headers });
                 const me = membersRes.data.members.find((m: any) => m.userId === currentUser?.userId || m.userId === JSON.parse(atob(token.split('.')[1])).userId);
                 setIsAdmin(me?.permissions?.includes('PROJECT_EDIT') || me?.role === 'ADMIN');
             } catch (e) {
@@ -62,16 +62,16 @@ export default function ProjectDocumentsPage() {
             }
 
             // 2. Fetch required docs
-            const reqDocsRes = await axios.get(`http://localhost:4000/api/projects/${id}/required-documents`, { headers });
+            const reqDocsRes = await axios.get(`/api/projects/${id}/required-documents`, { headers });
             setRequiredDocs(reqDocsRes.data);
 
             // 3. Fetch client docs
-            const clientDocsRes = await axios.get(`http://localhost:4000/api/projects/${id}/client-documents`, { headers });
+            const clientDocsRes = await axios.get(`/api/projects/${id}/client-documents`, { headers });
             setClientDocs(clientDocsRes.data);
 
             // 4. If admin, fetch global types
             try {
-                const typesRes = await axios.get(`http://localhost:4000/api/documents/types`, { headers });
+                const typesRes = await axios.get(`/api/documents/types`, { headers });
                 setGlobalTypes(typesRes.data);
             } catch (e) {
                 // Ignore if not allowed or whatever
@@ -95,7 +95,7 @@ export default function ProjectDocumentsPage() {
                 newIds = [...currentIds, docTypeId];
             }
 
-            const res = await axios.post(`http://localhost:4000/api/projects/${id}/required-documents`,
+            const res = await axios.post(`/api/projects/${id}/required-documents`,
                 { documentTypeIds: newIds },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -120,7 +120,7 @@ export default function ProjectDocumentsPage() {
             formData.append('file', file);
             formData.append('projectId', id as string);
 
-            const uploadRes = await axios.post('http://localhost:4000/api/files/upload', formData, {
+            const uploadRes = await axios.post('/api/files/upload', formData, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'multipart/form-data'
@@ -130,7 +130,7 @@ export default function ProjectDocumentsPage() {
             const dbFile = uploadRes.data.file;
 
             // 2. Link file to ClientDocument
-            const clientDocRes = await axios.post(`http://localhost:4000/api/projects/${id}/client-documents`, {
+            const clientDocRes = await axios.post(`/api/projects/${id}/client-documents`, {
                 documentTypeId: docTypeId,
                 ownerUserId: currentUser.userId,
                 fileId: dbFile.id
@@ -150,7 +150,7 @@ export default function ProjectDocumentsPage() {
     const updateDocStatus = async (docId: string, status: string, reason?: string) => {
         try {
             const token = session?.user?.token || localStorage.getItem('token');
-            const res = await axios.patch(`http://localhost:4000/api/documents/${docId}/status`, {
+            const res = await axios.patch(`/api/documents/${docId}/status`, {
                 status,
                 rejectionReason: reason
             }, {

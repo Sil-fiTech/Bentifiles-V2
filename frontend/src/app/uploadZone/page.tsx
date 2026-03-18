@@ -27,7 +27,7 @@ export default function Dashboard() {
 
     const fetchFiles = async (token: string) => {
         try {
-            const res = await axios.get('http://localhost:4000/api/files', {
+            const res = await axios.get('/api/files', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setFiles(res.data);
@@ -58,7 +58,7 @@ export default function Dashboard() {
             formData.append('file', file);
 
             try {
-                const res = await axios.post('http://localhost:4000/api/files/upload', formData, {
+                const res = await axios.post('/api/files/upload', formData, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'multipart/form-data'
