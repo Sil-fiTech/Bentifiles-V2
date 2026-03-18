@@ -14,7 +14,7 @@ import helmet from 'helmet';
 
 dotenv.config();
 const app = express();
-const port = process.env.PORT || 4000;
+const port = process.env.PORT || "4000";
 
 app.use(helmet());
 app.use(cors({
@@ -22,7 +22,6 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
-
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
