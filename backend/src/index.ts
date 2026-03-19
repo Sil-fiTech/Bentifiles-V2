@@ -14,7 +14,7 @@ import helmet from 'helmet';
 
 dotenv.config();
 const app = express();
-const port = process.env.PORT || 4000;
+const port = Number(process.env.PORT) || 4000;
 
 app.use(helmet());
 app.use(cors({
@@ -34,7 +34,7 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'O backend do BentiFiles está rodando' });
 });
 
-const server = app.listen(port, () => {
+const server = app.listen(port, "0.0.0.0", () => {
     console.log(`Server is running on port ${port}`);
 });
 
