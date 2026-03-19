@@ -48,6 +48,8 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
         if (file.mimetype.startsWith('image/')) {
             console.log('[Upload] Image detected, sending for analysis...');
             try {
+
+                const url = process.env.AMBIENTE == 'DEV' ? 'http://localhost:4000' : process.env.PYTHON_MICROSERVICE_URL;
                 const formData = new FormData();
                 const stream = Readable.from(fileBuffer);
                 formData.append('file', stream, {
@@ -55,7 +57,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                     contentType: file.mimetype,
                     knownLength: fileBuffer.length,
                 });
-                const pythonResponse = await axios.post('http://localhost:8000/analyze', formData, {
+                const pythonResponse = await axios.post(`${url}/analyze`, formData, {
                     headers: {
                         ...formData.getHeaders(),
                     },
