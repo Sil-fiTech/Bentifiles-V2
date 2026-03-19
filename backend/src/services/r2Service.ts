@@ -11,7 +11,7 @@ const r2 = new S3Client({
     },
 });
 
-export const uploadToR2 = async (fileBuffer: Buffer, mimetype: string, originalName: string): Promise<string> => {
+export const uploadToR2 = async (fileBuffer: Buffer, mimetype: string, savedFilename: string): Promise<string> => {
     const bucketName = process.env.R2_BUCKET_NAME;
     if (!bucketName) throw new Error("R2_BUCKET_NAME not defined in environment");
 
@@ -23,20 +23,16 @@ export const uploadToR2 = async (fileBuffer: Buffer, mimetype: string, originalN
         'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx'
     };
 
-    const ext = mimeToExt[mimetype] || '.bin';
-    const id = crypto.randomUUID();
-    const filename = `${id}${ext}`;
-
     const command = new PutObjectCommand({
         Bucket: bucketName,
-        Key: filename,
+        Key: savedFilename,
         Body: fileBuffer,
         ContentType: mimetype,
     });
 
     await r2.send(command);
     console.log("File uploaded to R2 successfully");
-    return filename; // Store only the filename in the DB
+    return savedFilename; // Store only the filename in the DB
 };
 
 export const getFileUrl = async (filename: string): Promise<string> => {
@@ -66,11 +62,11 @@ export const getFileFromR2 = async (filename: string): Promise<{ buffer: Buffer,
     });
 
     const response = await r2.send(command);
-    
+
     if (!response.Body) {
         throw new Error("Empty response body from R2");
     }
-    
+
     // Convert the readable stream to a buffer
     const stream = response.Body as NodeJS.ReadableStream;
     const buffer = await new Promise<Buffer>((resolve, reject) => {
@@ -79,10 +75,10 @@ export const getFileFromR2 = async (filename: string): Promise<{ buffer: Buffer,
         stream.on('error', reject);
         stream.on('end', () => resolve(Buffer.concat(chunks)));
     });
-    
+
     return {
         buffer,
         contentType: response.ContentType || 'application/octet-stream'
     };
-    
+
 };
