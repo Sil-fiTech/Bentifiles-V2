@@ -49,7 +49,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
             console.log('[Upload] Image detected, sending for analysis...');
             try {
 
-                const url = process.env.AMBIENTE == 'DEV' ? 'http://localhost:4000' : process.env.PYTHON_MICROSERVICE_URL;
+                const url = process.env.AMBIENTE == 'DEV' ? 'http://localhost:8000' : process.env.PYTHON_MICROSERVICE_URL;
                 const formData = new FormData();
                 const stream = Readable.from(fileBuffer);
                 formData.append('file', stream, {
