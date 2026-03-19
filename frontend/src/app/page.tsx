@@ -28,7 +28,7 @@ function HomeContent() {
     setLoading(true);
 
     try {
-      const endpoint = isLogin ? '/api/auth/login' : '/api/auth/register';
+      const endpoint = isLogin ? '/api/users/login' : '/api/users/register';
       const payload = isLogin ? { email, password } : { name, email, password };
 
       const res = await api.post(endpoint, payload);

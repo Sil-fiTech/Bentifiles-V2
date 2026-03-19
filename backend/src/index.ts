@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import prisma from './prisma';
 
 import authRoutes from './routes/authRoutes';
+import usersRoutes from './routes/usersRoutes';
 import fileRoutes from './routes/fileRoutes';
 import projectRoutes from './routes/projectRoutes';
 import documentRoutes from './routes/documentRoutes';
@@ -18,14 +19,15 @@ const port = Number(process.env.PORT) || 4000;
 
 app.use(helmet());
 app.use(cors({
-  origin: ['https://bentifiles.tech', 'https://www.bentifiles.tech'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  credentials: true
+    origin: ['https://bentifiles.tech', 'https://www.bentifiles.tech', 'http://localhost:3000', 'http://localhost:3001'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    credentials: true
 }));
 app.use(express.json());
 app.set('trust proxy', 1);
 
 app.use('/api/auth', authRoutes);
+app.use('/api/users', authRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/documents', documentRoutes);
