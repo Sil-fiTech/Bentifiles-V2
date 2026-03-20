@@ -68,6 +68,15 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
 
                 if (!analysisData.approved) {
                     console.log('[Upload] Image rejected by analysis service');
+                    // @ts-ignore   
+                    await prisma.rejectedUpload.create({
+                        data: {
+                            userId,
+                            projectId: projectId || null,
+                        },
+                    });
+                    console.log('[Upload] Rejection event recorded in database');
+
                     return res.status(400).json({
                         success: false,
                         message: "A imagem não atende aos critérios mínimos de qualidade",
@@ -156,11 +165,29 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
 
         const files = await prisma.file.findMany({
             where: { userId },
-            include: { verificationResults: true },
+            include: {
+                clientDocuments: true,
+                project: true,
+                user: {
+                    select: {
+                        name: true,
+                        // email: true (se quiser)
+                    },
+                },
+                verificationResults: true,
+            },
             orderBy: { createdAt: 'desc' }
         });
 
-        res.json(files);
+        // Regenerate fresh URLs for each file (fixes old files with expired signed URLs)
+        const filesWithFreshUrls = await Promise.all(
+            files.map(async (file) => ({
+                ...file,
+                url: await getFileUrl(file.filename),
+            }))
+        );
+
+        res.json({ files: filesWithFreshUrls });
     } catch (error) {
         console.error('Get files error:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
@@ -199,5 +226,76 @@ export const getFileBase64 = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error('Get file base64 error:', error);
         res.status(500).json({ message: 'Erro interno ao converter arquivo' });
+    }
+};
+
+export const getDashboardStats = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'Não autorizado' });
+        }
+
+        const [aprovedUploads, rejectedUploads] = await Promise.all([
+            prisma.file.count({
+                where: { userId }
+            }),
+            // @ts-ignore
+            prisma.rejectedUpload.count({
+                where: { userId }
+            })
+        ]);
+
+        const totalUploads = aprovedUploads + rejectedUploads
+        return res.status(200).json({
+            totalUploads: totalUploads,
+            rejectedUploads: rejectedUploads
+        });
+    } catch (error) {
+        console.error('[Dashboard Stats] Error:', error);
+        return res.status(500).json({ message: 'Erro ao buscar estatísticas' });
+    }
+};
+
+export const getPendingFiles = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+
+        if (!userId) {
+            return res.status(401).json({ message: 'Não autorizado' });
+        }
+
+        const pendingFiles = await prisma.file.findMany({
+            where: {
+                project: {
+                    createdByUserId: userId,
+                },
+                clientDocuments: {
+                    some: {
+                        status: 'pending',
+                    },
+                },
+            },
+            include: {
+                clientDocuments: true,
+                project: true,
+                user: {
+                    select: {
+                        name: true,
+                        // email: true (se quiser)
+                    },
+                },
+                verificationResults: true,
+            },
+            orderBy: {
+                createdAt: 'desc',
+            },
+        });
+
+        res.json({ files: pendingFiles });
+    } catch (error) {
+        console.error('[Pending Files] Error:', error);
+        res.status(500).json({ message: 'Erro ao buscar arquivos pendentes' });
     }
 };
