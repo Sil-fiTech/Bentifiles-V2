@@ -40,6 +40,7 @@ model User {
   clientDocsUploaded ClientDocument[] @relation("DocumentUploader")
   clientDocsReviewed ClientDocument[] @relation("DocumentReviewer")
   documentTypes      DocumentType[]
+  rejectedUploads    RejectedUpload[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -52,6 +53,7 @@ model Project {
   members         ProjectMembership[]
   invites         ProjectInvite[]
   files           File[]
+  rejectedUploads RejectedUpload[]
 
   requiredDocuments ProjectRequiredDocument[]
   clientDocuments   ClientDocument[]
@@ -187,4 +189,13 @@ model ClientDocument {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model RejectedUpload {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
 }
