@@ -22,6 +22,9 @@ interface NavProps {
     creating?: boolean;
     onCreateProject?: () => void;
     onLogout?: () => void;
+    context?: 'dashboard' | 'project';
+    projectName?: string;
+    className?: string; // Permitir override ou adição de classes base
 }
 
 export function Nav({
@@ -29,7 +32,10 @@ export function Nav({
     hasActiveProcessing = false,
     creating = false,
     onCreateProject,
-    onLogout
+    onLogout,
+    context = 'dashboard',
+    projectName,
+    className
 }: NavProps) {
     const router = useRouter();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -46,7 +52,7 @@ export function Nav({
     }, []);
 
     return (
-        <header className="bg-white/80 backdrop-blur-xl sticky top-0 z-40 flex justify-center w-full border-b border-zinc-100/50">
+        <header className={`bg-white/80 backdrop-blur-xl z-40 flex justify-center w-full border-b border-zinc-100/50 ${className || 'sticky top-0'}`}>
             <div className="flex justify-between items-center w-full max-w-7xl px-4 md:px-8 py-4">
                 {/* Left Section - Nav */}
                 <div className="flex items-center gap-8">
@@ -58,22 +64,35 @@ export function Nav({
                     </div>
 
                     <nav className="hidden md:flex items-center gap-6">
-                        <button
-                            onClick={onCreateProject}
-                            disabled={creating}
-                            className="text-sm font-bold flex items-center gap-2 text-zinc-600 hover:text-amber-500 transition-colors disabled:opacity-50"
-                        >
-                            {creating ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />} Novo Projeto
-                        </button>
-                        <button className="text-sm font-bold flex items-center gap-2 text-zinc-900 hover:text-amber-500 transition-colors">
-                            <LayoutGrid size={16} /> Projetos
-                        </button>
-                        <button
-                            onClick={() => router.push('/dashboard/documents')}
-                            className="text-sm font-bold flex items-center gap-2 text-zinc-500 hover:text-zinc-900 transition-colors"
-                        >
-                            <Folder size={16} /> Tipos de Doc
-                        </button>
+                        {context === 'dashboard' ? (
+                            <>
+                                <button
+                                    onClick={onCreateProject}
+                                    disabled={creating}
+                                    className="text-sm font-bold flex items-center gap-2 text-zinc-600 hover:text-amber-500 transition-colors disabled:opacity-50"
+                                >
+                                    {creating ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />} Novo Projeto
+                                </button>
+                                <button className="text-sm font-bold flex items-center gap-2 text-zinc-900 hover:text-amber-500 transition-colors">
+                                    <LayoutGrid size={16} /> Projetos
+                                </button>
+                                <button
+                                    onClick={() => router.push('/dashboard/documents')}
+                                    className="text-sm font-bold flex items-center gap-2 text-zinc-500 hover:text-zinc-900 transition-colors"
+                                >
+                                    <Folder size={16} /> Tipos de Doc
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <span className="font-headline font-bold tracking-tight text-zinc-900 border-b-2 border-amber-500 pb-1">
+                                    {projectName || 'Projeto Atual'}
+                                </span>
+                                <button onClick={() => router.push('/dashboard/documents')} className="font-headline font-bold tracking-tight text-zinc-500 hover:text-amber-600 transition-colors">
+                                    Relatórios
+                                </button>
+                            </>
+                        )}
                     </nav>
                 </div>
 
