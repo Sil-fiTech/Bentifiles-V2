@@ -155,11 +155,13 @@ export default function ProjectPage() {
             });
 
             const dbFile = uploadRes.data.file;
+            const docStatus = uploadRes.data.docStatus;
 
             const clientDocRes = await api.post(`/api/projects/${id}/client-documents`, {
                 documentTypeId: docTypeId,
                 ownerUserId: ownerId,
-                fileId: dbFile.id
+                fileId: dbFile.id,
+                status: docStatus
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -216,10 +218,10 @@ export default function ProjectPage() {
 
     const getStatusStyle = (statusCode: string) => {
         switch (statusCode) {
-            case 'approved': return { bg: 'bg-emerald-100 text-emerald-800', label: 'Aprovado' };
-            case 'rejected': return { bg: 'bg-red-100 text-red-800', label: 'Rejeitado' };
-            case 'pending': return { bg: 'bg-amber-100 text-amber-800', label: 'Em Análise' };
-            default: return { bg: 'bg-zinc-100 text-zinc-800', label: 'Pendente' };
+            case 'approved': return { bg: 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/50', label: 'Aprovado' };
+            case 'rejected': return { bg: 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-200/50', label: 'Rejeitado' };
+            case 'pending': return { bg: 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200/50', label: 'Em Análise' };
+            default: return { bg: 'bg-zinc-100 text-zinc-600 ring-1 ring-inset ring-zinc-200/50', label: 'Pendente' };
         }
     };
 
@@ -306,7 +308,7 @@ export default function ProjectPage() {
                     }}
                 />
 
-                <div className="w-full max-w-7xl mx-auto px-6 py-6 md:px-8 space-y-8 md:space-y-12 pb-24">
+                <div className="w-full max-w-7xl mx-auto px-6 py-8 md:px-12 lg:px-16 space-y-8 md:space-y-12 pb-24">
                     {/* Header Section RESTORED */}
                     <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div>
@@ -488,11 +490,11 @@ export default function ProjectPage() {
 
                                     {/* Document Rows (Expandable) */}
                                     {isExpanded && (
-                                        <div className="bg-zinc-50/50 px-6 md:px-8 pb-6 pt-2 border-t border-zinc-100">
+                                        <div className="bg-zinc-50/30 px-4 md:px-8 pb-6 pt-4 border-t border-zinc-100">
                                             {requiredDocs.length === 0 ? (
                                                 <p className="py-4 text-zinc-500 text-sm italic">Nenhum documento obrigatório configurado para este projeto.</p>
                                             ) : (
-                                                <div className="space-y-2">
+                                                <div className="space-y-3">
                                                     {requiredDocs.map(rd => {
                                                         const doc = userDocs.find(cd => cd.documentTypeId === rd.documentTypeId);
                                                         const statusStyle = getStatusStyle(doc?.status || 'missing');
@@ -500,9 +502,9 @@ export default function ProjectPage() {
                                                         const progress = uploadProgress[`${rd.documentTypeId}-${member.userId}`];
 
                                                         return (
-                                                            <div key={rd.id} className="py-4 border-b border-zinc-200/60 last:border-0 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                                            <div key={rd.id} className="py-4 px-5 md:px-6 rounded-xl border border-zinc-200/60 bg-white/50 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-white hover:shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300 group">
                                                                 <div className="flex items-start md:items-center gap-4 w-full md:w-auto">
-                                                                    <div className={`mt-1 md:mt-0 min-w-10 h-10 w-10 shrink-0 rounded-lg flex items-center justify-center ${doc ? 'bg-zinc-200 text-zinc-600' : 'bg-zinc-100 border border-dashed border-zinc-300 text-zinc-400'}`}>
+                                                                    <div className={`mt-1 md:mt-0 min-w-10 h-10 w-10 shrink-0 rounded-lg flex items-center justify-center ${doc ? 'bg-white border border-zinc-200 text-zinc-600 shadow-sm' : 'bg-amber-50/50 border border-dashed border-amber-200 text-amber-500'}`}>
                                                                         {doc ? <FileIcon size={18} /> : <AlertTriangle size={18} />}
                                                                     </div>
                                                                     <div>
@@ -514,31 +516,31 @@ export default function ProjectPage() {
                                                                     </div>
                                                                 </div>
 
-                                                                <div className="flex flex-wrap items-center gap-3 md:gap-6 ml-14 md:ml-0">
-                                                                    <span className={`px-3 py-1 ${statusStyle.bg} text-[10px] font-bold uppercase tracking-wider rounded-full`}>
+                                                                <div className="flex flex-wrap items-center gap-4 md:gap-8 ml-14 md:ml-0">
+                                                                    <span className={`px-3 py-1.5 ${statusStyle.bg} text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm`}>
                                                                         {statusStyle.label}
                                                                     </span>
 
-                                                                    <div className="flex flex-wrap items-center gap-2">
+                                                                    <div className="flex flex-wrap items-center gap-3 opacity-90 group-hover:opacity-100 transition-opacity">
                                                                         {doc && (
                                                                             <>
-                                                                                <button onClick={() => handleViewFile(doc.file.url)} className="text-xs font-headline font-bold text-zinc-600 hover:text-amber-600 hover:underline flex items-center gap-1 transition-colors">
+                                                                                <button onClick={() => handleViewFile(doc.file.url)} className="text-[11px] font-headline font-bold text-zinc-700 hover:text-amber-600 flex items-center gap-1.5 bg-white border border-zinc-200 px-3 py-1.5 rounded-lg shadow-sm transition-all hover:border-amber-400">
                                                                                     <Eye size={14} /> Ver
                                                                                 </button>
-                                                                                <button onClick={() => handleDownloadFile(doc)} className="text-xs font-headline font-bold text-zinc-600 hover:text-amber-600 hover:underline flex items-center gap-1 transition-colors">
+                                                                                <button onClick={() => handleDownloadFile(doc)} className="text-[11px] font-headline font-bold text-zinc-700 hover:text-amber-600 flex items-center gap-1.5 bg-white border border-zinc-200 px-3 py-1.5 rounded-lg shadow-sm transition-all hover:border-amber-400">
                                                                                     <Download size={14} /> Baixar
                                                                                 </button>
 
                                                                                 {isAdmin && doc.status === 'pending' && (
                                                                                     <>
                                                                                         <span className="text-zinc-200 hidden sm:inline">|</span>
-                                                                                        <button onClick={() => updateDocStatus(doc.id, 'approved')} className="text-xs font-bold text-tertiary-container hover:text-green-700 flex items-center gap-1 bg-green-50 px-2 py-1 rounded transition-colors">
+                                                                                        <button onClick={() => updateDocStatus(doc.id, 'approved')} className="text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
                                                                                             Aprovar
                                                                                         </button>
                                                                                         <button onClick={() => {
                                                                                             const reason = prompt('Motivo da rejeição:');
                                                                                             if (reason !== null) updateDocStatus(doc.id, 'rejected', reason);
-                                                                                        }} className="text-xs font-bold text-red-600 hover:text-red-700 flex items-center gap-1 bg-red-50 px-2 py-1 rounded transition-colors">
+                                                                                        }} className="text-[11px] font-bold text-red-700 hover:bg-red-100 flex items-center gap-1.5 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
                                                                                             Rejeitar
                                                                                         </button>
                                                                                     </>
@@ -573,7 +575,7 @@ export default function ProjectPage() {
                 </div>
 
                 {isAdmin && (
-                    <div className="fixed bottom-6 right-6 lg:bottom-10 lg:right-10 z-50">
+                    <div className="fixed bottom-24 right-6 md:bottom-10 lg:bottom-10 lg:right-10 z-50">
                         <button onClick={generateInvite} className="w-14 h-14 bg-amber-400 hover:bg-amber-500 text-amber-950 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all active:scale-95 group relative">
                             <Plus className="text-3xl" size={28} />
                             <span className="absolute right-full mr-4 bg-zinc-900 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md pointer-events-none">
@@ -631,9 +633,9 @@ function DropzoneUploader({ onUpload, isUploading, label = 'Upload', progress }:
                 if (!isUploading) open();
             }}
             className={`
-                relative overflow-hidden shrink-0 flex items-center gap-1.5 px-3 py-1.5 
-                text-xs font-bold uppercase tracking-widest rounded transition-colors
-                ${isUploading ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed' : 'bg-zinc-900 text-white hover:bg-zinc-800 cursor-pointer'}
+                relative overflow-hidden shrink-0 flex items-center gap-2 px-4 py-2 
+                text-[11px] font-bold uppercase tracking-widest rounded-lg transition-all
+                ${isUploading ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed' : 'bg-zinc-900 text-white hover:bg-zinc-800 cursor-pointer shadow-md hover:shadow-lg'}
                 ${isDragActive ? 'ring-2 ring-amber-400 outline-none' : ''}
             `}
         >

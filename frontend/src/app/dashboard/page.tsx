@@ -208,7 +208,7 @@ export default function Dashboard() {
                 />
 
                 {/* Content Canvas */}
-                <div className="w-full max-w-7xl mx-auto px-6 py-6 md:px-8 md:py-8 space-y-8 md:space-y-12 pb-24">
+                <div className="w-full max-w-7xl mx-auto px-6 py-6 md:px-12 lg:px-16 md:py-8 space-y-8 md:space-y-12 pb-24">
                     {/* Section: Recent Projects */}
                     <section>
                         <div className="flex justify-between items-end mb-6">
