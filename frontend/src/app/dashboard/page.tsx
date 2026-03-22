@@ -410,17 +410,11 @@ export default function Dashboard() {
                                                         src={file.url}
                                                         alt={file.originalName}
                                                         // @ts-ignore
-                                                        onClick={() => window.open(`${process.env.NEXT_PUBLIC_OCR_API_URL ? process.env.NEXT_PUBLIC_OCR_API_URL : 'http://localhost:3000'}/projects/${file.projectId}`, '_blank')}
+                                                        onClick={() => window.open(`${process.env.NEXT_PUBLIC_API_URL ? process.env.NEXT_PUBLIC_API_URL : 'http://localhost:3000'}/projects/${file.projectId}`, '_blank')}
                                                         className="w-full h-full object-cover"
                                                     />
                                                 ) : (
                                                     <FileIcon size={48} className="text-zinc-300 group-hover:text-amber-500 transition-colors" />
-                                                )}
-
-                                                {(!isReviewTab && result) && (
-                                                    <div className="absolute top-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded text-[10px] font-black font-headline shadow-sm">
-                                                        {score}/100
-                                                    </div>
                                                 )}
                                             </div>
                                             <div className="flex items-start justify-between">
