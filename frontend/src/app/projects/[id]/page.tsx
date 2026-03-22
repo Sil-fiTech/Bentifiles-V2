@@ -1,11 +1,20 @@
 'use client';
+
 import api from '@/lib/api';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
 import { useRouter, useParams } from 'next/navigation';
-import { UploadCloud, File as FileIcon, CheckCircle, AlertTriangle, XCircle, Users, Link as LinkIcon, ArrowLeft, Trash2, Shield, Loader2, FileText, Check, X, Eye } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import {
+    Bell, Settings, LayoutGrid, FolderOpen, Users, Star, Trash2, Plus,
+    HelpCircle, User as UserIcon, ChevronRight, Share, Edit,
+    FileText, Search as SearchIcon, ChevronDown,
+    Badge as BadgeIcon, Receipt, File as FileIcon, Eye,
+    UploadCloud, Loader2, ArrowLeft, Shield, AlertTriangle, CheckCircle, XCircle,
+    Download
+} from 'lucide-react';
+import { Nav } from '@/components/Nav';
 
 export default function ProjectPage() {
     const { id } = useParams();
@@ -14,51 +23,41 @@ export default function ProjectPage() {
     const [project, setProject] = useState<any>(null);
     const [files, setFiles] = useState<any[]>([]);
     const [members, setMembers] = useState<any[]>([]);
-    const [currentUserPermissions, setCurrentUserPermissions] = useState<string[]>([]);
-
-    const hasPermission = (permission: string) => currentUserPermissions.includes(permission);
-
-    const [loading, setLoading] = useState(true);
-    const [uploading, setUploading] = useState(false);
-
-    const [showManageModal, setShowManageModal] = useState(false);
-    const [inviteLink, setInviteLink] = useState('');
-
     const [requiredDocs, setRequiredDocs] = useState<any[]>([]);
     const [clientDocs, setClientDocs] = useState<any[]>([]);
+    const [currentUserPermissions, setCurrentUserPermissions] = useState<string[]>([]);
+
+    const [loading, setLoading] = useState(true);
+    const [expandedUsers, setExpandedUsers] = useState<Record<string, boolean>>({});
+    const [searchQuery, setSearchQuery] = useState('');
     const [uploadingDocType, setUploadingDocType] = useState<string | null>(null);
     const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
     const [currentUser, setCurrentUser] = useState<any>(null);
+    const [inviteLink, setInviteLink] = useState('');
+    const [isEditingName, setIsEditingName] = useState(false);
+    const [newName, setNewName] = useState('');
 
     const { data: session, status } = useSession();
 
     useEffect(() => {
         if (status === 'loading') return;
-        
         const localToken = localStorage.getItem('token');
         const activeToken = session?.user?.token || localToken;
-        
         if (!activeToken) {
             router.push('/');
             return;
         }
-
-        // Avoid fetching if we already have the basic project data and it's the right project
-        // but since we need real-time data for documents, we usually fetch on mount or id change.
-        // We add a check for status stable.
         if (status === 'authenticated' || (status === 'unauthenticated' && localToken)) {
             fetchData(activeToken as string);
         }
-    }, [id, status]); // Removed session from dependencies to avoid extra triggers if it changes but token is same
+    }, [id, status]);
 
     const fetchData = async (token: string) => {
         try {
             setLoading(true);
             const headers = { Authorization: `Bearer ${token}` };
-
             const response = await api.get(`/api/projects/${id}/details`, { headers });
             const { project, files, members, requiredDocuments, clientDocuments, currentUserPermissions } = response.data;
-
             setProject(project);
             setFiles(files);
             setMembers(members);
@@ -66,18 +65,23 @@ export default function ProjectPage() {
             setClientDocs(clientDocuments);
             setCurrentUserPermissions(currentUserPermissions);
 
-            // Decode token to get current user ID (for legacy uses if any)
             try {
                 const payload = JSON.parse(atob((token || '').split('.')[1]));
                 setCurrentUser(payload);
-            } catch (e) {}
-
+            } catch (e) { }
         } catch (error) {
             toast.error('Falha ao carregar projeto');
             router.push('/dashboard');
         } finally {
             setLoading(false);
         }
+    };
+
+    const hasPermission = (permission: string) => currentUserPermissions.includes(permission);
+    const isAdmin = currentUserPermissions.includes('PROJECT_EDIT');
+
+    const toggleUserExpand = (userId: string) => {
+        setExpandedUsers(prev => ({ ...prev, [userId]: !prev[userId] }));
     };
 
     const generateInvite = async () => {
@@ -88,40 +92,30 @@ export default function ProjectPage() {
             });
             const link = `${window.location.origin}/?invite=${res.data.invite.token}`;
             setInviteLink(link);
+            navigator.clipboard.writeText(link);
+            toast.success('Link de convite copiado!');
         } catch (error) {
             toast.error('Falha ao gerar convite');
         }
     };
 
-    const copyInvite = () => {
-        navigator.clipboard.writeText(inviteLink);
-        toast.success('Copiado para a área de transferência!');
-    };
 
-    const removeMember = async (userId: string) => {
-        try {
-            const token = session?.user?.token || localStorage.getItem('token');
-            await api.delete(`/api/projects/${id}/members/${userId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            toast.success('Membro removido');
-            setMembers(prev => prev.filter(m => m.userId !== userId));
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Falha ao remover membro');
+    const handleRename = async () => {
+        if (!newName.trim() || newName === project?.name) {
+            setIsEditingName(false);
+            return;
         }
-    };
-
-    const promoteToAdmin = async (userId: string) => {
         try {
             const token = session?.user?.token || localStorage.getItem('token');
-            const res = await api.patch(`/api/projects/${id}/members/${userId}`, { role: 'ADMIN' }, {
+            const res = await api.patch(`/api/projects/${id}`, { name: newName }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            toast.success('Membro promovido a ADMIN');
-            // Update the member in the list with new permissions from response
-            setMembers(prev => prev.map(m => m.userId === userId ? { ...m, permissions: res.data.member.permissions } : m));
-        } catch (error: any) {
-            toast.error(error.response?.data?.message || 'Falha ao promover membro');
+            toast.success('Projeto renomeado com sucesso!');
+            setProject((prev: any) => ({ ...prev, name: res.data.name || newName }));
+            setIsEditingName(false);
+        } catch (error) {
+            console.log(error);
+            toast.error('Falha ao renomear projeto');
         }
     };
 
@@ -142,7 +136,6 @@ export default function ProjectPage() {
         const toastId = toast.loading(`Enviando ${file.name}...`);
 
         try {
-            console.log("file");
             const formData = new FormData();
             formData.append('file', file);
             formData.append('projectId', id as string);
@@ -156,30 +149,53 @@ export default function ProjectPage() {
                     const percentCompleted = Math.round((progressEvent.loaded * 100) / (progressEvent.total || file.size));
                     setUploadProgress(prev => ({ ...prev, [uploadKey]: percentCompleted }));
                     if (percentCompleted === 100) {
-                        toast.loading(`Analisando a qualidade de ${file.name}... Isso pode levar alguns segundos.`, { id: toastId });
-                    } else {
-                        toast.loading(`Enviando ${file.name}... ${percentCompleted}%`, { id: toastId });
+                        toast.loading(`Analisando a qualidade de ${file.name}...`, { id: toastId });
                     }
                 }
             });
 
             const dbFile = uploadRes.data.file;
+            const docStatus = uploadRes.data.docStatus;
 
             const clientDocRes = await api.post(`/api/projects/${id}/client-documents`, {
                 documentTypeId: docTypeId,
                 ownerUserId: ownerId,
-                fileId: dbFile.id
+                fileId: dbFile.id,
+                status: docStatus
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            setClientDocs(prev => [clientDocRes.data, ...prev]);
-            toast.success('Documento analisado e enviado com sucesso!', { id: toastId });
+            setClientDocs(prev => [clientDocRes.data, ...prev.filter(d => !(d.documentTypeId === docTypeId && d.ownerUserId === ownerId))]);
+            toast.success('Documento enviado com sucesso!', { id: toastId });
         } catch (error: any) {
             toast.error(error.response?.data?.message || 'Falha ao enviar documento', { id: toastId });
         } finally {
             setUploadingDocType(null);
             setUploadProgress(prev => ({ ...prev, [uploadKey]: 0 }));
+        }
+    };
+
+    const handleViewFile = async (url: string) => {
+        try {
+            const token = session?.user?.token || localStorage.getItem('token');
+            toast.loading('Iniciando visualização', { id: 'loading-file' });
+            const response = await api.get(`/api/files/base64`, {
+                params: { url },
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            toast.dismiss('loading-file');
+            const { base64, mimeType } = response.data;
+            const byteCharacters = atob(base64);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const blob = new Blob([new Uint8Array(byteNumbers)], { type: mimeType });
+            window.open(URL.createObjectURL(blob), '_blank');
+        } catch (error) {
+            toast.dismiss('loading-file');
+            toast.error('Falha ao abrir arquivo');
         }
     };
 
@@ -189,221 +205,367 @@ export default function ProjectPage() {
             const res = await api.patch(`/api/documents/${docId}/status`, {
                 status: statusText,
                 rejectionReason: reason,
-                projectId: id // Adicionado projectId necessário pelo checkRole middleware
+                projectId: id
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-
             setClientDocs(prev => prev.map(d => d.id === docId ? res.data : d));
             toast.success('Status atualizado');
         } catch (error) {
-            toast.error('Falha ao atualizar status');
+            toast.error('Falha ao atualizar');
         }
     };
 
-    const getDocStatusBadge = (statusCode: string) => {
+    const getStatusStyle = (statusCode: string) => {
         switch (statusCode) {
-            case 'approved': return <span style={{ background: 'var(--success)', color: 'white', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 600 }}>Aprovado</span>;
-            case 'rejected': return <span style={{ background: 'var(--danger)', color: 'white', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 600 }}>Rejeitado</span>;
-            case 'pending': return <span style={{ background: 'var(--warning)', color: 'black', padding: '4px 8px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 600 }}>Pendente</span>;
-            default: return null;
+            case 'approved': return { bg: 'bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200/50', label: 'Aprovado' };
+            case 'rejected': return { bg: 'bg-red-50 text-red-700 ring-1 ring-inset ring-red-200/50', label: 'Rejeitado' };
+            case 'pending': return { bg: 'bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-200/50', label: 'Em Análise' };
+            default: return { bg: 'bg-zinc-100 text-zinc-600 ring-1 ring-inset ring-zinc-200/50', label: 'Pendente' };
         }
     };
 
-    const isAdmin = currentUserPermissions.includes('PROJECT_EDIT');
-
-    const onDrop = useCallback(async (acceptedFiles: File[]) => {
-        if (!hasPermission('DOCUMENT_UPLOAD')) {
-            toast.error('Você não tem permissão para enviar arquivos soltos');
-            return;
-        }
-        if (acceptedFiles.length === 0) return;
-        setUploading(true);
-        const token = session?.user?.token || localStorage.getItem('token');
-
-        for (const file of acceptedFiles) {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('projectId', id as string);
-
-            try {
-                const res = await api.post('/api/files/upload', formData, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'multipart/form-data'
-                    }
-                });
-                toast.success(`Enviado: ${file.name}`);
-                setFiles(prev => [res.data.file, ...prev]);
-            } catch (error: any) {
-                toast.error(`Falha ao enviar ${file.name}`);
-            }
-        }
-        setUploading(false);
-    }, [id, currentUserPermissions]);
-
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        onDrop,
-        accept: {
-            'image/jpeg': ['.jpeg', '.jpg'],
-            'image/png': ['.png'],
-            'application/pdf': ['.pdf'],
-            'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
-        },
-        disabled: !hasPermission('DOCUMENT_UPLOAD')
-    });
-
-    const getStatusIcon = (status: string) => {
-        switch (status) {
-            case 'APPROVED': return <CheckCircle color="var(--success)" size={20} />;
-            case 'CONDITIONAL': return <AlertTriangle color="var(--warning)" size={20} />;
-            case 'REJECTED': return <XCircle color="var(--danger)" size={20} />;
-            default: return null;
-        }
-    };
-
-    const getStatusColor = (status: string) => {
-        switch (status) {
-            case 'APPROVED': return 'var(--success)';
-            case 'CONDITIONAL': return 'var(--warning)';
-            case 'REJECTED': return 'var(--danger)';
-            default: return 'var(--text-secondary)';
-        }
-    }
-
-    const handleViewFile = async (url: string) => {
+    const handleDownloadFile = async (doc: any) => {
         try {
+            console.log(doc);
+            console.log(project?.name);
+            const   email = doc.ownerUser.email.trim('@', '_').replace('.', '_');
+            const filename = `${project?.name}_${doc.documentType.name}_${email}`;
             const token = session?.user?.token || localStorage.getItem('token');
-
-            toast.loading('Carregando arquivo...', { id: 'loading-file' });
-
             const response = await api.get(`/api/files/base64`, {
-                params: { url },
+                params: { url: doc.file.url },
                 headers: { Authorization: `Bearer ${token}` }
             });
-
-            toast.dismiss('loading-file');
-
             const { base64, mimeType } = response.data;
-
-            // Decode base64 and create a Blob
             const byteCharacters = atob(base64);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) {
                 byteNumbers[i] = byteCharacters.charCodeAt(i);
             }
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: mimeType });
-            const blobUrl = URL.createObjectURL(blob);
-
-            window.open(blobUrl, '_blank');
+            const blob = new Blob([new Uint8Array(byteNumbers)], { type: mimeType });
+            const urlObject = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = urlObject;
+            link.download = filename;
+            console.log(filename);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(urlObject);
         } catch (error) {
-            toast.dismiss('loading-file');
-            toast.error('Falha ao visualizar o arquivo');
-            console.error('Erro ao buscar arquivo:', error);
+            console.error('Error downloading file:', error);
+            toast.error('Falha ao baixar arquivo');
         }
-    }
-
+    };
 
     if (loading) {
-        return <div style={{ display: 'flex', justifyContent: 'center', padding: '100px' }}><Loader2 size={32} className="animate-spin" color="var(--accent-light)" /></div>;
+        return <div className="min-h-screen bg-surface flex items-center justify-center"><Loader2 size={32} className="animate-spin text-amber-500" /></div>;
     }
 
+    // Calculos das Metricas
+    const nonAdminMembers = members.filter(m => !m.permissions?.includes('PROJECT_EDIT'));
+    const totalUsers = members.length;
+    const totalDocsSent = clientDocs.length;
+    const totalRequiredPerUser = requiredDocs.length;
+
+    // docs pendentes (aqueles q estao em pending state)
+    const pendingDocs = clientDocs.filter(d => d.status === 'pending').length;
+
+    // completion rate: baseando docs aprovados vs total exigido para nao-admins
+    const targetDocs = nonAdminMembers.length * totalRequiredPerUser;
+    const approvedDocs = clientDocs.filter(d => d.status === 'approved' && nonAdminMembers.some(m => m.userId === d.ownerUserId)).length;
+    const completionRate = targetDocs > 0 ? Math.round((approvedDocs / targetDocs) * 100) : 100;
+
+    // time ago (utilizando API nativa)
+    const timeAgo = project?.updatedAt ? new Date(project.updatedAt).toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Recentemente';
+
+    // Para o usuário logado que não é admin, filtramos apenas para ver a própria conta (simulando a visáo do "Alex Rivera")
+    const membersToDisplay = isAdmin ? members.filter(m => !m.permissions?.includes('PROJECT_EDIT')) : members.filter(m => m.userId === currentUser?.userId);
+    const filteredMembers = membersToDisplay.filter(m => m.user.name.toLowerCase().includes(searchQuery.toLowerCase()) || m.user.email.toLowerCase().includes(searchQuery.toLowerCase()));
+
+
+    
+    const userName = session?.user?.name || 'User';
+    const userInitials = userName.substring(0, 2).toUpperCase();
     return (
-        <div className="project-container" style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
-            <button onClick={() => router.push('/dashboard')} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-secondary)', background: 'transparent', border: 'none', cursor: 'pointer', marginBottom: '24px' }}>
-                <ArrowLeft size={18} /> Voltar ao Painel
-            </button>
-            <header className="project-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
-                <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>{project?.name || 'Projeto'}</h1>
-                <div className="project-header-actions" style={{ display: 'flex', gap: '16px' }}>
-                    <button
-                        onClick={() => router.push(`/projects/${id}/documents`)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--text-primary)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, transition: 'background 0.2s' }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                    >
-                        <FileText size={18} /> Documentos
-                    </button>
-                    {hasPermission('MEMBER_MANAGE') && (
-                        <button
-                            onClick={() => setShowManageModal(true)}
-                            style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', fontWeight: 600 }}
-                        >
-                            <Users size={18} /> Gerenciar Usuários
-                        </button>
-                    )}
-                </div>
-            </header>
+        <div className="bg-background font-body text-on-surface antialiased overflow-hidden flex h-screen w-full relative">
+            
+            {/* Main Content Canvas */}
+            <main className="flex-1 h-screen flex flex-col items-center bg-surface overflow-y-auto relative w-full custom-scrollbar">
+                
+                {/* Top Navigation Bar */}
+                <Nav
+                    context="project"
+                    projectName={project?.name}
+                    userInitials={userInitials}
+                    onLogout={async () => {
+                        localStorage.removeItem('token');
+                        if (session) {
+                            const { signOut } = await import('next-auth/react');
+                            await signOut({ redirect: false });
+                        }
+                        router.push('/');
+                    }}
+                />
 
-            {/* CHECKLIST SECTION */}
-            {requiredDocs.length > 0 && !isAdmin && (
-                <div style={{ marginBottom: '40px' }}>
-                    <h2 style={{ fontSize: '1.5rem', fontWeight: 700, marginBottom: '20px' }}>Documentos Necessários</h2>
-                    <div className="doc-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
-                        {requiredDocs.map(rd => {
-                            // Find if this user has uploaded this doc
-                            const userDoc = clientDocs.find(cd => cd.documentTypeId === rd.documentTypeId && (isAdmin ? false : cd.ownerUserId === currentUser?.userId));
+                <div className="w-full max-w-7xl mx-auto px-6 py-8 md:px-12 lg:px-16 space-y-8 md:space-y-12 pb-24">
+                    {/* Header Section RESTORED */}
+                    <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                        <div>
+                            <nav className="flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase text-zinc-500 mb-2">
+                                <span className="cursor-pointer hover:text-zinc-900" onClick={() => router.push('/dashboard')}>Projetos</span>
+                                <ChevronRight size={12} />
+                                <span className="text-amber-500">Detalhes</span>
+                            </nav>
+                            <div className="flex items-center gap-3">
+                                {isEditingName ? (
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="text"
+                                            value={newName}
+                                            onChange={(e) => setNewName(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleRename()}
+                                            disabled={loading}
+                                            autoFocus
+                                            className="font-headline text-2xl md:text-3xl font-black tracking-tight text-zinc-900 bg-white border border-amber-400 rounded-lg px-3 py-1 outline-none w-full max-w-[300px] shadow-sm"
+                                        />
+                                        <button onClick={handleRename} className="text-emerald-500 hover:bg-emerald-50 p-1.5 rounded-lg transition-colors" title="Salvar">
+                                            <CheckCircle size={22} />
+                                        </button>
+                                        <button onClick={() => setIsEditingName(false)} className="text-zinc-400 hover:bg-zinc-100 p-1.5 rounded-lg transition-colors" title="Cancelar">
+                                            <XCircle size={22} />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <h1 className="font-headline text-3xl md:text-4xl font-black tracking-tighter text-zinc-900">{project?.name || 'Detalhes do Projeto'}</h1>
+                                        {isAdmin && (
+                                            <button 
+                                                onClick={() => {
+                                                    setNewName(project?.name || '');
+                                                    setIsEditingName(true);
+                                                }}
+                                                className="text-zinc-400 hover:text-amber-500 transition-colors p-1"
+                                                title="Renomear Projeto"
+                                            >
+                                                <Edit size={20} />
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+                            </div>
 
-                            // If admin is viewing, maybe show all docs? The prompt said:
-                            // "A tela do projeto deve funcionar como um checklist de documentos obrigatórios, facilitando para o usuário saber exatamente o que falta enviar."
-                            // For Admins, they can see everything in the "Documentos Recebidos" section further down, or under "Documentos" button.
-                            // But here we are rendering the checklist. If it's the admin viewing the checklist, they probably shouldn't see an upload checklist meant for users, OR we only show it for users.
-                            // Let's render the checklist primarily for the CURRENT USER'S obligations.
+                            <div className="flex flex-wrap items-center gap-3 mt-3">
+                                <span className="flex items-center gap-1.5 px-3 py-1 bg-tertiary-container text-on-tertiary-container text-xs font-bold rounded-full">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-tertiary animate-pulse"></span>
+                                    {project?.status || 'Em andamento'}
+                                </span>
+                                <span className="text-xs text-zinc-500 font-medium italic">Atualizado: {timeAgo}</span>
+                            </div>
+                        </div>
+                        {isAdmin && (
+                            <div className="flex flex-wrap items-center gap-4">
+                                <button onClick={generateInvite} className="px-4 py-2 bg-zinc-200 text-zinc-900 hover:bg-zinc-300 transition-colors rounded-lg font-semibold text-sm flex items-center gap-2 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+                                    <Share size={16} /> Convite
+                                </button>
+                              {/*   <button className="px-6 py-2 bg-primary-container text-on-primary-fixed font-headline font-bold rounded-lg flex items-center gap-2 hover:bg-primary transition-colors shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+                                    <Edit size={16} /> Modificar
+                                </button>    */}
+                            </div>
+                        )}
+                    </header>
 
-                            // Let's only render the checklist if NOT admin or if admin wants to upload their own docs (they are users too).
-                            // The user request specified: "O sistema deve verificar se já existe um documento daquele tipo enviado pelo usuário logado"
+                    {/* Summary Metrics: Bento Grid (Admin only context or personal metrics) */}
+                    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                        <div className="bg-white border border-zinc-100 p-6 rounded-xl flex flex-col justify-between group hover:border-amber-400 transition-colors shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                            <Users className="text-amber-500 mb-4" size={24} />
+                            <div>
+                                <p className="text-4xl font-headline font-black text-zinc-900 tracking-tighter">{totalUsers}</p>
+                                <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 group-hover:text-amber-600 transition-colors">Contribuidores</p>
+                            </div>
+                        </div>
+                        <div className="bg-white border border-zinc-100 p-6 rounded-xl flex flex-col justify-between group hover:border-amber-400 transition-colors shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                            <FileText className="text-amber-500 mb-4" size={24} />
+                            <div>
+                                <p className="text-4xl font-headline font-black text-zinc-900 tracking-tighter">{totalDocsSent}</p>
+                                <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 group-hover:text-amber-600 transition-colors">Documentos Enviados</p>
+                            </div>
+                        </div>
+                        <div className="bg-white border border-zinc-100 p-6 rounded-xl flex flex-col justify-between group hover:border-red-400 transition-colors shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                            <div className="flex items-center gap-2 mb-4">
+                                <AlertTriangle className="text-red-500" size={24} />
+                            </div>
+                            <div>
+                                <p className="text-4xl font-headline font-black text-zinc-900 tracking-tighter">{pendingDocs}</p>
+                                <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 group-hover:text-red-500 transition-colors">Revisões Pendentes</p>
+                            </div>
+                        </div>
+                        <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl flex items-center justify-between overflow-hidden relative shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+                            <div className="z-10">
+                                <p className="text-4xl font-headline font-black text-amber-400 tracking-tighter">{completionRate}%</p>
+                                <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mt-1">Progresso Geral</p>
+                            </div>
+                            {/* Progress Ring representation */}
+                            <div className="relative flex items-center justify-center transform scale-[1.3] translate-x-6 opacity-80">
+                                <svg className="w-24 h-24 -rotate-90">
+                                    <circle cx="48" cy="48" fill="transparent" r="38" stroke="rgba(255,255,255,0.1)" strokeWidth="8"></circle>
+                                    <circle cx="48" cy="48" fill="transparent" r="38" stroke="#fbbf24" strokeDasharray="239" strokeDashoffset={239 - (239 * completionRate) / 100} strokeLinecap="round" strokeWidth="8" className="transition-all duration-1000 ease-out"></circle>
+                                </svg>
+                            </div>
+                        </div>
+                    </section>
 
-                            const myDoc = clientDocs.find(cd => cd.documentTypeId === rd.documentTypeId && cd.ownerUserId === currentUser?.userId);
+                    {/* Main Content: Contributor List / Checklist */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                        <h2 className="font-headline text-3xl font-black tracking-tighter text-zinc-900">
+                            {isAdmin ? 'Checklist da Equipe' : 'Meus Documentos'}
+                        </h2>
+                        {isAdmin && (
+                            <div className="flex items-center gap-2 bg-white border border-zinc-100 px-4 py-2 rounded-lg focus-within:ring-2 focus-within:ring-amber-400 focus-within:border-transparent transition-all shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+                                <SearchIcon className="text-zinc-400" size={16} />
+                                <input
+                                    className="bg-transparent border-none focus:ring-0 text-sm font-medium w-full sm:w-48 outline-none text-zinc-900"
+                                    placeholder="Buscar usuários..."
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="space-y-6">
+                        {filteredMembers.length === 0 && (
+                            <div className="text-center py-12 bg-white rounded-xl border border-zinc-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                                <Users size={40} className="mx-auto text-zinc-300 mb-3" />
+                                <h3 className="text-lg font-bold text-zinc-900 font-headline">Nenhum membro encontrado</h3>
+                                <p className="text-sm text-zinc-500">Ajuste os filtros ou convide novos contribuidores.</p>
+                            </div>
+                        )}
+
+                        {filteredMembers.map((member: any) => {
+                            const isExpanded = expandedUsers[member.userId] ?? true;
+                            const userDocs = clientDocs.filter(d => d.ownerUserId === member.userId);
+                            const userApproved = userDocs.filter(d => d.status === 'approved').length;
+                            const completePercent = requiredDocs.length > 0 ? (userApproved / requiredDocs.length) * 100 : 100;
 
                             return (
-                                <div key={rd.id} className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                    <div>
-                                        <h3 style={{ fontSize: '1.2rem', fontWeight: 600 }}>{rd.documentType.name}</h3>
-                                        {rd.documentType.description && <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)' }}>{rd.documentType.description}</p>}
+                                <div key={member.userId} className={`bg-white rounded-xl overflow-hidden border transition-all duration-200 ${isExpanded ? 'border-zinc-200 shadow-[0_10px_40px_rgba(0,0,0,0.05)]' : 'border-zinc-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'}`}>
+                                    {/* User Header */}
+                                    <div className="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer hover:bg-zinc-50 transition-colors" onClick={() => toggleUserExpand(member.userId)}>
+                                        <div className="flex items-center gap-4">
+                                            <div className="min-w-12 h-12 w-12 rounded-lg bg-amber-50 flex items-center justify-center font-headline font-black text-xl text-amber-600 border border-amber-100">
+                                                {member.user.name.substring(0, 2).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-headline text-lg md:text-xl font-black tracking-tight text-zinc-900 flex items-center gap-2">
+                                                    {member.user.name}
+                                                    {/* @ts-ignore */}
+                                                    {member.permissions?.includes('PROJECT_EDIT') && <Shield size={14} className="text-amber-500" title="Admin" />}
+                                                </h3>
+                                                <p className="text-xs md:text-sm text-zinc-500 font-medium">{member.user.email}</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex-1 w-full max-w-md ml-0 md:ml-auto">
+                                            <div className="flex justify-between items-end mb-2">
+                                                <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400">Progresso</span>
+                                                <span className="text-sm font-headline font-bold text-zinc-900">
+                                                    {userApproved} / {requiredDocs.length} <span className="text-zinc-500 font-normal">Concluídos</span>
+                                                </span>
+                                            </div>
+                                            <div className="w-full h-2 bg-zinc-100 rounded-full overflow-hidden">
+                                                <div
+                                                    className={`h-full transition-all duration-500 ${completePercent === 100 ? 'bg-tertiary' : 'bg-primary-fixed-dim'}`}
+                                                    style={{ width: `${completePercent}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+
+                                        <button className="flex items-center gap-2 text-zinc-400 font-headline font-bold hover:text-amber-500 self-start md:self-auto mt-2 md:mt-0 transition-colors">
+                                            <span className="text-sm">{isExpanded ? 'Ocultar' : 'Detalhes'}</span>
+                                            <ChevronDown size={18} className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                                        </button>
                                     </div>
 
-                                    {myDoc ? (
-                                        <div style={{ padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Status:</span>
-                                                {getDocStatusBadge(myDoc.status)}
-                                            </div>
-                                            <div className="doc-file-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px' }}>
-                                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', whiteSpace: 'nowrap' }}>Arquivo:</span>
-                                                <button onClick={() => handleViewFile(myDoc.file.url)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--accent-light)', textDecoration: 'underline', fontWeight: 600, fontSize: '0.95rem', padding: 0, textAlign: 'right', wordBreak: 'break-all' }}>
-                                                    {myDoc.file.originalName}
-                                                </button>
-                                            </div>
-                                            {myDoc.status === 'rejected' && myDoc.rejectionReason && (
-                                                <div style={{ padding: '8px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '4px', borderLeft: '3px solid var(--danger)', marginTop: '8px' }}>
-                                                    <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Recusado:</span> {myDoc.rejectionReason}
+                                    {/* Document Rows (Expandable) */}
+                                    {isExpanded && (
+                                        <div className="bg-zinc-50/30 px-4 md:px-8 pb-6 pt-4 border-t border-zinc-100">
+                                            {requiredDocs.length === 0 ? (
+                                                <p className="py-4 text-zinc-500 text-sm italic">Nenhum documento obrigatório configurado para este projeto.</p>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    {requiredDocs.map(rd => {
+                                                        const doc = userDocs.find(cd => cd.documentTypeId === rd.documentTypeId);
+                                                        const statusStyle = getStatusStyle(doc?.status || 'missing');
+                                                        const isUploading = uploadingDocType === `${rd.documentTypeId}-${member.userId}`;
+                                                        const progress = uploadProgress[`${rd.documentTypeId}-${member.userId}`];
+
+                                                        return (
+                                                            <div key={rd.id} className="py-4 px-5 md:px-6 rounded-xl border border-zinc-200/60 bg-white/50 flex flex-col md:flex-row md:items-center justify-between gap-6 hover:bg-white hover:shadow-[0_4px_20px_rgba(0,0,0,0.03)] transition-all duration-300 group">
+                                                                <div className="flex items-start md:items-center gap-4 w-full md:w-auto">
+                                                                    <div className={`mt-1 md:mt-0 min-w-10 h-10 w-10 shrink-0 rounded-lg flex items-center justify-center ${doc ? 'bg-white border border-zinc-200 text-zinc-600 shadow-sm' : 'bg-amber-50/50 border border-dashed border-amber-200 text-amber-500'}`}>
+                                                                        {doc ? <FileIcon size={18} /> : <AlertTriangle size={18} />}
+                                                                    </div>
+                                                                    <div>
+                                                                        <h4 className="text-sm font-headline font-bold text-zinc-900 leading-tight">{rd.documentType.name}</h4>
+                                                                        <p className="text-[10px] mt-1 font-bold uppercase tracking-widest text-zinc-400 line-clamp-1">{rd.documentType.description || 'OBRIGATÓRIO'}</p>
+                                                                        {doc?.status === 'rejected' && doc.rejectionReason && (
+                                                                            <p className="text-xs text-red-500 mt-1 font-medium bg-red-50 inline-block px-2 py-0.5 rounded">Motivo: {doc.rejectionReason}</p>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+
+                                                                <div className="flex flex-wrap items-center gap-4 md:gap-8 ml-14 md:ml-0">
+                                                                    <span className={`px-3 py-1.5 ${statusStyle.bg} text-[10px] font-bold uppercase tracking-wider rounded-full shadow-sm`}>
+                                                                        {statusStyle.label}
+                                                                    </span>
+
+                                                                    <div className="flex flex-wrap items-center gap-3 opacity-90 group-hover:opacity-100 transition-opacity">
+                                                                        {doc && (
+                                                                            <>
+                                                                                <button onClick={() => handleViewFile(doc.file.url)} className="text-[11px] font-headline font-bold text-zinc-700 hover:text-amber-600 flex items-center gap-1.5 bg-white border border-zinc-200 px-3 py-1.5 rounded-lg shadow-sm transition-all hover:border-amber-400">
+                                                                                    <Eye size={14} /> Ver
+                                                                                </button>
+                                                                                <button onClick={() => handleDownloadFile(doc)} className="text-[11px] font-headline font-bold text-zinc-700 hover:text-amber-600 flex items-center gap-1.5 bg-white border border-zinc-200 px-3 py-1.5 rounded-lg shadow-sm transition-all hover:border-amber-400">
+                                                                                    <Download size={14} /> Baixar
+                                                                                </button>
+
+                                                                                {isAdmin && doc.status === 'pending' && (
+                                                                                    <>
+                                                                                        <span className="text-zinc-200 hidden sm:inline">|</span>
+                                                                                        <button onClick={() => updateDocStatus(doc.id, 'approved')} className="text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                                                                                            Aprovar
+                                                                                        </button>
+                                                                                        <button onClick={() => {
+                                                                                            const reason = prompt('Motivo da rejeição:');
+                                                                                            if (reason !== null) updateDocStatus(doc.id, 'rejected', reason);
+                                                                                        }} className="text-[11px] font-bold text-red-700 hover:bg-red-100 flex items-center gap-1.5 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                                                                                            Rejeitar
+                                                                                        </button>
+                                                                                    </>
+                                                                                )}
+                                                                            </>
+                                                                        )}
+
+                                                                        {(!doc || doc.status === 'rejected') && (!isAdmin || isAdmin && !doc) && (
+                                                                            <>
+                                                                                {doc && <span className="text-zinc-200 hidden sm:inline">|</span>}
+                                                                                <DropzoneUploader
+                                                                                    onUpload={(files) => handleUploadSpecificDocument(files, rd.documentTypeId, member.userId)}
+                                                                                    isUploading={isUploading}
+                                                                                    progress={progress}
+                                                                                    label={doc ? "Re-enviar" : "Upload"}
+                                                                                />
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             )}
-                                            {/* Allow re-upload if rejected */}
-                                            {myDoc.status === 'rejected' && (
-                                                <div style={{ marginTop: '8px' }}>
-                                                    <DropzoneUploader
-                                                        onUpload={(files) => handleUploadSpecificDocument(files, rd.documentTypeId)}
-                                                        isUploading={uploadingDocType === `${rd.documentTypeId}-${currentUser?.userId}`}
-                                                        progress={uploadProgress[`${rd.documentTypeId}-${currentUser?.userId}`]}
-                                                        label="Re-enviar"
-                                                    />
-                                                </div>
-                                            )}
-                                        </div>
-                                    ) : (
-                                        <div style={{ padding: '16px', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '16px', border: '1px dashed rgba(239, 68, 68, 0.3)' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Status:</span>
-                                                <span style={{ fontWeight: 600, color: 'var(--danger)' }}>Não enviado</span>
-                                            </div>
-                                            <DropzoneUploader
-                                                onUpload={(files) => handleUploadSpecificDocument(files, rd.documentTypeId)}
-                                                isUploading={uploadingDocType === `${rd.documentTypeId}-${currentUser?.userId}`}
-                                                progress={uploadProgress[`${rd.documentTypeId}-${currentUser?.userId}`]}
-                                                label="Fazer Upload"
-                                            />
                                         </div>
                                     )}
                                 </div>
@@ -411,243 +573,55 @@ export default function ProjectPage() {
                         })}
                     </div>
                 </div>
-            )}
-            {/* END CHECKLIST SECTION */}
 
-            {/* ADMIN DOCUMENT REVIEW SECTION (Grouped by User) */}
-            {isAdmin && (
-                <div style={{ marginBottom: '40px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                        <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Documentos dos Usuários</h2>
-                    </div>
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                        {members.filter(m => !m.permissions?.includes('PROJECT_EDIT') || m.userId !== currentUser?.userId).map((member: any) => (
-                            <div key={member.userId} className="glass-panel" style={{ padding: '24px' }}>
-                                <h3 style={{ fontSize: '1.2rem', fontWeight: 600, borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '12px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <Users size={20} color="var(--accent-light)" /> {member.user.name}
-                                    <span style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', fontWeight: 400 }}>({member.user.email})</span>
-                                </h3>
-
-                                {requiredDocs.length === 0 ? (
-                                    <p style={{ color: 'var(--text-secondary)' }}>Nenhum documento exigido cadastrado.</p>
-                                ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                        {requiredDocs.map(rd => {
-                                            const doc = clientDocs.find(cd => cd.documentTypeId === rd.documentTypeId && cd.ownerUserId === member.userId);
-
-                                            return (
-                                                <div key={rd.id} className="admin-doc-item" style={{
-                                                    padding: '16px',
-                                                    background: 'rgba(255,255,255,0.03)',
-                                                    borderRadius: '8px',
-                                                    borderLeft: `3px solid ${doc ? (doc.status === 'pending' ? 'var(--warning)' : doc.status === 'approved' ? 'var(--success)' : 'var(--danger)') : 'var(--card-border)'}`,
-                                                    display: 'flex',
-                                                    flexWrap: 'wrap',
-                                                    gap: '16px',
-                                                    justifyContent: 'space-between',
-                                                    alignItems: 'center'
-                                                }}>
-                                                    <div style={{ flex: '1', minWidth: '250px' }}>
-                                                        <h4 style={{ fontWeight: 600, fontSize: '1.05rem', marginBottom: '8px' }}>{rd.documentType.name}</h4>
-
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                                                            <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem' }}>Status:</span>
-                                                            {doc ? getDocStatusBadge(doc.status) : <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Não enviado</span>}
-                                                        </div>
-
-                                                        {doc && (
-                                                            <div style={{ marginBottom: '8px' }}>
-                                                                <span style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginRight: '6px' }}>Arquivo:</span>
-                                                                <button onClick={() => handleViewFile(doc.file.url)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontWeight: 600, color: 'var(--text-primary)', textDecoration: 'underline', padding: 0 }}>
-                                                                    {doc.file.originalName}
-                                                                </button>
-                                                            </div>
-                                                        )}
-
-                                                        {doc?.status === 'pending' && (
-                                                            <div className="admin-doc-actions" style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                                                                <button onClick={() => handleViewFile(doc.file.url)} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'blue', color: 'white', padding: '4px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}>
-                                                                    <Eye size={14} /> Visualizar
-                                                                </button>
-                                                                <button onClick={() => updateDocStatus(doc.id, 'approved')} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--success)', color: 'white', padding: '4px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}>
-                                                                    <Check size={14} /> Aprovar
-                                                                </button>
-                                                                <button onClick={() => {
-                                                                    const reason = prompt('Motivo da rejeição:');
-                                                                    if (reason !== null) updateDocStatus(doc.id, 'rejected', reason);
-                                                                }} style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'var(--danger)', color: 'white', padding: '4px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }}>
-                                                                    <X size={14} /> Rejeitar
-                                                                </button>
-                                                            </div>
-                                                        )}
-
-                                                        {doc?.status === 'rejected' && doc.rejectionReason && (
-                                                            <div style={{ marginTop: '8px', padding: '6px 10px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '4px', color: 'var(--danger)', fontSize: '0.85rem' }}>
-                                                                Motivo: {doc.rejectionReason}
-                                                            </div>
-                                                        )}
-                                                    </div>
-
-                                                    <div className="admin-doc-upload" style={{ minWidth: '180px' }}>
-                                                        <DropzoneUploader
-                                                            onUpload={(files) => handleUploadSpecificDocument(files, rd.documentTypeId, member.userId)}
-                                                            isUploading={uploadingDocType === `${rd.documentTypeId}-${member.userId}`}
-                                                            progress={uploadProgress[`${rd.documentTypeId}-${member.userId}`]}
-                                                            label={doc ? "Substituir arquivo" : "Fazer Upload"}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-
-                        {members.filter(m => !m.permissions?.includes('PROJECT_EDIT') || m.userId !== currentUser?.userId).length === 0 && (
-                            <p style={{ color: 'var(--text-secondary)' }}>Não há outros usuários vinculados a este projeto.</p>
-                        )}
-                    </div>
-                </div>
-            )}
-            {/* END ADMIN DOCUMENT REVIEW */}
-
-            {/* {    <div
-                {...getRootProps()}
-                className="glass-panel"
-                style={{
-                    padding: '60px 40px',
-                    textAlign: 'center',
-                    border: `2px dashed ${isDragActive ? 'var(--accent-light)' : 'var(--card-border)'}`,
-                    backgroundColor: isDragActive ? 'rgba(139, 92, 246, 0.1)' : 'var(--card-bg)',
-                    cursor: hasPermission('DOCUMENT_UPLOAD') ? 'pointer' : 'not-allowed',
-                    transition: 'all 0.2s ease',
-                    marginBottom: '40px',
-                    opacity: hasPermission('DOCUMENT_UPLOAD') ? 1 : 0.6
-                }}
-            >
-                <input {...getInputProps()} />
-                <UploadCloud size={48} color={isDragActive ? 'var(--accent-light)' : 'var(--text-secondary)'} style={{ margin: '0 auto 16px' }} />
-                {!hasPermission('DOCUMENT_UPLOAD') ? (
-                    <p style={{ color: 'var(--text-secondary)' }}>Você não tem permissão para enviar arquivos para este projeto.</p>
-                ) : uploading ? (
-                    <p style={{ fontSize: '1.2rem', fontWeight: 500 }}>Enviando...</p>
-                ) : isDragActive ? (
-                    <p style={{ fontSize: '1.2rem', fontWeight: 500, color: 'var(--accent-light)' }}>Solte os arquivos aqui...</p>
-                ) : (
-                    <div>
-                        <p style={{ fontSize: '1.2rem', fontWeight: 500, marginBottom: '8px' }}>Arraste & solte os arquivos aqui, ou clique para selecionar</p>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Suporta JPG, PNG, PDF, DOCX</p>
+                {isAdmin && (
+                    <div className="fixed bottom-24 right-6 md:bottom-10 lg:bottom-10 lg:right-10 z-50">
+                        <button onClick={generateInvite} className="w-14 h-14 bg-amber-400 hover:bg-amber-500 text-amber-950 rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all active:scale-95 group relative">
+                            <Plus className="text-3xl" size={28} />
+                            <span className="absolute right-full mr-4 bg-zinc-900 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-md pointer-events-none">
+                                Convidar Usuário
+                            </span>
+                        </button>
                     </div>
                 )}
-            </div>}
+            </main>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '24px' }}>
-                {files.length === 0 && <p style={{ color: 'var(--text-secondary)' }}>Nenhum documento neste projeto ainda.</p>}
-                {files.map((file: any) => {
-                    const result = file.verificationResults?.[0];
-                    return (
-                        <div key={file.id} className="glass-panel" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                                <div style={{ padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '12px' }}>
-                                    <FileIcon size={24} color="var(--accent-light)" />
-                                </div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                    <h3 style={{ fontSize: '1.1rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }} title={file.originalName}>
-                                        {file.originalName}
-                                    </h3>
-                                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '4px' }}>
-                                        {(file.size / 1024 / 1024).toFixed(2)} MB • {new Date(file.createdAt).toLocaleDateString()}
-                                    </p>
-                                </div>
-                            </div>
+            {/* Bottom Nav for Mobile */}
+            <nav className="md:hidden fixed bottom-0 w-full bg-white border-t border-zinc-100 h-16 flex items-center justify-around z-50 px-2 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] pb-safe-area">
+                <button onClick={() => router.push('/dashboard')} className="flex flex-col items-center gap-1 text-zinc-400 hover:text-amber-500 transition-colors p-2">
+                    <LayoutGrid size={18} className="md:size-5" />
+                    <span className="text-[9px] font-bold uppercase tracking-tighter">Dash</span>
+                </button>
+                <button className="flex flex-col items-center gap-1 text-zinc-400 hover:text-amber-500 transition-colors p-2">
+                    <FolderOpen size={18} className="md:size-5" />
+                    <span className="text-[9px] font-bold uppercase tracking-tighter">Arq</span>
+                </button>
 
-                            {result && (
-                                <div style={{ padding: '16px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', borderLeft: `4px solid ${getStatusColor(result.status)}` }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, color: getStatusColor(result.status) }}>
-                                            {getStatusIcon(result.status)}
-                                            {result.status}
-                                        </div>
-                                        <div style={{ fontSize: '1.2rem', fontWeight: 700 }}>
-                                            {result.score}<span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>/100</span>
-                                        </div>
-                                    </div>
-                                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                                        {result.recommendation && result.recommendation.split(' | ').map((rec: string, i: number) => (
-                                            <p key={i} style={{ display: 'flex', gap: '6px', marginBottom: '4px' }}><span style={{ color: 'var(--accent-light)' }}>•</span> {rec}</p>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div> */}
+                {isAdmin && (
+                    <button onClick={generateInvite} className="w-10 h-10 bg-amber-400 rounded-full flex items-center justify-center -translate-y-4 shadow-lg text-amber-950 active:scale-95 transition-transform border-4 border-white">
+                        <Plus size={20} />
+                    </button>
+                )}
 
-            {/* Manage Users Modal */}
-            {showManageModal && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px' }}>
-                    <div className="glass-panel2" style={{ width: '100%', maxWidth: '600px', padding: '32px', maxHeight: '90vh', overflowY: 'auto' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                            <h2 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Gerenciar Usuários</h2>
-                            <button onClick={() => setShowManageModal(false)} style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer' }}><XCircle size={24} /></button>
-                        </div>
-
-                        <div style={{ marginBottom: '32px' }}>
-                            <div className="modal-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                <h3>Convidar novo usuário</h3>
-                                <button onClick={generateInvite} style={{ background: 'var(--accent-light)', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.9rem' }}>Gerar Link</button>
-                            </div>
-                            {inviteLink && (
-                                <div className="modal-invite-row" style={{ display: 'flex', gap: '8px' }}>
-                                    <input type="text" readOnly value={inviteLink} style={{ flex: 1, padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--card-border)', background: 'rgba(0,0,0,0.2)', color: 'var(--text-primary)' }} />
-                                    <button onClick={copyInvite} style={{ background: 'var(--card-bg)', border: '1px solid var(--card-border)', color: 'var(--text-primary)', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}><LinkIcon size={18} /></button>
-                                </div>
-                            )}
-                        </div>
-
-                        <div>
-                            <h3 style={{ marginBottom: '16px' }}>Membros ({members.length})</h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                {members.map((m: any) => {
-                                    const isAdmin = m.permissions?.includes('PROJECT_EDIT');
-                                    return (
-                                        <div key={m.userId} className="member-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
-                                            <div>
-                                                <p style={{ fontWeight: 600 }}>{m.user.name}</p>
-                                                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{m.user.email}</p>
-                                            </div>
-                                            <div className="member-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <span style={{ fontSize: '0.8rem', padding: '4px 8px', borderRadius: '12px', background: isAdmin ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255,255,255,0.1)', color: isAdmin ? 'var(--accent-light)' : 'var(--text-secondary)' }}>
-                                                    {isAdmin ? 'Admin' : 'Membro'}
-                                                </span>
-                                                {!isAdmin && hasPermission('MEMBER_MANAGE') && (
-                                                    <button onClick={() => promoteToAdmin(m.userId)} title="Promover a admin" style={{ background: 'transparent', border: 'none', color: 'var(--accent-light)', cursor: 'pointer' }}><Shield size={18} /></button>
-                                                )}
-                                                {hasPermission('MEMBER_MANAGE') && (
-                                                    <button onClick={() => removeMember(m.userId)} title="Remover membro" style={{ background: 'transparent', border: 'none', color: 'var(--danger)', cursor: 'pointer' }}><Trash2 size={18} /></button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
+                <button className="flex flex-col items-center gap-1 text-zinc-400 hover:text-amber-500 transition-colors p-2">
+                    <Users size={18} className="md:size-5" />
+                    <span className="text-[9px] font-bold uppercase tracking-tighter">Equipe</span>
+                </button>
+                <button className="flex flex-col items-center gap-1 text-amber-500 p-2">
+                    <UserIcon size={18} className="md:size-5" />
+                    <span className="text-[9px] font-bold uppercase tracking-tighter">Eu</span>
+                </button>
+            </nav>
         </div>
     );
 }
 
-function DropzoneUploader({ onUpload, isUploading, label = 'Fazer Upload', progress }: { onUpload: (files: File[]) => void, isUploading: boolean, label?: string, progress?: number }) {
+function DropzoneUploader({ onUpload, isUploading, label = 'Upload', progress }: { onUpload: (files: File[]) => void, isUploading: boolean, label?: string, progress?: number }) {
     const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
         onDrop: onUpload,
         maxFiles: 1,
         disabled: isUploading,
-        noClick: true, // We handle click manually to avoid bubbling issues
+        noClick: true,
     });
 
     return (
@@ -656,32 +630,25 @@ function DropzoneUploader({ onUpload, isUploading, label = 'Fazer Upload', progr
             onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                if (!isUploading) {
-                    open();
-                }
+                if (!isUploading) open();
             }}
-            style={{
-                border: `1px dashed ${isDragActive ? 'var(--accent-light)' : 'rgba(255,255,255,0.2)'}`,
-                padding: '12px 16px',
-                borderRadius: '8px',
-                cursor: isUploading ? 'not-allowed' : 'pointer',
-                background: isDragActive ? 'rgba(139, 92, 246, 0.1)' : 'var(--card-bg)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                color: 'var(--text-secondary)',
-                position: 'relative',
-                overflow: 'hidden'
-            }}
+            className={`
+                relative overflow-hidden shrink-0 flex items-center gap-2 px-4 py-2 
+                text-[11px] font-bold uppercase tracking-widest rounded-lg transition-all
+                ${isUploading ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed' : 'bg-zinc-900 text-white hover:bg-zinc-800 cursor-pointer shadow-md hover:shadow-lg'}
+                ${isDragActive ? 'ring-2 ring-amber-400 outline-none' : ''}
+            `}
         >
             {isUploading && progress !== undefined && (
-                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${progress}%`, background: 'rgba(139, 92, 246, 0.15)', transition: 'width 0.2s', zIndex: 0 }} />
+                <div
+                    className="absolute left-0 top-0 bottom-0 bg-amber-400/20 transition-all duration-300"
+                    style={{ width: `${progress}%`, zIndex: 0 }}
+                />
             )}
-            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <input {...getInputProps()} />
-                {isUploading ? <Loader2 size={18} className="animate-spin" /> : <UploadCloud size={18} color="var(--accent-light)" />}
-                <span style={{ fontSize: '0.95rem', fontWeight: 600 }}>{isUploading ? `Enviando... ${progress !== undefined && progress > 0 ? progress + '%' : ''}` : label}</span>
+            <input {...getInputProps()} />
+            <div className="relative z-10 flex items-center gap-1.5 whitespace-nowrap text-[10px] md:text-xs">
+                {isUploading ? <Loader2 size={12} className="animate-spin" /> : <UploadCloud size={12} />}
+                {isUploading ? `Enviando ${progress ? progress + '%' : ''}` : label}
             </div>
         </div>
     );

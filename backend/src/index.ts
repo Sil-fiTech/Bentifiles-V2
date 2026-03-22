@@ -18,11 +18,14 @@ const app = express();
 const port = Number(process.env.PORT) || 4000;
 
 app.use(helmet());
+
 app.use(cors({
     origin: ['https://bentifiles.tech', 'https://www.bentifiles.tech', 'http://localhost:3000', 'http://localhost:3001'],
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    methods: 'GET,POST,PUT,DELETE,PATCH,OPTIONS',
     credentials: true
 }));
+console.log('CORS loaded with PATCH string format');
+
 app.use(express.json());
 app.set('trust proxy', 1);
 

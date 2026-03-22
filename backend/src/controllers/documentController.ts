@@ -58,13 +58,13 @@ export const createDocumentType = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: 'Já existe um tipo de documento com este nome' });
         }
 
-        const data: any = { 
-            name, 
+        const data: any = {
+            name,
             slug,
             description,
             isDefault: false,
             createdById: userId,
-            tenantId: userId 
+            tenantId: userId
         };
 
         const newType = await prisma.documentType.create({ data });
@@ -139,11 +139,11 @@ export const deleteDocumentType = async (req: AuthRequest, res: Response) => {
             return res.status(403).json({ message: 'Tipos de documento padrão não podem ser excluídos' });
         }
 
-        await prisma.documentType.update({ 
+        await prisma.documentType.update({
             where: { id },
             data: { deletedAt: new Date() }
         });
-        
+
         res.json({ message: 'Tipo de documento removido' });
     } catch (error) {
         console.error('Error deleting document type:', error);
@@ -214,7 +214,7 @@ export const configureProjectRequiredDocuments = async (req: AuthRequest, res: R
 export const uploadClientDocument = async (req: AuthRequest, res: Response) => {
     try {
         const projectId = req.body.projectId || (req.projectId as string);
-        const { documentTypeId, ownerUserId, fileId } = req.body;
+        const { documentTypeId, ownerUserId, fileId, status } = req.body;
         const uploadedByUserId = req.user?.userId;
         const role = req.projectRole;
 
@@ -236,6 +236,12 @@ export const uploadClientDocument = async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ message: 'Este tipo de documento não é exigido para este projeto' });
         }
 
+        let docStatus: 'pending' | 'approved' | 'rejected' = 'pending';
+        if (status === 'APPROVED') {
+            docStatus = 'approved';
+        } else if (status === 'REJECTED') {
+            docStatus = 'rejected';
+        }
         const clientDoc = await prisma.clientDocument.create({
             data: {
                 projectId,
@@ -243,7 +249,7 @@ export const uploadClientDocument = async (req: AuthRequest, res: Response) => {
                 ownerUserId,
                 uploadedByUserId,
                 fileId,
-                status: 'pending'
+                status: docStatus
             },
             include: {
                 documentType: true,

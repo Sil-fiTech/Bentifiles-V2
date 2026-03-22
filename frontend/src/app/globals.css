@@ -1,4 +1,60 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200..1000;1,200..1000&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-secondary-fixed-dim: #c8c6c5;
+  --color-tertiary: #1b6d24;
+  --color-on-secondary-fixed-variant: #474746;
+  --color-inverse-primary: #f0c12c;
+  --color-error-container: #ffdad6;
+  --color-on-background: #1a1c1c;
+  --color-primary-fixed: #ffdf90;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container: #eeeeee;
+  --color-surface-bright: #f9f9f9;
+  --color-tertiary-container: #8bdd85;
+  --color-background: #f9f9f9;
+  --color-on-primary: #ffffff;
+  --color-on-primary-fixed-variant: #584400;
+  --color-inverse-surface: #2f3131;
+  --color-error: #ba1a1a;
+  --color-on-secondary-container: #636262;
+  --color-on-error-container: #93000a;
+  --color-on-primary-container: #695200;
+  --color-tertiary-fixed-dim: #88d982;
+  --color-surface-container-high: #e8e8e8;
+  --color-outline: #807661;
+  --color-on-tertiary-fixed-variant: #005312;
+  --color-secondary-fixed: #e5e2e1;
+  --color-on-primary-fixed: #241a00;
+  --color-tertiary-fixed: #a3f69c;
+  --color-inverse-on-surface: #f1f1f1;
+  --color-on-tertiary-container: #0c631b;
+  --color-secondary-container: #e2dfde;
+  --color-surface-dim: #dadada;
+  --color-surface-tint: #755b00;
+  --color-on-tertiary: #ffffff;
+  --color-primary-container: #f4c430;
+  --color-outline-variant: #d1c5ad;
+  --color-on-error: #ffffff;
+  --color-surface-container-highest: #e2e2e2;
+  --color-surface: #f9f9f9;
+  --color-on-secondary: #ffffff;
+  --color-on-surface: #1a1c1c;
+  --color-surface-variant: #e2e2e2;
+  --color-primary: #755b00;
+  --color-primary-fixed-dim: #f0c12c;
+  --color-on-surface-variant: #4e4634;
+  --color-surface-container-low: #f3f3f3;
+  --color-on-secondary-fixed: #1c1b1b;
+  --color-on-tertiary-fixed: #002204;
+  --color-secondary: #5f5e5e;
+
+  --font-headline: "Space Grotesk", sans-serif;
+  --font-body: "Manrope", sans-serif;
+  --font-label: "Manrope", sans-serif;
+}
 
 :root {
   --bg-color: #0d0f1a;
@@ -42,6 +98,41 @@ button {
   border: none;
   background: none;
   font-family: inherit;
+}
+
+/* Custom scrollbar */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s;
+}
+
+.custom-scrollbar:hover {
+  scrollbar-color: rgba(161, 131, 55, 0.4) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 10px;
+  transition: background 0.3s;
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb {
+  background: rgba(161, 131, 55, 0.35);
+}
+
+.custom-scrollbar:hover::-webkit-scrollbar-thumb:hover {
+  background: rgba(161, 131, 55, 0.6);
 }
 
 /* Glassmorphism utilities */
