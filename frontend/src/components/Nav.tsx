@@ -53,7 +53,7 @@ export function Nav({
 
     return (
         <header className={`bg-white/80 backdrop-blur-xl z-40 flex justify-center w-full border-b border-zinc-100/50 ${className || 'sticky top-0'}`}>
-            <div className="flex justify-between items-center w-full max-w-7xl px-4 md:px-8 py-4">
+            <div className="flex justify-between items-center w-full max-w-7xl px-6 md:px-12 lg:px-16 py-4">
                 {/* Left Section - Nav */}
                 <div className="flex items-center gap-8">
                     <div className="flex items-center gap-3">

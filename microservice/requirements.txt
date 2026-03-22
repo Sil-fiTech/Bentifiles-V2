@@ -8,3 +8,7 @@ pydantic-settings
 python-multipart
 easyocr
 python-dotenv
+numpy==2.4.3
+opencv-python==4.13.0.92
+packaging==26.0
+pillow==12.1.1

@@ -60,13 +60,12 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                 const pythonResponse = await axios.post(`${url}/analyze`, formData, {
                     headers: {
                         ...formData.getHeaders(),
-                    },
+                },
                 });
-
-                analysisData = pythonResponse.data;
+            analysisData = pythonResponse.data;
                 console.log('[Upload] Analysis complete:', analysisData);
 
-                if (!analysisData.approved) {
+                if (analysisData.status == "REJECTED" ) {      
                     console.log('[Upload] Image rejected by analysis service');
                     // @ts-ignore   
                     await prisma.rejectedUpload.create({
@@ -82,9 +81,11 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                         message: "A imagem não atende aos critérios mínimos de qualidade",
                         analysis: {
                             approved: analysisData.approved,
-                            score: analysisData.score,
+                            score: analysisData.final_score ?? analysisData.score,
                             minScore: analysisData.minScore,
-                            reasons: analysisData.reasons
+                            reasons: analysisData.reasons,
+                            quality_label: analysisData.quality_label,
+                            metrics: analysisData.metrics
                         }
                     });
                 }
@@ -146,10 +147,14 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
             message: 'Upload realizado com sucesso',
             analysis: analysisData ? {
                 approved: analysisData.approved,
-                score: analysisData.score
+                score: analysisData.final_score ?? analysisData.score,
+                quality_label: analysisData.quality_label,
+                reasons: analysisData.reasons,
+                metrics: analysisData.metrics
             } : undefined,
             document: resultingFile,
-            file: resultingFile
+            file: resultingFile,
+            docStatus: analysisData?.status
         });
 
     } catch (error) {
