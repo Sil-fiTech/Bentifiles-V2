@@ -142,9 +142,9 @@ function HomeContent() {
             </button>
           </form>
 
-          <div className="flex items-center gap-4 my-8">
+          <div className="flex items-center gap-4 my-8 mx-2">
             <hr className="flex-1 border-t border-zinc-200/80" />
-            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-2 bg-white/30 rounded-full py-1">ou conecte com</span>
+            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-3 bg-white/50 rounded-full py-1.5">Ou conecte com</span>
             <hr className="flex-1 border-t border-zinc-200/80" />
           </div>
 

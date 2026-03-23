@@ -30,7 +30,7 @@ app.use(express.json());
 app.set('trust proxy', 1);
 
 app.use('/api/auth', authRoutes);
-app.use('/api/users', authRoutes);
+app.use('/api/users', usersRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/documents', documentRoutes);

@@ -208,7 +208,7 @@ export default function Dashboard() {
                 />
 
                 {/* Content Canvas */}
-                <div className="w-full max-w-7xl mx-auto px-6 py-6 md:px-12 lg:px-16 md:py-8 space-y-8 md:space-y-12 pb-24">
+                <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-8 md:space-y-12 pb-24">
                     {/* Section: Recent Projects */}
                     <section>
                         <div className="flex justify-between items-end mb-6">
@@ -219,9 +219,9 @@ export default function Dashboard() {
                         </div>
 
                         {projects.length === 0 ? (
-                            <div className="bg-white p-8 rounded-lg shadow-sm border border-zinc-100 text-center">
+                            <div className="bg-white p-6 rounded-xl shadow-sm border border-zinc-200/60 text-center">
                                 <p className="text-zinc-500">Você não possui nenhum projeto ainda.</p>
-                                <button onClick={handleCreateProject} className="mt-4 text-amber-600 font-bold hover:underline">
+                                <button onClick={handleCreateProject} className="mt-4 px-6 py-2.5 bg-amber-50 text-amber-600 font-bold hover:bg-amber-100/80 rounded-xl transition-all active:scale-[0.98]">
                                     Criar o primeiro projeto
                                 </button>
                             </div>
@@ -233,7 +233,7 @@ export default function Dashboard() {
                                         onClick={() => router.push(`/projects/${project.id}`)}
                                         className="flex-shrink-0 w-[400px] group cursor-pointer"
                                     >
-                                        <div className="bg-white rounded-lg overflow-hidden shadow-[0px_20px_40px_rgba(26,28,28,0.06)] group-hover:bg-primary-fixed transition-colors duration-150">
+                                        <div className="bg-white rounded-xl overflow-hidden shadow-sm group-hover:bg-primary-fixed transition-colors duration-150 border border-zinc-200/60">
                                             <div className="h-48 relative overflow-hidden bg-zinc-800 flex items-center justify-center">
                                                 <div className="absolute inset-0 opacity-20 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%,transparent_100%)] bg-[length:20px_20px]"></div>
                                                 <Folder size={48} className="text-amber-400 opacity-80 group-hover:scale-110 transition-transform duration-300" />
@@ -263,7 +263,7 @@ export default function Dashboard() {
 
                     {/* Section: Asset Intelligence */}
                     <section>
-                        <div className="flex justify-between items-center mb-8">
+                        <div className="flex justify-between items-center mb-6">
                             <div>
                                 <h2 className="text-3xl font-headline font-black text-zinc-900 tracking-tighter">Inteligência dos Arquivos</h2>
                                 <div className="flex items-center gap-2 mt-1">
@@ -281,9 +281,9 @@ export default function Dashboard() {
                                 <div className="flex bg-zinc-100/80 p-2 rounded-xl border border-zinc-200/60 shadow-inner">
                                     <button
                                         onClick={() => setActiveTab('my-docs')}
-                                        className={`flex items-center gap-3 px-8 py-3.5 text-[15px] font-bold transition-all duration-300 rounded-lg whitespace-nowrap ${!isReviewTab
+                                        className={`flex items-center gap-3 px-8 py-3.5 text-[15px] font-bold transition-all duration-300 rounded-xl whitespace-nowrap active:scale-[0.98] ${!isReviewTab
                                             ? 'bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] text-zinc-900 ring-1 ring-zinc-200/50'
-                                            : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-200/50'
+                                            : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50'
                                             }`}
                                     >
                                         <Folder size={16} className={`transition-colors duration-300 ${!isReviewTab ? "text-amber-500" : "text-zinc-400"}`} />
@@ -295,9 +295,9 @@ export default function Dashboard() {
                                 <div className="flex bg-zinc-100/80 p-2 rounded-xl border border-zinc-200/60 shadow-inner">
                                     <button
                                         onClick={() => setActiveTab('review-docs')}
-                                        className={`flex items-center gap-3 px-8 py-3.5 text-[15px] font-bold transition-all duration-300 rounded-lg whitespace-nowrap ${isReviewTab
+                                        className={`flex items-center gap-3 px-8 py-3.5 text-[15px] font-bold transition-all duration-300 rounded-xl whitespace-nowrap active:scale-[0.98] ${isReviewTab
                                             ? 'bg-white shadow-[0_2px_12px_rgba(0,0,0,0.06)] text-zinc-900 ring-1 ring-zinc-200/50'
-                                            : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-200/50'
+                                            : 'text-zinc-500 hover:text-zinc-700 hover:bg-zinc-50'
                                             }`}
                                     >
                                         <CheckCircle2 size={16} className={`transition-colors duration-300 ${isReviewTab ? "text-amber-500" : "text-zinc-400"}`} />
@@ -315,8 +315,8 @@ export default function Dashboard() {
 
 
                         {/* Stats Cards */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-                            <div className="bg-white border border-zinc-100 rounded-lg p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                            <div className="bg-white border border-zinc-200/60 rounded-xl p-6 shadow-sm">
                                 <div className="flex items-center gap-3 mb-2">
                                     <div className="w-8 h-8 rounded-md bg-zinc-100 flex items-center justify-center">
                                         <Zap size={16} className="text-zinc-500" />
@@ -329,7 +329,7 @@ export default function Dashboard() {
                                     {isReviewTab ? pendingFiles.length : stats.totalUploads}
                                 </p>
                             </div>
-                            <div className="bg-white border border-zinc-100 rounded-lg p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                            <div className="bg-white border border-zinc-200/60 rounded-xl p-6 shadow-sm">
                                 <div className="flex items-center gap-3 mb-2">
                                     <div className="w-8 h-8 rounded-md bg-tertiary-container flex items-center justify-center">
                                         <CheckCircle2 size={16} className="text-tertiary" />
@@ -342,7 +342,7 @@ export default function Dashboard() {
                                     {isReviewTab ? "0" : files.length}
                                 </p>
                             </div>
-                            <div className="bg-white border border-zinc-100 rounded-lg p-5 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                            <div className="bg-white border border-zinc-200/60 rounded-xl p-6 shadow-sm">
                                 <div className="flex items-center gap-3 mb-2">
                                     <div className="w-8 h-8 rounded-md bg-amber-50 flex items-center justify-center">
                                         <XCircle size={16} className="text-amber-500" />
@@ -359,7 +359,7 @@ export default function Dashboard() {
 
 
                         {displayedFiles.length === 0 ? (
-                            <div className="bg-white p-8 rounded-lg shadow-sm border border-zinc-100 text-center">
+                            <div className="bg-white p-6 rounded-xl shadow-sm border border-zinc-200/60 text-center">
                                 <p className="text-zinc-500">
                                     {isReviewTab
                                         ? "Não há documentos pendentes para avaliação no momento."
@@ -367,7 +367,7 @@ export default function Dashboard() {
                                 </p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                                 {displayedFiles.slice(0, 8).map((file) => {
                                     console.log(file);
                                     const result = file.verificationResults?.[0];
@@ -403,8 +403,8 @@ export default function Dashboard() {
                                     }
 
                                     return (
-                                        <div key={file.id} className="bg-white border border-zinc-100 p-4 rounded-md group hover:bg-primary-fixed transition-colors duration-150 relative shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
-                                            <div className="aspect-square bg-zinc-50 rounded-sm overflow-hidden mb-4 relative flex items-center justify-center">
+                                        <div key={file.id} className="bg-white border border-zinc-200/60 p-6 rounded-xl group hover:bg-primary-fixed transition-colors duration-150 relative shadow-sm">
+                                            <div className="aspect-square bg-zinc-50 rounded-lg overflow-hidden mb-4 relative flex items-center justify-center">
                                                 {file.mimetype?.startsWith('image/') ? (
                                                     <img
                                                         src={file.url}
@@ -457,7 +457,7 @@ export default function Dashboard() {
 
                 {/* Floating Action Component (Processing Info) */}
                 {hasActiveProcessing && (
-                    <div className="fixed bottom-8 right-8 bg-zinc-900 text-white p-4 rounded-lg shadow-2xl flex items-center gap-4 z-50 border-l-4 border-amber-400">
+                    <div className="fixed bottom-8 right-8 bg-zinc-900 text-white p-4 rounded-xl shadow-2xl flex items-center gap-4 z-50 border-l-4 border-amber-400">
                         <div className="w-10 h-10 rounded-full bg-amber-400/20 flex items-center justify-center">
                             <Zap className="text-amber-400" size={20} fill="currentColor" />
                         </div>

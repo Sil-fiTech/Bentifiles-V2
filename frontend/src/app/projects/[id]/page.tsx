@@ -308,7 +308,7 @@ export default function ProjectPage() {
                     }}
                 />
 
-                <div className="w-full max-w-7xl mx-auto px-6 py-8 md:px-12 lg:px-16 space-y-8 md:space-y-12 pb-24">
+                <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-8 md:space-y-12 pb-24">
                     {/* Header Section RESTORED */}
                     <header className="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div>
@@ -345,7 +345,7 @@ export default function ProjectPage() {
                                                     setNewName(project?.name || '');
                                                     setIsEditingName(true);
                                                 }}
-                                                className="text-zinc-400 hover:text-amber-500 transition-colors p-1"
+                                                className="text-zinc-400 hover:text-amber-500 hover:bg-zinc-50 p-1.5 rounded-lg transition-colors"
                                                 title="Renomear Projeto"
                                             >
                                                 <Edit size={20} />
@@ -365,7 +365,7 @@ export default function ProjectPage() {
                         </div>
                         {isAdmin && (
                             <div className="flex flex-wrap items-center gap-4">
-                                <button onClick={generateInvite} className="px-4 py-2 bg-zinc-200 text-zinc-900 hover:bg-zinc-300 transition-colors rounded-lg font-semibold text-sm flex items-center gap-2 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
+                                <button onClick={generateInvite} className="px-5 py-2.5 bg-zinc-200 text-zinc-900 hover:bg-zinc-300 transition-colors rounded-xl font-headline font-bold text-sm flex items-center gap-2 shadow-sm active:scale-[0.98]">
                                     <Share size={16} /> Convite
                                 </button>
                               {/*   <button className="px-6 py-2 bg-primary-container text-on-primary-fixed font-headline font-bold rounded-lg flex items-center gap-2 hover:bg-primary transition-colors shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
@@ -376,22 +376,22 @@ export default function ProjectPage() {
                     </header>
 
                     {/* Summary Metrics: Bento Grid (Admin only context or personal metrics) */}
-                    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                        <div className="bg-white border border-zinc-100 p-6 rounded-xl flex flex-col justify-between group hover:border-amber-400 transition-colors shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                    <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <div className="bg-white border border-zinc-200/60 p-6 rounded-xl flex flex-col justify-between group hover:border-amber-400 transition-colors shadow-sm">
                             <Users className="text-amber-500 mb-4" size={24} />
                             <div>
                                 <p className="text-4xl font-headline font-black text-zinc-900 tracking-tighter">{totalUsers}</p>
                                 <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 group-hover:text-amber-600 transition-colors">Contribuidores</p>
                             </div>
                         </div>
-                        <div className="bg-white border border-zinc-100 p-6 rounded-xl flex flex-col justify-between group hover:border-amber-400 transition-colors shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                        <div className="bg-white border border-zinc-200/60 p-6 rounded-xl flex flex-col justify-between group hover:border-amber-400 transition-colors shadow-sm">
                             <FileText className="text-amber-500 mb-4" size={24} />
                             <div>
                                 <p className="text-4xl font-headline font-black text-zinc-900 tracking-tighter">{totalDocsSent}</p>
                                 <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 group-hover:text-amber-600 transition-colors">Documentos Enviados</p>
                             </div>
                         </div>
-                        <div className="bg-white border border-zinc-100 p-6 rounded-xl flex flex-col justify-between group hover:border-red-400 transition-colors shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                        <div className="bg-white border border-zinc-200/60 p-6 rounded-xl flex flex-col justify-between group hover:border-red-400 transition-colors shadow-sm">
                             <div className="flex items-center gap-2 mb-4">
                                 <AlertTriangle className="text-red-500" size={24} />
                             </div>
@@ -400,7 +400,7 @@ export default function ProjectPage() {
                                 <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 group-hover:text-red-500 transition-colors">Revisões Pendentes</p>
                             </div>
                         </div>
-                        <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl flex items-center justify-between overflow-hidden relative shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
+                        <div className="bg-zinc-900 border border-zinc-800 p-6 rounded-xl flex items-center justify-between overflow-hidden relative shadow-sm">
                             <div className="z-10">
                                 <p className="text-4xl font-headline font-black text-amber-400 tracking-tighter">{completionRate}%</p>
                                 <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mt-1">Progresso Geral</p>
@@ -421,7 +421,7 @@ export default function ProjectPage() {
                             {isAdmin ? 'Checklist da Equipe' : 'Meus Documentos'}
                         </h2>
                         {isAdmin && (
-                            <div className="flex items-center gap-2 bg-white border border-zinc-100 px-4 py-2 rounded-lg focus-within:ring-2 focus-within:ring-amber-400 focus-within:border-transparent transition-all shadow-[0_2px_12px_rgba(0,0,0,0.03)]">
+                            <div className="flex items-center gap-2 bg-white border border-zinc-200/60 px-4 py-2 rounded-lg focus-within:ring-2 focus-within:ring-amber-400 focus-within:border-transparent transition-all shadow-sm">
                                 <SearchIcon className="text-zinc-400" size={16} />
                                 <input
                                     className="bg-transparent border-none focus:ring-0 text-sm font-medium w-full sm:w-48 outline-none text-zinc-900"
@@ -436,7 +436,7 @@ export default function ProjectPage() {
 
                     <div className="space-y-6">
                         {filteredMembers.length === 0 && (
-                            <div className="text-center py-12 bg-white rounded-xl border border-zinc-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+                            <div className="text-center py-12 bg-white rounded-xl border border-zinc-200/60 shadow-sm">
                                 <Users size={40} className="mx-auto text-zinc-300 mb-3" />
                                 <h3 className="text-lg font-bold text-zinc-900 font-headline">Nenhum membro encontrado</h3>
                                 <p className="text-sm text-zinc-500">Ajuste os filtros ou convide novos contribuidores.</p>
@@ -450,7 +450,7 @@ export default function ProjectPage() {
                             const completePercent = requiredDocs.length > 0 ? (userApproved / requiredDocs.length) * 100 : 100;
 
                             return (
-                                <div key={member.userId} className={`bg-white rounded-xl overflow-hidden border transition-all duration-200 ${isExpanded ? 'border-zinc-200 shadow-[0_10px_40px_rgba(0,0,0,0.05)]' : 'border-zinc-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)]'}`}>
+                                <div key={member.userId} className={`bg-white rounded-xl overflow-hidden border transition-all duration-200 ${isExpanded ? 'border-zinc-200/60 shadow-md' : 'border-zinc-200/60 shadow-sm'}`}>
                                     {/* User Header */}
                                     <div className="p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer hover:bg-zinc-50 transition-colors" onClick={() => toggleUserExpand(member.userId)}>
                                         <div className="flex items-center gap-4">
@@ -482,7 +482,7 @@ export default function ProjectPage() {
                                             </div>
                                         </div>
 
-                                        <button className="flex items-center gap-2 text-zinc-400 font-headline font-bold hover:text-amber-500 self-start md:self-auto mt-2 md:mt-0 transition-colors">
+                                        <button className="flex items-center gap-2 text-zinc-400 font-headline font-bold hover:text-amber-500 hover:bg-amber-50 px-3 py-1.5 rounded-lg self-start md:self-auto mt-2 md:mt-0 transition-colors">
                                             <span className="text-sm">{isExpanded ? 'Ocultar' : 'Detalhes'}</span>
                                             <ChevronDown size={18} className={`transform transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                                         </button>
@@ -490,7 +490,7 @@ export default function ProjectPage() {
 
                                     {/* Document Rows (Expandable) */}
                                     {isExpanded && (
-                                        <div className="bg-zinc-50/30 px-4 md:px-8 pb-6 pt-4 border-t border-zinc-100">
+                                        <div className="bg-zinc-50/30 px-4 md:px-8 pb-6 pt-4 border-t border-zinc-200/60">
                                             {requiredDocs.length === 0 ? (
                                                 <p className="py-4 text-zinc-500 text-sm italic">Nenhum documento obrigatório configurado para este projeto.</p>
                                             ) : (
@@ -524,23 +524,23 @@ export default function ProjectPage() {
                                                                     <div className="flex flex-wrap items-center gap-3 opacity-90 group-hover:opacity-100 transition-opacity">
                                                                         {doc && (
                                                                             <>
-                                                                                <button onClick={() => handleViewFile(doc.file.url)} className="text-[11px] font-headline font-bold text-zinc-700 hover:text-amber-600 flex items-center gap-1.5 bg-white border border-zinc-200 px-3 py-1.5 rounded-lg shadow-sm transition-all hover:border-amber-400">
+                                                                                <button onClick={() => handleViewFile(doc.file.url)} className="text-[11px] font-headline font-bold text-zinc-700 hover:text-amber-600 flex items-center gap-1.5 bg-white border border-zinc-200 px-4 py-2 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:border-amber-400 active:scale-[0.98]">
                                                                                     <Eye size={14} /> Ver
                                                                                 </button>
-                                                                                <button onClick={() => handleDownloadFile(doc)} className="text-[11px] font-headline font-bold text-zinc-700 hover:text-amber-600 flex items-center gap-1.5 bg-white border border-zinc-200 px-3 py-1.5 rounded-lg shadow-sm transition-all hover:border-amber-400">
+                                                                                <button onClick={() => handleDownloadFile(doc)} className="text-[11px] font-headline font-bold text-zinc-700 hover:text-amber-600 flex items-center gap-1.5 bg-white border border-zinc-200 px-4 py-2 rounded-lg shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:border-amber-400 active:scale-[0.98]">
                                                                                     <Download size={14} /> Baixar
                                                                                 </button>
 
                                                                                 {isAdmin && doc.status === 'pending' && (
                                                                                     <>
                                                                                         <span className="text-zinc-200 hidden sm:inline">|</span>
-                                                                                        <button onClick={() => updateDocStatus(doc.id, 'approved')} className="text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                                                                                        <button onClick={() => updateDocStatus(doc.id, 'approved')} className="text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 px-4 py-2 rounded-lg transition-colors shadow-sm active:scale-[0.98]">
                                                                                             Aprovar
                                                                                         </button>
                                                                                         <button onClick={() => {
                                                                                             const reason = prompt('Motivo da rejeição:');
                                                                                             if (reason !== null) updateDocStatus(doc.id, 'rejected', reason);
-                                                                                        }} className="text-[11px] font-bold text-red-700 hover:bg-red-100 flex items-center gap-1.5 bg-red-50 border border-red-200 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                                                                                        }} className="text-[11px] font-bold text-red-700 hover:bg-red-100 flex items-center gap-1.5 bg-red-50 border border-red-200 px-4 py-2 rounded-lg transition-colors shadow-sm active:scale-[0.98]">
                                                                                             Rejeitar
                                                                                         </button>
                                                                                     </>
@@ -587,7 +587,7 @@ export default function ProjectPage() {
             </main>
 
             {/* Bottom Nav for Mobile */}
-            <nav className="md:hidden fixed bottom-0 w-full bg-white border-t border-zinc-100 h-16 flex items-center justify-around z-50 px-2 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] pb-safe-area">
+            <nav className="md:hidden fixed bottom-0 w-full bg-white border-t border-zinc-200/60 h-16 flex items-center justify-around z-50 px-2 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] pb-safe-area">
                 <button onClick={() => router.push('/dashboard')} className="flex flex-col items-center gap-1 text-zinc-400 hover:text-amber-500 transition-colors p-2">
                     <LayoutGrid size={18} className="md:size-5" />
                     <span className="text-[9px] font-bold uppercase tracking-tighter">Dash</span>
@@ -633,9 +633,9 @@ function DropzoneUploader({ onUpload, isUploading, label = 'Upload', progress }:
                 if (!isUploading) open();
             }}
             className={`
-                relative overflow-hidden shrink-0 flex items-center gap-2 px-4 py-2 
-                text-[11px] font-bold uppercase tracking-widest rounded-lg transition-all
-                ${isUploading ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed' : 'bg-zinc-900 text-white hover:bg-zinc-800 cursor-pointer shadow-md hover:shadow-lg'}
+                relative overflow-hidden shrink-0 flex items-center gap-2 px-5 py-2.5 
+                text-[11px] font-bold uppercase tracking-widest rounded-xl transition-all active:scale-[0.98]
+                ${isUploading ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed' : 'bg-amber-400 text-amber-950 hover:bg-amber-500 cursor-pointer shadow-[0_4px_12px_rgba(0,0,0,0.1)] hover:shadow-[0_6px_16px_rgba(0,0,0,0.15)]'}
                 ${isDragActive ? 'ring-2 ring-amber-400 outline-none' : ''}
             `}
         >
