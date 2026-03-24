@@ -1,0 +1,410 @@
+// page.module.scss — Document Types Dashboard
+@use '../../../styles/tokens' as *;
+@use '../../../styles/mixins' as *;
+
+// ------------------------------------------------------------------
+// Root
+// ------------------------------------------------------------------
+.root {
+  background: var(--color-background);
+  font-family: $font-body;
+  color: var(--color-on-surface);
+  overflow: hidden;
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+.main {
+  flex: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--color-surface);
+  overflow-y: auto;
+  position: relative;
+  width: 100%;
+  @include custom-scrollbar;
+}
+
+.canvas {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: $sp-6 $sp-4 $sp-16;
+
+  @include md { padding: $sp-8 $sp-6 $sp-16; }
+  @include lg { padding: $sp-8 $sp-8 $sp-16; }
+}
+
+// ------------------------------------------------------------------
+// Loading
+// ------------------------------------------------------------------
+.loadingScreen {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+}
+
+// ------------------------------------------------------------------
+// Section header
+// ------------------------------------------------------------------
+.sectionHeader {
+  @include flex-between;
+  margin-bottom: $sp-8;
+  align-items: flex-end;
+}
+
+.sectionTitle {
+  font-family: $font-headline;
+  font-size: 1.875rem;
+  font-weight: 900;
+  color: $zinc-900;
+  letter-spacing: -0.04em;
+}
+
+.sectionSubtitle {
+  font-size: 0.875rem;
+  color: $zinc-500;
+  font-weight: 500;
+  margin-top: $sp-1;
+}
+
+// ------------------------------------------------------------------
+// Create Card
+// ------------------------------------------------------------------
+.createSection {
+  @include card-base;
+  padding: $sp-6;
+  margin-bottom: $sp-8;
+}
+
+.createHeader {
+  display: flex;
+  align-items: center;
+  gap: $sp-3;
+  margin-bottom: $sp-6;
+}
+
+.createIconWrapper {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: $radius-lg;
+  background: $amber-50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid $amber-100;
+  color: $amber-500;
+}
+
+.createTitle {
+  font-family: $font-headline;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: $zinc-900;
+}
+
+.createForm {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-4;
+
+  @include md {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.fieldGroup {
+  width: 100%;
+
+  @include md {
+    flex: 1;
+    &.nameField { max-width: 33%; }
+  }
+}
+
+.fieldLabel {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: $zinc-600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: $sp-1_5;
+  padding: 0 $sp-1;
+}
+
+.fieldInput {
+  @include input-base;
+  width: 100%;
+  background: $zinc-50;
+}
+
+.addBtn {
+  @include btn-primary;
+  width: 100%;
+  justify-content: center;
+  padding: $sp-3 $sp-5;
+  margin-top: 1.375rem; // To align with inputs (label + gap)
+
+  @include md {
+    width: auto;
+  }
+}
+
+.alertBox {
+  margin-top: $sp-4;
+  display: flex;
+  align-items: flex-start;
+  gap: $sp-2;
+  background: $amber-50;
+  color: $amber-700;
+  padding: $sp-3;
+  border-radius: $radius-lg;
+  border: 1px solid rgba($amber-200, 0.5);
+  font-size: 0.875rem;
+  font-weight: 500;
+
+  span.bold { font-weight: 700; }
+  svg { color: $amber-500; flex-shrink: 0; margin-top: 2px; }
+}
+
+// ------------------------------------------------------------------
+// Empty state
+// ------------------------------------------------------------------
+.emptyState {
+  @include card-base;
+  padding: $sp-6;
+  text-align: center;
+}
+
+.emptyText {
+  color: $zinc-500;
+}
+
+// ------------------------------------------------------------------
+// Documents Grid
+// ------------------------------------------------------------------
+.docGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $sp-6;
+
+  @include md { grid-template-columns: repeat(2, 1fr); }
+  @include lg { grid-template-columns: repeat(3, 1fr); }
+}
+
+.docCard {
+  @include card-base;
+  padding: $sp-6;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
+  &:hover {
+    box-shadow: $shadow-md;
+    border-color: $zinc-300;
+  }
+}
+
+// Editing Mode Check
+.editMode {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+  flex: 1;
+
+  .editFieldGroup {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+  }
+
+  .editLabel {
+    display: block;
+    font-size: 0.625rem;
+    font-weight: 700;
+    color: $zinc-500;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: $sp-1;
+    margin-left: 2px;
+  }
+
+  .editInput {
+    @include input-base;
+    padding: $sp-2 $sp-3;
+    border-color: rgba($amber-400, 0.5);
+    font-size: 0.875rem;
+
+    &:focus {
+      border-color: $amber-400;
+      box-shadow: 0 0 0 2px rgba($amber-500, 0.2);
+    }
+  }
+
+  .editTextarea {
+    @extend .editInput;
+    resize: none;
+    height: 5rem;
+    font-size: 0.75rem;
+    color: $zinc-600;
+  }
+}
+
+// Normal Mode
+.docCardContent {
+  flex: 1;
+}
+
+.docCardHeader {
+  @include flex-between;
+  align-items: flex-start;
+  margin-bottom: $sp-3;
+}
+
+.docIconWrapper {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: $radius-lg;
+  background: $zinc-50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba($zinc-200, 0.6);
+  color: $zinc-400;
+  transition: $transition-fast;
+
+  .docCard:hover & {
+    color: $amber-500;
+    border-color: $amber-100;
+    background: rgba($amber-50, 0.5);
+  }
+}
+
+.systemBadge {
+  background: $zinc-100;
+  color: $zinc-500;
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: $sp-1 $sp-2_5;
+  border-radius: $radius-full;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.docName {
+  font-family: $font-headline;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: $zinc-900;
+  margin-bottom: $sp-1;
+  display: -webkit-box;
+  line-clamp: 1;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.docDescription {
+  font-size: 0.875rem;
+  color: $zinc-500;
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.5rem; // ~2 lines
+
+  .italic {
+    font-style: italic;
+    opacity: 0.5;
+  }
+}
+
+// ------------------------------------------------------------------
+// Card Footer (Actions)
+// ------------------------------------------------------------------
+.cardFooter {
+  margin-top: $sp-6;
+  padding-top: $sp-4;
+  border-top: 1px solid rgba($zinc-200, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: $sp-2;
+}
+
+.actionBtn {
+  @include btn-reset;
+  padding: $sp-2;
+  color: $zinc-400;
+  border-radius: $radius-lg;
+  transition: $transition-base;
+
+  &:hover {
+    color: $amber-600;
+    background: $amber-50;
+  }
+
+  &.danger:hover {
+    color: $red-600;
+    background: $red-50;
+  }
+}
+
+.readOnlyText {
+  font-size: 0.625rem;
+  color: $zinc-400;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.editBtnGroup {
+  display: flex;
+  gap: $sp-2;
+}
+
+.cancelBtn {
+  @include btn-reset;
+  padding: $sp-1_5 $sp-3;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $zinc-500;
+  border-radius: $radius-lg;
+
+  &:hover {
+    color: $zinc-700;
+    background: $zinc-100;
+  }
+}
+
+.saveBtn {
+  @include btn-reset;
+  padding: $sp-1_5 $sp-3;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $emerald-700;
+  background: $emerald-50;
+  border: 1px solid $emerald-200;
+  border-radius: $radius-lg;
+  display: flex;
+  align-items: center;
+  gap: $sp-1_5;
+  transition: $transition-fast;
+
+  &:hover {
+    background: $emerald-100;
+  }
+  &:active {
+    transform: scale(0.98);
+  }
+}

@@ -1,0 +1,351 @@
+// page.module.scss — Login Page
+@use '../styles/tokens' as *;
+@use '../styles/mixins' as *;
+// ------------------------------------------------------------------
+// Root container
+// ------------------------------------------------------------------
+.root {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: $zinc-50;
+  overflow: hidden;
+  font-family: $font-body;
+  color: $zinc-900;
+
+  ::selection { background: rgba($amber-200, 1); }
+}
+
+// ------------------------------------------------------------------
+// Background decoration
+// ------------------------------------------------------------------
+.orb1 {
+  position: absolute;
+  top: -10%;
+  left: -10%;
+  width: 40%;
+  height: 40%;
+  background: rgba($amber-400, 0.4);
+  border-radius: $radius-full;
+  filter: blur(120px);
+  mix-blend-mode: multiply;
+  animation: pulse 8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.orb2 {
+  position: absolute;
+  bottom: -10%;
+  right: -10%;
+  width: 40%;
+  height: 40%;
+  background: rgba(165, 180, 252, 0.3);
+  border-radius: $radius-full;
+  filter: blur(120px);
+  mix-blend-mode: multiply;
+  animation: pulse 10s ease-in-out 2s infinite;
+  pointer-events: none;
+}
+
+.orb3 {
+  position: absolute;
+  top: 20%;
+  right: 10%;
+  width: 30%;
+  height: 30%;
+  background: rgba(251, 207, 232, 0.3);
+  border-radius: $radius-full;
+  filter: blur(100px);
+  mix-blend-mode: multiply;
+  animation: pulse 12s ease-in-out 4s infinite;
+  pointer-events: none;
+}
+
+.gridPattern {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMWgydjJIMUMxeiIgZmlsbD0iI2Y0ZjRmNSIgZmlsbC1vcGFjaXR5PSIwLjM1IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48L3N2Zz4=");
+  mask-image: linear-gradient(to bottom, white, transparent);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50%       { opacity: 1;   transform: scale(1.05); }
+}
+
+// ------------------------------------------------------------------
+// Content column
+// ------------------------------------------------------------------
+.main {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 480px;
+  padding: $sp-4;
+
+  @include sm { padding: $sp-6; }
+  @include lg { padding: 0; }
+}
+
+// ------------------------------------------------------------------
+// Brand header
+// ------------------------------------------------------------------
+.brand {
+  margin-bottom: $sp-8;
+  
+  @include sm { margin-bottom: $sp-10; }
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.logoWrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $sp-3;
+  margin-bottom: $sp-4;
+
+  @include sm { margin-bottom: $sp-6; }
+  transition: $transition-slow;
+  cursor: default;
+
+  &:hover { transform: scale(1.05); }
+}
+
+.logoImg {
+  width: 80px;
+  height: 80px;
+
+  @include sm {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+.headline {
+  font-family: $font-headline;
+  font-size: clamp(2.5rem, 6vw, 3.75rem);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: $zinc-900;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.08));
+  line-height: 1;
+}
+
+.headlineAccent {
+  color: transparent;
+  background: linear-gradient(to right, $amber-400, $amber-600);
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+.tagline {
+  margin-top: $sp-3;
+  font-size: 0.875rem;
+
+  @include sm {
+    margin-top: $sp-4;
+    font-size: 0.9375rem;
+  }
+  color: $zinc-500;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+// ------------------------------------------------------------------
+// Auth card (glassmorphism)
+// ------------------------------------------------------------------
+.card {
+  @include glass-card-light;
+  padding: $sp-6;
+
+  @include sm { padding: $sp-10; }
+}
+
+.cardHeader {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: $sp-8;
+}
+
+.cardTitle {
+  font-family: $font-headline;
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: $zinc-900;
+  letter-spacing: -0.03em;
+}
+
+.cardSubtitle {
+  font-size: 0.875rem;
+  color: $zinc-500;
+  margin-top: $sp-1;
+  font-weight: 500;
+}
+
+// ------------------------------------------------------------------
+// Form
+// ------------------------------------------------------------------
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-5;
+}
+
+.fieldGroup {
+  position: relative;
+
+  &:focus-within .fieldLabel { color: $amber-600; }
+}
+
+.fieldLabel {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: $zinc-600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: $sp-2;
+  padding: 0 $sp-1;
+  transition: $transition-base;
+}
+
+.fieldInput {
+  @include input-base;
+}
+
+// Submit button
+.submitBtn {
+  @include btn-primary;
+  margin-top: $sp-2;
+  width: 100%;
+  justify-content: center;
+  padding: $sp-4;
+  font-size: 1rem;
+  border-radius: $radius-xl;
+  background: linear-gradient(to right, $amber-400, $amber-500);
+  box-shadow: 0 20px 40px rgba($amber-500, 0.2);
+  overflow: hidden;
+  position: relative;
+
+  &:hover:not(:disabled) {
+    box-shadow: 0 20px 40px rgba($amber-500, 0.4);
+  }
+}
+
+.submitBtnSheen {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(100%);
+  transition: transform 0.3s ease-in-out;
+
+  .submitBtn:hover & { transform: translateY(0); }
+}
+
+.submitBtnText {
+  position: relative;
+  z-index: 1;
+}
+
+// Divider
+.divider {
+  display: flex;
+  align-items: center;
+  gap: $sp-4;
+  margin: $sp-8 $sp-2;
+}
+
+.dividerLine {
+  flex: 1;
+  border: none;
+  border-top: 1px solid rgba($zinc-200, 0.8);
+}
+
+.dividerLabel {
+  font-size: 0.625rem;
+  font-weight: 900;
+  color: $zinc-400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: $sp-1_5 $sp-3;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: $radius-full;
+  white-space: nowrap;
+}
+
+// Google button
+.googleBtn {
+  @include btn-reset;
+  width: 100%;
+  padding: $sp-4;
+  background: white;
+  border: 1px solid rgba($zinc-200, 0.8);
+  border-radius: $radius-xl;
+  color: $zinc-700;
+  font-family: $font-headline;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $sp-3;
+  box-shadow: $shadow-sm;
+  transition: $transition-base;
+
+  &:hover:not(:disabled) {
+    background: $zinc-50;
+    border-color: $zinc-300;
+    box-shadow: $shadow-md;
+  }
+
+  &:active:not(:disabled) { transform: scale(0.98); }
+}
+
+// ------------------------------------------------------------------
+// Footer toggle
+// ------------------------------------------------------------------
+.footer {
+  margin-top: $sp-8;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: $sp-4 $sp-6;
+  border-radius: $radius-xl;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  display: inline-block;
+  width: max-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.footerText {
+  font-size: 0.875rem;
+  color: $zinc-600;
+  font-weight: 500;
+}
+
+.footerToggle {
+  @include btn-reset;
+  color: $amber-600;
+  font-weight: 900;
+  margin-left: $sp-1_5;
+  text-decoration: underline;
+  text-decoration-color: rgba($amber-600, 0.3);
+  text-underline-offset: 4px;
+  transition: $transition-base;
+
+  &:hover {
+    color: $amber-700;
+    text-decoration-color: $amber-600;
+  }
+}
