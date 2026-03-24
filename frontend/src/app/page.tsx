@@ -33,7 +33,7 @@ function HomeContent() {
       router.push('/dashboard');
       return;
     }
-    
+
     if (status !== 'loading') {
       const localToken = localStorage.getItem('token');
       if (localToken) {
@@ -44,7 +44,7 @@ function HomeContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!turnstileToken) {
       toast.error('Por favor, complete a verificação de segurança');
       return;
@@ -54,17 +54,40 @@ function HomeContent() {
 
     try {
       const endpoint = isLogin ? '/api/users/login' : '/api/users/register';
-      const payload = isLogin 
-        ? { email, password, turnstileToken } 
+      const payload = isLogin
+        ? { email, password, turnstileToken }
         : { name, email, password, turnstileToken };
 
       const res = await api.post(endpoint, payload);
 
-      localStorage.setItem('token', res.data.token);
-      toast.success(res.data.message);
-      router.push('/dashboard');
+      if (isLogin) {
+        localStorage.setItem('token', res.data.token);
+        toast.success(res.data.message);
+        router.push('/dashboard');
+      } else {
+        toast.success('Conta criada! Verifique seu e-mail para validar a conta.');
+        setIsLogin(true);
+        setPassword('');
+      }
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Falha na autenticação');
+      if (error.response?.data?.error === 'EMAIL_NOT_VERIFIED') {
+        toast.error(error.response?.data?.message || 'E-mail não verificado.', {
+          action: {
+            label: 'Reenviar E-mail',
+            onClick: async () => {
+              try {
+                await api.post('/api/users/resend-verification', { email });
+                toast.success('Novo e-mail de verificação enviado! Verifique sua caixa de entrada.');
+              } catch (resendError) {
+                toast.error('Erro ao reenviar e-mail de verificação.');
+              }
+            }
+          },
+          duration: 10000 // Keep it longer so user can click
+        });
+      } else {
+        toast.error(error.response?.data?.message || 'Falha na autenticação');
+      }
     } finally {
       setLoading(false);
     }
@@ -152,8 +175,8 @@ function HomeContent() {
               />
             </div>
 
-            <Turnstile 
-              siteKey="0x4AAAAAACvFRhV6i6pVbKYu" 
+            <Turnstile
+              siteKey="0x4AAAAAACvhVvi_0lSDhv6U"
               onSuccess={(token: string) => setTurnstileToken(token)}
               options={{ theme: 'light' }}
             />

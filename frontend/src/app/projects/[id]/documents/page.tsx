@@ -1,6 +1,6 @@
 'use client';
 import api from '@/lib/api';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useRouter, useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
@@ -27,6 +27,7 @@ export default function ProjectSettingsPage() {
     // Document Config
     const [globalTypes, setGlobalTypes] = useState<any[]>([]);
     const [requiredDocs, setRequiredDocs] = useState<any[]>([]);
+    const pendingIdsRef = useRef<string[] | null>(null);
     const [templates, setTemplates] = useState<any[]>([]);
     const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
     const [docSearchTerm, setDocSearchTerm] = useState('');
@@ -88,6 +89,7 @@ export default function ProjectSettingsPage() {
                     ]);
                     
                     setRequiredDocs(reqDocsRes.data);
+                    pendingIdsRef.current = reqDocsRes.data.map((rd: any) => rd.documentTypeId);
                     setGlobalTypes(typesRes.data);
                     setTemplates(templatesRes.data);
                 } catch (e) {
@@ -103,26 +105,38 @@ export default function ProjectSettingsPage() {
 
     const toggleRequiredDocument = async (docTypeId: string) => {
         if (project?.status === 'ARCHIVED') { toast.error('Projeto arquivado.'); return; }
+        
+        // Garante que a gente leia os arrays de uma fila sincronizada que o React não atrasa
+        let currentIds = pendingIdsRef.current;
+        if (!currentIds) currentIds = requiredDocs.map(rd => rd.documentTypeId);
+
+        let newIds: string[] = [];
+        if (currentIds.includes(docTypeId)) {
+            newIds = currentIds.filter(id => id !== docTypeId);
+        } else {
+            newIds = [...currentIds, docTypeId];
+        }
+
+        // Atualiza a fila IMEDIATAMENTE antes do próximo clique do mouse
+        pendingIdsRef.current = newIds;
+
+        // Atualização Otimista da Interface
+        setRequiredDocs(newIds.map(id => ({ documentTypeId: id })));
+
         try {
             const token = session?.user?.token || localStorage.getItem('token');
-            const currentIds = requiredDocs.map(rd => rd.documentTypeId);
-            let newIds = [];
-
-            if (currentIds.includes(docTypeId)) {
-                newIds = currentIds.filter(id => id !== docTypeId);
-            } else {
-                newIds = [...currentIds, docTypeId];
-            }
-
             const res = await api.post(`/api/projects/${id}/required-documents`,
                 { documentTypeIds: newIds },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-
+            
+            // Re-sincroniza totalmente com o servidor para garantia 100%
+            pendingIdsRef.current = res.data.map((rd: any) => rd.documentTypeId);
             setRequiredDocs(res.data);
-            toast.success('Configuração atualizada');
         } catch (error) {
             toast.error('Falha ao atualizar configuração');
+            const token = session?.user?.token || localStorage.getItem('token');
+            if (token) fetchData(token, currentUser);
         }
     };
 

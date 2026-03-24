@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { register, login, googleLogin } from '../controllers/authController';
+import { register, login, googleLogin, verifyEmail, resendVerification } from '../controllers/authController';
 import rateLimit from 'express-rate-limit';
 
 const router = Router();
@@ -14,5 +14,7 @@ const authLimiter = rateLimit({
 router.post('/register', authLimiter, register);
 router.post('/login', authLimiter, login);
 router.post('/google', authLimiter, googleLogin);
+router.get('/verify-email', verifyEmail);
+router.post('/resend-verification', authLimiter, resendVerification);
 
 export default router;
