@@ -25,19 +25,27 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (account?.provider === 'google' && user) {
                 try {
                     // Chama o backend para criar ou buscar o usuário do banco
-                    const res = await api.post(`/api/auth/google`, {
-                        email: user.email,
-                        name: user.name,
-                        image: user.image,
-                        providerId: user.id || account.providerAccountId,
+                    const res = await fetch(`http://localhost:4000/api/auth/google`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            email: user.email,
+                            name: user.name,
+                            image: user.image,
+                            providerId: user.id || account.providerAccountId,
+                        }),
                     });
 
-                    if (res.data.user && res.data.token) {
+                    const data = await res.json();
+
+                    if (res.ok && data.user && data.token) {
                         // Salva os dados do backend no token do NextAuth
-                        token.backendToken = res.data.token;
-                        token.backendUserId = res.data.user.id;
+                        token.backendToken = data.token;
+                        token.backendUserId = data.user.id;
                     } else {
-                        throw new Error(res.data.message || 'Erro ao sincronizar com backend');
+                        throw new Error(data.message || 'Erro ao sincronizar com backend');
                     }
                 } catch (error) {
                     console.error('Erro na sincronização Google->Backend:', error);

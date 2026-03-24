@@ -3,6 +3,9 @@
 - DEPLOY
 
 # TODO:
+
+- RLS SUPABASE
+- AUTENTICACAO TERCEIRIZADA
 - Criacao de templates, ao criar o projeto que ele já venha com os tipos de documento pre definidos - V2
 - Arrumar página do projeto (Novo visual, novo layout, novas configurações (exemplo: Mudar nome do projeto, arquivar, deletar, etc))
 
