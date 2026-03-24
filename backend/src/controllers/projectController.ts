@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import prisma from '../prisma';
+import { generateSlug } from '../utils/slugify';
 
 export const getProjects = async (req: AuthRequest, res: Response) => {
     try {
@@ -8,7 +9,12 @@ export const getProjects = async (req: AuthRequest, res: Response) => {
         if (!userId) return res.status(401).json({ message: 'Não autorizado' });
 
         const memberships = await prisma.projectMembership.findMany({
-            where: { userId },
+            where: { 
+                userId,
+                project: {
+                    status: { not: 'DELETED' }
+                }
+            },
             include: { project: true },
         });
 
@@ -24,7 +30,7 @@ export const getProjects = async (req: AuthRequest, res: Response) => {
 export const createProject = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.userId;
-        const { name } = req.body;
+        const { name, templateId } = req.body;
         if (!userId) return res.status(401).json({ message: 'Unauthorized' });
 
         const projectName = name || 'Projeto';
@@ -33,6 +39,7 @@ export const createProject = async (req: AuthRequest, res: Response) => {
             data: {
                 name: projectName,
                 createdByUserId: userId,
+                templateId: templateId || undefined,
                 members: {
                     create: {
                         userId,
@@ -41,6 +48,52 @@ export const createProject = async (req: AuthRequest, res: Response) => {
                 },
             },
         });
+
+        if (templateId) {
+            const template = await prisma.template.findUnique({
+                where: { id: templateId },
+                include: { documentTypes: true }
+            });
+
+            if (template && template.documentTypes.length > 0) {
+                for (const tdt of template.documentTypes) {
+                    const slug = generateSlug(tdt.name);
+                    
+                    let docType = await prisma.documentType.findFirst({
+                        where: {
+                            slug,
+                            deletedAt: null,
+                            OR: [
+                                { isDefault: true },
+                                { tenantId: userId }
+                            ]
+                        }
+                    });
+
+                    if (!docType) {
+                        docType = await prisma.documentType.create({
+                            data: {
+                                name: tdt.name,
+                                slug,
+                                description: tdt.description,
+                                isDefault: false,
+                                createdById: userId,
+                                tenantId: userId
+                            }
+                        });
+                    }
+
+                    await prisma.projectRequiredDocument.create({
+                        data: {
+                            projectId: project.id,
+                            documentTypeId: docType.id,
+                            required: tdt.isRequired,
+                            order: tdt.order
+                        }
+                    });
+                }
+            }
+        }
 
         res.status(201).json({ project });
     } catch (error) {
@@ -116,7 +169,7 @@ export const getProjectDetails = async (req: AuthRequest, res: Response) => {
             }
         });
 
-        if (!project) return res.status(404).json({ message: 'Projeto não encontrado' });
+        if (!project || project.status === 'DELETED') return res.status(404).json({ message: 'Projeto não encontrado' });
 
         // Get client documents separately because they have complex includes
         const clientDocs = await prisma.clientDocument.findMany({
@@ -150,6 +203,7 @@ export const getProjectDetails = async (req: AuthRequest, res: Response) => {
             project: {
                 id: project.id,
                 name: project.name,
+                status: project.status,
                 createdAt: project.createdAt
             },
             files,
@@ -167,3 +221,147 @@ export const getProjectDetails = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
+
+export const applyTemplateToProject = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        const id = req.params.id as string;
+        const { templateId } = req.body;
+        
+        if (!userId) return res.status(401).json({ message: 'Não autorizado' });
+        if (!templateId) return res.status(400).json({ message: 'templateId é obrigatório' });
+
+        const template = await prisma.template.findUnique({
+            where: { id: templateId },
+            include: { documentTypes: true }
+        });
+
+        if (!template) {
+            return res.status(404).json({ message: 'Template não encontrado' });
+        }
+
+        const project = await prisma.project.findUnique({
+            where: { id }
+        });
+
+        if (!project || project.status === 'DELETED') {
+            return res.status(404).json({ message: 'Projeto não encontrado' });
+        }
+
+        // Get currently required docs to avoid duplicates
+        const existingReqs = await prisma.projectRequiredDocument.findMany({
+            where: { projectId: id }
+        });
+        const existingDocTypeIds = existingReqs.map(r => r.documentTypeId);
+
+        if (template.documentTypes.length > 0) {
+            for (const tdt of template.documentTypes) {
+                const slug = generateSlug(tdt.name);
+                
+                let docType = await prisma.documentType.findFirst({
+                    where: {
+                        slug,
+                        deletedAt: null,
+                        OR: [
+                            { isDefault: true },
+                            { tenantId: userId }
+                        ]
+                    }
+                });
+
+                if (!docType) {
+                    docType = await prisma.documentType.create({
+                        data: {
+                            name: tdt.name,
+                            slug,
+                            description: tdt.description,
+                            isDefault: false,
+                            createdById: userId,
+                            tenantId: userId
+                        }
+                    });
+                }
+
+                // If not already required in project, add it
+                if (!existingDocTypeIds.includes(docType.id)) {
+                    await prisma.projectRequiredDocument.create({
+                        data: {
+                            projectId: project.id,
+                            documentTypeId: docType.id,
+                            required: tdt.isRequired,
+                            order: tdt.order
+                        }
+                    });
+                    existingDocTypeIds.push(docType.id);
+                }
+            }
+        }
+        
+        // Fetch and return the updated required documents list
+        const updatedRequiredDocs = await prisma.projectRequiredDocument.findMany({
+            where: { projectId: id },
+            include: { documentType: true },
+            orderBy: { order: 'asc' }
+        });
+
+        res.status(200).json(updatedRequiredDocs);
+    } catch (error) {
+        console.error('Error applying template to project:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
+
+export const archiveProject = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        const id = req.params.id as string;
+        if (!userId) return res.status(401).json({ message: 'Não autorizado' });
+
+        const project = await prisma.project.update({
+            where: { id },
+            data: { status: 'ARCHIVED' },
+        });
+
+        res.status(200).json({ project });
+    } catch (error) {
+        console.error('Error archiving project:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
+
+export const unarchiveProject = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        const id = req.params.id as string;
+        if (!userId) return res.status(401).json({ message: 'Não autorizado' });
+
+        const project = await prisma.project.update({
+            where: { id },
+            data: { status: 'ACTIVE' },
+        });
+
+        res.status(200).json({ project });
+    } catch (error) {
+        console.error('Error unarchiving project:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
+
+export const deleteProject = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        const id = req.params.id as string;
+        if (!userId) return res.status(401).json({ message: 'Não autorizado' });
+
+        await prisma.project.update({
+            where: { id },
+            data: { status: 'DELETED' }
+        });
+
+        res.status(200).json({ message: 'Projeto excluído com sucesso' });
+    } catch (error) {
+        console.error('Error deleting project:', error);
+        res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+};
+
