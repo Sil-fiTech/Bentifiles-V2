@@ -1,0 +1,887 @@
+﻿
+> frontend@0.1.0 build
+> next build
+
+node.exe : ΓÜá 
+Warning: Next.js 
+inferred your 
+workspace root, but it 
+may not be correct.
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo 
+...
++ ~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~
+~~
+    + CategoryInfo     
+         : NotSpecifi  
+  ed: (ΓÜá Warning:    
+ Ne...not be correc    
+t.:String) [], Rem    
+oteException
+    + FullyQualifiedEr 
+   rorId : NativeComm  
+  andError
+ 
+ We detected multiple 
+lockfiles and selected 
+the directory of C:\Use
+rs\dudub\package-lock.j
+son as the root 
+directory.
+ To silence this 
+warning, set 
+`turbopack.root` in 
+your Next.js config, 
+or consider removing 
+one of the lockfiles 
+if it's not needed.
+   See https://nextjs.o
+rg/docs/app/api-referen
+ce/config/next-config-j
+s/turbopack#root-direct
+ory for more 
+information.
+ Detected additional 
+lockfiles: 
+   * C:\Users\dudub\Des
+ktop\Bentifiles-V2\fron
+tend\package-lock.json
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+Turbopack build 
+encountered 1 warnings:
+./Desktop/Bentifiles-V2
+/frontend/src/app/dashb
+oard/page.module.scss
+Issue while running 
+loader
+SassWarning: 
+Deprecation Warning on 
+line 125, column 10 of 
+file:///C:/Users/dudub/
+Desktop/Bentifiles-V2/f
+rontend/src/app/dashboa
+rd/page.module.scss:125
+:10:
+This operation is 
+parsed as:
+
+    0 - $sp-2
+
+but you may have 
+intended it to mean:
+
+    0 (-$sp-2)
+
+Add a space after - to 
+clarify that it's 
+meant to be a binary 
+operation, or wrap
+it in parentheses to 
+make it a unary 
+operation. This will 
+be an error in future
+versions of Sass.
+
+More info and 
+automated migrator: htt
+ps://sass-lang.com/d/st
+rict-unary
+
+125 |   margin: 0 
+-$sp-2;
+
+
+src\app\dashboard\page.
+module.scss 126:11  
+root stylesheet
+
+
+Import traces:
+  Client Component 
+Browser:
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/d
+ashboard/page.module.sc
+ss [Client Component 
+Browser]
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/d
+ashboard/page.tsx 
+[Client Component 
+Browser]
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/d
+ashboard/page.tsx 
+[Server Component]
+
+  Client Component SSR:
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/d
+ashboard/page.module.sc
+ss [Client Component 
+SSR]
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/d
+ashboard/page.tsx 
+[Client Component SSR]
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/d
+ashboard/page.tsx 
+[Server Component]
+
+
+
+> Build error occurred
+Error: Turbopack build 
+failed with 2 errors:
+./Desktop/Bentifiles-V2
+/frontend/src/app/proje
+cts/[id]/page.module.sc
+ss
+Error evaluating 
+Node.js code
+Error: Undefined 
+variable.
+    Γò╖
+688 Γöé   &:hover { 
+background: 
+$emerald-100; 
+border-color: 
+$emerald-300; color: 
+$emerald-700; }
+    Γöé                
+                       
+              
+^^^^^^^^^^^^
+    Γò╡
+  src\app\projects\[id]
+\page.module.scss 
+688:53  root stylesheet
+Caused by: Error: 
+Undefined variable.
+    Γò╖
+688 Γöé   &:hover { 
+background: 
+$emerald-100; 
+border-color: 
+$emerald-300; color: 
+$emerald-700; }
+    Γöé                
+                       
+              
+^^^^^^^^^^^^
+    Γò╡
+  src\app\projects\[id]
+\page.module.scss 
+688:53  root stylesheet
+    [at 
+Object.wrapException (C
+:\Users\dudub\Desktop\B
+entifiles-V2\frontend\n
+ode_modules\sass\sass.d
+art.js:2337:47)]
+    [at C:\Users\dudub\
+Desktop\Bentifiles-V2\f
+rontend\node_modules\sa
+ss\sass.dart.js:91300:2
+3]
+    [at _wrapJsFunction
+ForAsync_closure.$prote
+cted (C:\Users\dudub\De
+sktop\Bentifiles-V2\fro
+ntend\node_modules\sass
+\sass.dart.js:5005:15)]
+    [at _wrapJsFunction
+ForAsync_closure.call$2
+ (C:\Users\dudub\Deskto
+p\Bentifiles-V2\fronten
+d\node_modules\sass\sas
+s.dart.js:38686:12)]
+    [at 
+Object._asyncStartSync 
+(C:\Users\dudub\Desktop
+\Bentifiles-V2\frontend
+\node_modules\sass\sass
+.dart.js:4969:20)]
+    [at _EvaluateVisito
+r2.visitVariableExpress
+ion$body$_EvaluateVisit
+or0 (C:\Users\dudub\Des
+ktop\Bentifiles-V2\fron
+tend\node_modules\sass\
+sass.dart.js:91306:16)]
+    [at _EvaluateVisito
+r2.visitVariableExpress
+ion$1 (C:\Users\dudub\D
+esktop\Bentifiles-V2\fr
+ontend\node_modules\sas
+s\sass.dart.js:91280:19
+)]
+    [at VariableExpress
+ion0.accept$1$1 (C:\Use
+rs\dudub\Desktop\Bentif
+iles-V2\frontend\node_m
+odules\sass\sass.dart.j
+s:129386:22)]
+    [at VariableExpress
+ion0.accept$1 (C:\Users
+\dudub\Desktop\Bentifil
+es-V2\frontend\node_mod
+ules\sass\sass.dart.js:
+129389:19)]
+    [at C:\Users\dudub\
+Desktop\Bentifiles-V2\f
+rontend\node_modules\sa
+ss\sass.dart.js:89315:4
+1]
+    [at _wrapJsFunction
+ForAsync_closure.$prote
+cted (C:\Users\dudub\De
+sktop\Bentifiles-V2\fro
+ntend\node_modules\sass
+\sass.dart.js:5005:15)]
+    [at _wrapJsFunction
+ForAsync_closure.call$2
+ (C:\Users\dudub\Deskto
+p\Bentifiles-V2\fronten
+d\node_modules\sass\sas
+s.dart.js:38686:12)]
+    [at _awaitOnObject_
+closure.call$1 (C:\User
+s\dudub\Desktop\Bentifi
+les-V2\frontend\node_mo
+dules\sass\sass.dart.js
+:38674:32)]
+    [at 
+Object._rootRunUnary (C
+:\Users\dudub\Desktop\B
+entifiles-V2\frontend\n
+ode_modules\sass\sass.d
+art.js:5429:18)]
+    [at StaticClosure.<
+anonymous> (C:\Users\du
+dub\Desktop\Bentifiles-
+V2\frontend\node_module
+s\sass\sass.dart.js:129
+707:16)]
+    [at _CustomZone.run
+Unary$2$2 (C:\Users\dud
+ub\Desktop\Bentifiles-V
+2\frontend\node_modules
+\sass\sass.dart.js:4011
+5:39)]
+    [at _Future__propag
+ateToListeners_handleVa
+lueCallback.call$0 (C:\
+Users\dudub\Desktop\Ben
+tifiles-V2\frontend\nod
+e_modules\sass\sass.dar
+t.js:39175:51)]
+    [at Object._Future_
+_propagateToListeners (
+C:\Users\dudub\Desktop\
+Bentifiles-V2\frontend\
+node_modules\sass\sass.
+dart.js:5215:93)]
+    [at _Future._comple
+teWithValue$1 (C:\Users
+\dudub\Desktop\Bentifil
+es-V2\frontend\node_mod
+ules\sass\sass.dart.js:
+39038:9)]
+    [at _AsyncAwaitComp
+leter.complete$1 (C:\Us
+ers\dudub\Desktop\Benti
+files-V2\frontend\node_
+modules\sass\sass.dart.
+js:38661:14)]
+    [at 
+Object._asyncReturn (C:
+\Users\dudub\Desktop\Be
+ntifiles-V2\frontend\no
+de_modules\sass\sass.da
+rt.js:4977:17)]
+    [at C:\Users\dudub\
+Desktop\Bentifiles-V2\f
+rontend\node_modules\sa
+ss\sass.dart.js:93845:2
+4]
+    [at _wrapJsFunction
+ForAsync_closure.$prote
+cted (C:\Users\dudub\De
+sktop\Bentifiles-V2\fro
+ntend\node_modules\sass
+\sass.dart.js:5005:15)]
+    [at _wrapJsFunction
+ForAsync_closure.call$2
+ (C:\Users\dudub\Deskto
+p\Bentifiles-V2\fronten
+d\node_modules\sass\sas
+s.dart.js:38686:12)]
+    [at _awaitOnObject_
+closure.call$1 (C:\User
+s\dudub\Desktop\Bentifi
+les-V2\frontend\node_mo
+dules\sass\sass.dart.js
+:38674:32)]
+    [at 
+Object._rootRunUnary (C
+:\Users\dudub\Desktop\B
+entifiles-V2\frontend\n
+ode_modules\sass\sass.d
+art.js:5429:18)]
+    [at StaticClosure.<
+anonymous> (C:\Users\du
+dub\Desktop\Bentifiles-
+V2\frontend\node_module
+s\sass\sass.dart.js:129
+707:16)]
+    [at _CustomZone.run
+Unary$2$2 (C:\Users\dud
+ub\Desktop\Bentifiles-V
+2\frontend\node_modules
+\sass\sass.dart.js:4011
+5:39)]
+    [at _Future__propag
+ateToListeners_handleVa
+lueCallback.call$0 (C:\
+Users\dudub\Desktop\Ben
+tifiles-V2\frontend\nod
+e_modules\sass\sass.dar
+t.js:39175:51)]
+    [at Object._Future_
+_propagateToListeners (
+C:\Users\dudub\Desktop\
+Bentifiles-V2\frontend\
+node_modules\sass\sass.
+dart.js:5215:93)]
+    [at _Future._comple
+teWithValue$1 (C:\Users
+\dudub\Desktop\Bentifil
+es-V2\frontend\node_mod
+ules\sass\sass.dart.js:
+39038:9)]
+    [at _AsyncAwaitComp
+leter.complete$1 (C:\Us
+ers\dudub\Desktop\Benti
+files-V2\frontend\node_
+modules\sass\sass.dart.
+js:38661:14)]
+    [at 
+Object._asyncReturn (C:
+\Users\dudub\Desktop\Be
+ntifiles-V2\frontend\no
+de_modules\sass\sass.da
+rt.js:4977:17)]
+    [at C:\Users\dudub\
+Desktop\Bentifiles-V2\f
+rontend\node_modules\sa
+ss\sass.dart.js:93877:2
+4]
+    [at _wrapJsFunction
+ForAsync_closure.$prote
+cted (C:\Users\dudub\De
+sktop\Bentifiles-V2\fro
+ntend\node_modules\sass
+\sass.dart.js:5005:15)]
+    [at _wrapJsFunction
+ForAsync_closure.call$2
+ (C:\Users\dudub\Deskto
+p\Bentifiles-V2\fronten
+d\node_modules\sass\sas
+s.dart.js:38686:12)]
+    [at _awaitOnObject_
+closure.call$1 (C:\User
+s\dudub\Desktop\Bentifi
+les-V2\frontend\node_mo
+dules\sass\sass.dart.js
+:38674:32)]
+    [at 
+Object._rootRunUnary (C
+:\Users\dudub\Desktop\B
+entifiles-V2\frontend\n
+ode_modules\sass\sass.d
+art.js:5429:18)]
+    [at StaticClosure.<
+anonymous> (C:\Users\du
+dub\Desktop\Bentifiles-
+V2\frontend\node_module
+s\sass\sass.dart.js:129
+707:16)]
+    [at _CustomZone.run
+Unary$2$2 (C:\Users\dud
+ub\Desktop\Bentifiles-V
+2\frontend\node_modules
+\sass\sass.dart.js:4011
+5:39)]
+    [at _Future__propag
+ateToListeners_handleVa
+lueCallback.call$0 (C:\
+Users\dudub\Desktop\Ben
+tifiles-V2\frontend\nod
+e_modules\sass\sass.dar
+t.js:39175:51)]
+    [at Object._Future_
+_propagateToListeners (
+C:\Users\dudub\Desktop\
+Bentifiles-V2\frontend\
+node_modules\sass\sass.
+dart.js:5215:93)]
+    [at _Future._comple
+teWithValue$1 (C:\Users
+\dudub\Desktop\Bentifil
+es-V2\frontend\node_mod
+ules\sass\sass.dart.js:
+39038:9)]
+    [at _Future__asyncC
+ompleteWithValue_closur
+e.call$0 (C:\Users\dudu
+b\Desktop\Bentifiles-V2
+\frontend\node_modules\
+sass\sass.dart.js:39103
+:18)]
+    [at 
+Object._rootRun (C:\Use
+rs\dudub\Desktop\Bentif
+iles-V2\frontend\node_m
+odules\sass\sass.dart.j
+s:5419:16)]
+    [at StaticClosure.<
+anonymous> (C:\Users\du
+dub\Desktop\Bentifiles-
+V2\frontend\node_module
+s\sass\sass.dart.js:129
+703:16)]
+    [at 
+_CustomZone.run$1$1 (C:
+\Users\dudub\Desktop\Be
+ntifiles-V2\frontend\no
+de_modules\sass\sass.da
+rt.js:40110:39)]
+    [at _CustomZone_bin
+dCallback_closure.call$
+0 (C:\Users\dudub\Deskt
+op\Bentifiles-V2\fronte
+nd\node_modules\sass\sa
+ss.dart.js:40207:25)]
+    [at 
+Object._microtaskLoop (
+C:\Users\dudub\Desktop\
+Bentifiles-V2\frontend\
+node_modules\sass\sass.
+dart.js:5273:24)]
+    [at StaticClosure._
+startMicrotaskLoop (C:\
+Users\dudub\Desktop\Ben
+tifiles-V2\frontend\nod
+e_modules\sass\sass.dar
+t.js:5279:11)]
+
+Import traces:
+  Client Component 
+Browser:
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/p
+rojects/[id]/page.modul
+e.scss [Client 
+Component Browser]
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/p
+rojects/[id]/page.tsx 
+[Client Component 
+Browser]
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/p
+rojects/[id]/page.tsx 
+[Server Component]
+
+  Client Component SSR:
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/p
+rojects/[id]/page.modul
+e.scss [Client 
+Component SSR]
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/p
+rojects/[id]/page.tsx 
+[Client Component SSR]
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/p
+rojects/[id]/page.tsx 
+[Server Component]
+
+
+./Desktop/Bentifiles-V2
+/frontend/src/app/uploa
+dZone/page.module.scss
+Error evaluating 
+Node.js code
+Error: Can't find 
+stylesheet to import.
+  Γò╖
+2 Γöé @use '../../../st
+yles/tokens' as *;
+  Γöé ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
+  Γò╡
+  src\app\uploadZone\pa
+ge.module.scss 2:1  
+root stylesheet
+Caused by: Error: 
+Can't find stylesheet 
+to import.
+  Γò╖
+2 Γöé @use '../../../st
+yles/tokens' as *;
+  Γöé ^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
+  Γò╡
+  src\app\uploadZone\pa
+ge.module.scss 2:1  
+root stylesheet
+    [at 
+Object.wrapException (C
+:\Users\dudub\Desktop\B
+entifiles-V2\frontend\n
+ode_modules\sass\sass.d
+art.js:2337:47)]
+    [at C:\Users\dudub\
+Desktop\Bentifiles-V2\f
+rontend\node_modules\sa
+ss\sass.dart.js:90086:2
+5]
+    [at _wrapJsFunction
+ForAsync_closure.$prote
+cted (C:\Users\dudub\De
+sktop\Bentifiles-V2\fro
+ntend\node_modules\sass
+\sass.dart.js:5005:15)]
+    [at _wrapJsFunction
+ForAsync_closure.call$2
+ (C:\Users\dudub\Deskto
+p\Bentifiles-V2\fronten
+d\node_modules\sass\sas
+s.dart.js:38686:12)]
+    [at _awaitOnObject_
+closure.call$1 (C:\User
+s\dudub\Desktop\Bentifi
+les-V2\frontend\node_mo
+dules\sass\sass.dart.js
+:38674:32)]
+    [at 
+Object._rootRunUnary (C
+:\Users\dudub\Desktop\B
+entifiles-V2\frontend\n
+ode_modules\sass\sass.d
+art.js:5429:18)]
+    [at StaticClosure.<
+anonymous> (C:\Users\du
+dub\Desktop\Bentifiles-
+V2\frontend\node_module
+s\sass\sass.dart.js:129
+707:16)]
+    [at _CustomZone.run
+Unary$2$2 (C:\Users\dud
+ub\Desktop\Bentifiles-V
+2\frontend\node_modules
+\sass\sass.dart.js:4011
+5:39)]
+    [at _Future__propag
+ateToListeners_handleVa
+lueCallback.call$0 (C:\
+Users\dudub\Desktop\Ben
+tifiles-V2\frontend\nod
+e_modules\sass\sass.dar
+t.js:39175:51)]
+    [at Object._Future_
+_propagateToListeners (
+C:\Users\dudub\Desktop\
+Bentifiles-V2\frontend\
+node_modules\sass\sass.
+dart.js:5215:93)]
+    [at _Future._comple
+teWithValue$1 (C:\Users
+\dudub\Desktop\Bentifil
+es-V2\frontend\node_mod
+ules\sass\sass.dart.js:
+39038:9)]
+    [at _AsyncAwaitComp
+leter.complete$1 (C:\Us
+ers\dudub\Desktop\Benti
+files-V2\frontend\node_
+modules\sass\sass.dart.
+js:38661:14)]
+    [at 
+Object._asyncReturn (C:
+\Users\dudub\Desktop\Be
+ntifiles-V2\frontend\no
+de_modules\sass\sass.da
+rt.js:4977:17)]
+    [at C:\Users\dudub\
+Desktop\Bentifiles-V2\f
+rontend\node_modules\sa
+ss\sass.dart.js:98396:2
+4]
+    [at _wrapJsFunction
+ForAsync_closure.$prote
+cted (C:\Users\dudub\De
+sktop\Bentifiles-V2\fro
+ntend\node_modules\sass
+\sass.dart.js:5005:15)]
+    [at _wrapJsFunction
+ForAsync_closure.call$2
+ (C:\Users\dudub\Deskto
+p\Bentifiles-V2\fronten
+d\node_modules\sass\sas
+s.dart.js:38686:12)]
+    [at _awaitOnObject_
+closure.call$1 (C:\User
+s\dudub\Desktop\Bentifi
+les-V2\frontend\node_mo
+dules\sass\sass.dart.js
+:38674:32)]
+    [at 
+Object._rootRunUnary (C
+:\Users\dudub\Desktop\B
+entifiles-V2\frontend\n
+ode_modules\sass\sass.d
+art.js:5429:18)]
+    [at StaticClosure.<
+anonymous> (C:\Users\du
+dub\Desktop\Bentifiles-
+V2\frontend\node_module
+s\sass\sass.dart.js:129
+707:16)]
+    [at _CustomZone.run
+Unary$2$2 (C:\Users\dud
+ub\Desktop\Bentifiles-V
+2\frontend\node_modules
+\sass\sass.dart.js:4011
+5:39)]
+    [at _Future__propag
+ateToListeners_handleVa
+lueCallback.call$0 (C:\
+Users\dudub\Desktop\Ben
+tifiles-V2\frontend\nod
+e_modules\sass\sass.dar
+t.js:39175:51)]
+    [at Object._Future_
+_propagateToListeners (
+C:\Users\dudub\Desktop\
+Bentifiles-V2\frontend\
+node_modules\sass\sass.
+dart.js:5215:93)]
+    [at _Future._comple
+teWithValue$1 (C:\Users
+\dudub\Desktop\Bentifil
+es-V2\frontend\node_mod
+ules\sass\sass.dart.js:
+39038:9)]
+    [at _AsyncAwaitComp
+leter.complete$1 (C:\Us
+ers\dudub\Desktop\Benti
+files-V2\frontend\node_
+modules\sass\sass.dart.
+js:38661:14)]
+    [at 
+Object._asyncReturn (C:
+\Users\dudub\Desktop\Be
+ntifiles-V2\frontend\no
+de_modules\sass\sass.da
+rt.js:4977:17)]
+    [at C:\Users\dudub\
+Desktop\Bentifiles-V2\f
+rontend\node_modules\sa
+ss\sass.dart.js:98487:2
+4]
+    [at _wrapJsFunction
+ForAsync_closure.$prote
+cted (C:\Users\dudub\De
+sktop\Bentifiles-V2\fro
+ntend\node_modules\sass
+\sass.dart.js:5005:15)]
+    [at _wrapJsFunction
+ForAsync_closure.call$2
+ (C:\Users\dudub\Deskto
+p\Bentifiles-V2\fronten
+d\node_modules\sass\sas
+s.dart.js:38686:12)]
+    [at _awaitOnObject_
+closure.call$1 (C:\User
+s\dudub\Desktop\Bentifi
+les-V2\frontend\node_mo
+dules\sass\sass.dart.js
+:38674:32)]
+    [at 
+Object._rootRunUnary (C
+:\Users\dudub\Desktop\B
+entifiles-V2\frontend\n
+ode_modules\sass\sass.d
+art.js:5429:18)]
+    [at StaticClosure.<
+anonymous> (C:\Users\du
+dub\Desktop\Bentifiles-
+V2\frontend\node_module
+s\sass\sass.dart.js:129
+707:16)]
+    [at _CustomZone.run
+Unary$2$2 (C:\Users\dud
+ub\Desktop\Bentifiles-V
+2\frontend\node_modules
+\sass\sass.dart.js:4011
+5:39)]
+    [at _Future__propag
+ateToListeners_handleVa
+lueCallback.call$0 (C:\
+Users\dudub\Desktop\Ben
+tifiles-V2\frontend\nod
+e_modules\sass\sass.dar
+t.js:39175:51)]
+    [at Object._Future_
+_propagateToListeners (
+C:\Users\dudub\Desktop\
+Bentifiles-V2\frontend\
+node_modules\sass\sass.
+dart.js:5215:93)]
+    [at _Future._comple
+teWithValue$1 (C:\Users
+\dudub\Desktop\Bentifil
+es-V2\frontend\node_mod
+ules\sass\sass.dart.js:
+39038:9)]
+    [at _AsyncAwaitComp
+leter.complete$1 (C:\Us
+ers\dudub\Desktop\Benti
+files-V2\frontend\node_
+modules\sass\sass.dart.
+js:38661:14)]
+    [at 
+Object._asyncReturn (C:
+\Users\dudub\Desktop\Be
+ntifiles-V2\frontend\no
+de_modules\sass\sass.da
+rt.js:4977:17)]
+    [at C:\Users\dudub\
+Desktop\Bentifiles-V2\f
+rontend\node_modules\sa
+ss\sass.dart.js:87664:2
+4]
+    [at _wrapJsFunction
+ForAsync_closure.$prote
+cted (C:\Users\dudub\De
+sktop\Bentifiles-V2\fro
+ntend\node_modules\sass
+\sass.dart.js:5005:15)]
+    [at _wrapJsFunction
+ForAsync_closure.call$2
+ (C:\Users\dudub\Deskto
+p\Bentifiles-V2\fronten
+d\node_modules\sass\sas
+s.dart.js:38686:12)]
+    [at _awaitOnObject_
+closure.call$1 (C:\User
+s\dudub\Desktop\Bentifi
+les-V2\frontend\node_mo
+dules\sass\sass.dart.js
+:38674:32)]
+    [at 
+Object._rootRunUnary (C
+:\Users\dudub\Desktop\B
+entifiles-V2\frontend\n
+ode_modules\sass\sass.d
+art.js:5429:18)]
+    [at StaticClosure.<
+anonymous> (C:\Users\du
+dub\Desktop\Bentifiles-
+V2\frontend\node_module
+s\sass\sass.dart.js:129
+707:16)]
+    [at _CustomZone.run
+Unary$2$2 (C:\Users\dud
+ub\Desktop\Bentifiles-V
+2\frontend\node_modules
+\sass\sass.dart.js:4011
+5:39)]
+    [at _Future__propag
+ateToListeners_handleVa
+lueCallback.call$0 (C:\
+Users\dudub\Desktop\Ben
+tifiles-V2\frontend\nod
+e_modules\sass\sass.dar
+t.js:39175:51)]
+    [at Object._Future_
+_propagateToListeners (
+C:\Users\dudub\Desktop\
+Bentifiles-V2\frontend\
+node_modules\sass\sass.
+dart.js:5215:93)]
+    [at 
+_Future._complete$1 (C:
+\Users\dudub\Desktop\Be
+ntifiles-V2\frontend\no
+de_modules\sass\sass.da
+rt.js:39030:11)]
+    [at _SyncCompleter.
+complete$1 (C:\Users\du
+dub\Desktop\Bentifiles-
+V2\frontend\node_module
+s\sass\sass.dart.js:388
+75:10)]
+    [at promiseToFuture
+_closure1.call$1 (C:\Us
+ers\dudub\Desktop\Benti
+files-V2\frontend\node_
+modules\sass\sass.dart.
+js:45577:22)]
+    [at Object.Primitiv
+es_applyFunction (C:\Us
+ers\dudub\Desktop\Benti
+files-V2\frontend\node_
+modules\sass\sass.dart.
+js:2213:30)]
+
+Import traces:
+  Client Component 
+Browser:
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/u
+ploadZone/page.module.s
+css [Client Component 
+Browser]
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/u
+ploadZone/page.tsx 
+[Client Component 
+Browser]
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/u
+ploadZone/page.tsx 
+[Server Component]
+
+  Client Component SSR:
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/u
+ploadZone/page.module.s
+css [Client Component 
+SSR]
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/u
+ploadZone/page.tsx 
+[Client Component SSR]
+    ./Desktop/Bentifile
+s-V2/frontend/src/app/u
+ploadZone/page.tsx 
+[Server Component]
+
+
+    at ignore-listed 
+frames

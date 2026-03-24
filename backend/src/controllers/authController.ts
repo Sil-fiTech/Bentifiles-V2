@@ -3,12 +3,46 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../prisma';
 
+const verifyTurnstile = async (token: string): Promise<boolean> => {
+    if (!token) return false;
+    
+    try {
+        const secret = process.env.TURNSTILE_SECRET_KEY;
+        if (!secret) {
+            console.error('TURNSTILE_SECRET_KEY não configurado no servidor');
+            return false;
+        }
+        
+        const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                secret,
+                response: token,
+            }),
+        });
+
+        const data = await response.json();
+        return data.success;
+    } catch (error) {
+        console.error('Erro na validação do Turnstile:', error);
+        return false;
+    }
+};
+
 export const register = async (req: Request, res: Response) => {
     try {
-        const { name, email, password } = req.body;
+        const { name, email, password, turnstileToken } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({ message: 'Campos obrigatórios ausentes' });
+        }
+
+        const isTurnstileValid = await verifyTurnstile(turnstileToken);
+        if (!isTurnstileValid) {
+            return res.status(400).json({ message: 'Falha na verificação de segurança (Turnstile)' });
         }
 
         const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -43,10 +77,15 @@ export const register = async (req: Request, res: Response) => {
 
 export const login = async (req: Request, res: Response) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, turnstileToken } = req.body;
 
         if (!email || !password) {
             return res.status(400).json({ message: 'Campos obrigatórios ausentes' });
+        }
+
+        const isTurnstileValid = await verifyTurnstile(turnstileToken);
+        if (!isTurnstileValid) {
+            return res.status(400).json({ message: 'Falha na verificação de segurança (Turnstile)' });
         }
 
         const user = await prisma.user.findUnique({ where: { email } });

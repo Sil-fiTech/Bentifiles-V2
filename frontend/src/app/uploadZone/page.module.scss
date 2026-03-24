@@ -1,0 +1,232 @@
+// page.module.scss — Upload Zone Page
+@use '@/styles/tokens' as *;
+@use '../../styles/mixins' as *;
+// ------------------------------------------------------------------
+// Root
+// ------------------------------------------------------------------
+.root {
+  background: var(--color-background);
+  font-family: $font-body;
+  color: var(--color-on-surface);
+  overflow: hidden;
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+.main {
+  flex: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--color-surface);
+  overflow-y: auto;
+  position: relative;
+  width: 100%;
+  @include custom-scrollbar;
+}
+
+.canvas {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: $sp-6 $sp-4 $sp-16;
+
+  @include md { padding: $sp-8 $sp-6 $sp-16; }
+  @include lg { padding: $sp-8 $sp-8 $sp-16; }
+}
+
+// ------------------------------------------------------------------
+// Page header
+// ------------------------------------------------------------------
+.pageHeader {
+  margin-bottom: $sp-8;
+}
+
+.pageTitle {
+  font-family: $font-headline;
+  font-size: 1.875rem;
+  font-weight: 900;
+  color: $zinc-900;
+  letter-spacing: -0.04em;
+}
+
+.pageSubtitle {
+  font-size: 0.875rem;
+  color: $zinc-500;
+  font-weight: 500;
+  margin-top: $sp-1;
+}
+
+// ------------------------------------------------------------------
+// Dropzone
+// ------------------------------------------------------------------
+.dropzone {
+  background: white;
+  border: 2px dashed $zinc-300;
+  border-radius: $radius-xl;
+  padding: $sp-6;
+
+  @include sm { padding: $sp-12; }
+  text-align: center;
+  cursor: pointer;
+  transition: $transition-base;
+  box-shadow: $shadow-sm;
+
+  &:hover {
+    border-color: $zinc-400;
+  }
+
+  &.active {
+    border-color: $amber-400;
+    background: rgba($amber-50, 0.5);
+  }
+}
+
+.dropzoneTitle {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: $zinc-700;
+  margin-bottom: $sp-2;
+
+  .active & { color: $amber-600; }
+}
+
+.dropzoneSubtitle {
+  font-size: 0.875rem;
+  color: $zinc-500;
+}
+
+// ------------------------------------------------------------------
+// Files grid
+// ------------------------------------------------------------------
+.fileGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $sp-6;
+
+  @include md { grid-template-columns: repeat(2, 1fr); }
+  @include lg { grid-template-columns: repeat(3, 1fr); }
+}
+
+.fileCard {
+  @include card-base;
+  padding: $sp-6;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-4;
+  transition: box-shadow 0.2s;
+
+  &:hover { box-shadow: $shadow-md; }
+}
+
+.fileCardTop {
+  display: flex;
+  align-items: flex-start;
+  gap: $sp-4;
+}
+
+.fileIconWrapper {
+  padding: $sp-3;
+  background: $amber-50;
+  border-radius: $radius-xl;
+  border: 1px solid $amber-100;
+  flex-shrink: 0;
+}
+
+.fileCardInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.fileName {
+  font-family: $font-headline;
+  font-weight: 700;
+  color: $zinc-900;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.fileMeta {
+  font-size: 0.75rem;
+  color: $zinc-500;
+  margin-top: $sp-1;
+}
+
+// Verification result panel
+.resultPanel {
+  padding: $sp-4;
+  background: $zinc-50;
+  border-radius: $radius-xl;
+  border-left: 4px solid;
+
+  &.approved  { border-color: $emerald-500; }
+  &.conditional { border-color: $amber-500; }
+  &.rejected  { border-color: $red-500; }
+  &.default   { border-color: $zinc-300; }
+}
+
+.resultHeader {
+  @include flex-between;
+  margin-bottom: $sp-4;
+}
+
+.resultStatus {
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  font-weight: 700;
+  font-size: 0.875rem;
+}
+
+.resultScore {
+  font-family: $font-headline;
+  font-size: 1.125rem;
+  font-weight: 900;
+  color: $zinc-900;
+}
+
+.resultScoreUnit {
+  font-size: 0.75rem;
+  color: $zinc-500;
+  font-weight: 400;
+}
+
+.resultRecs {
+  font-size: 0.75rem;
+  color: $zinc-600;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-1;
+}
+
+.resultRec {
+  display: flex;
+  gap: $sp-1_5;
+}
+
+.resultRecDot {
+  color: $amber-500;
+  flex-shrink: 0;
+}
+
+.resultMetrics {
+  display: flex;
+  gap: $sp-6;
+  margin-top: $sp-4;
+  font-size: 0.75rem;
+  color: $zinc-500;
+}
+
+.resultMetricItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.resultMetricValue {
+  font-weight: 700;
+  color: $zinc-900;
+}
