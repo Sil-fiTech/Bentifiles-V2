@@ -1,0 +1,304 @@
+// page.module.scss — Profile Page
+@use '../../styles/tokens' as *;
+@use '../../styles/mixins' as *;
+// ------------------------------------------------------------------
+// Root
+// ------------------------------------------------------------------
+.root {
+  background: $zinc-50;
+  font-family: $font-body;
+  color: $zinc-900;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  @include custom-scrollbar;
+}
+
+.loadingScreen {
+  min-height: 100vh;
+  background: $zinc-50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// ------------------------------------------------------------------
+// Main canvas
+// ------------------------------------------------------------------
+.main {
+  width: 100%;
+  max-width: 56rem;
+  margin: 0 auto;
+  padding: $sp-6 $sp-4;
+  z-index: 10;
+
+  @include md { padding: $sp-8 $sp-6; }
+  @include lg { padding: $sp-8 $sp-8; }
+}
+
+// ------------------------------------------------------------------
+// Back button
+// ------------------------------------------------------------------
+.backBtn {
+  @include btn-reset;
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  color: $zinc-500;
+  font-weight: 700;
+  font-size: 0.875rem;
+  padding: $sp-2 $sp-3;
+  border-radius: $radius-md;
+  background: white;
+  box-shadow: $shadow-sm;
+  transition: $transition-base;
+  width: max-content;
+
+  &:hover { color: $zinc-900; }
+  &:active { transform: scale(0.98); }
+}
+
+// ------------------------------------------------------------------
+// Page header
+// ------------------------------------------------------------------
+.pageHeader {
+  margin-bottom: $sp-8;
+  margin-top: $sp-6;
+}
+
+.pageTitle {
+  font-family: $font-headline;
+  font-size: 1.875rem;
+  font-weight: 900;
+  color: $zinc-900;
+  letter-spacing: -0.04em;
+}
+
+.pageSubtitle {
+  color: $zinc-500;
+  font-weight: 500;
+  margin-top: $sp-1;
+}
+
+// ------------------------------------------------------------------
+// Two-column grid
+// ------------------------------------------------------------------
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $sp-8;
+
+  @include md { grid-template-columns: 1fr 2fr; }
+}
+
+// ------------------------------------------------------------------
+// Left panel — Profile summary card
+// ------------------------------------------------------------------
+.summaryCard {
+  @include card-base;
+  padding: $sp-4;
+
+  @include sm { padding: $sp-6; }
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.avatarWrapper {
+  position: relative;
+  margin-bottom: $sp-4;
+}
+
+.avatar {
+  width: 6rem;
+  height: 6rem;
+  border-radius: $radius-xl;
+  background: linear-gradient(135deg, $zinc-800, $zinc-900);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.875rem;
+  letter-spacing: 0.1em;
+  border: 1px solid rgba($amber-400, 0.5);
+  box-shadow: $shadow-md;
+}
+
+.onlineDot {
+  position: absolute;
+  bottom: -0.25rem;
+  right: -0.25rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  background: $emerald-500;
+  border: 2px solid white;
+  border-radius: $radius-full;
+}
+
+.profileName {
+  font-family: $font-headline;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: $zinc-900;
+}
+
+.profileEmail {
+  color: $zinc-500;
+  font-size: 0.875rem;
+}
+
+.divider {
+  width: 100%;
+  height: 1px;
+  background: rgba($zinc-200, 0.6);
+  margin: $sp-6 0;
+}
+
+.metaList {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+  width: 100%;
+  text-align: left;
+}
+
+.metaItem {
+  display: flex;
+  align-items: center;
+  gap: $sp-3;
+  font-size: 0.875rem;
+  color: $zinc-600;
+  font-weight: 500;
+
+  svg { color: $zinc-400; flex-shrink: 0; }
+}
+
+// ------------------------------------------------------------------
+// Right panel — Edit panel
+// ------------------------------------------------------------------
+.editPanel {
+  @include card-base;
+  padding: $sp-4;
+
+  @include sm { padding: $sp-6; }
+  @include md { padding: $sp-8; }
+}
+
+.panelTitle {
+  font-family: $font-headline;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: $zinc-900;
+  margin-bottom: $sp-6;
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+
+  svg { color: $amber-500; }
+}
+
+.fieldList {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-5;
+}
+
+.fieldLabel {
+  display: block;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: $zinc-600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: $sp-1_5;
+  padding: 0 $sp-1;
+}
+
+.fieldInput {
+  width: 100%;
+  padding: $sp-3 $sp-4;
+  background: $zinc-50;
+  border: 1px solid rgba($zinc-200, 0.8);
+  border-radius: $radius-xl;
+  outline: none;
+  color: $zinc-900;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  box-shadow: $shadow-sm;
+  transition: $transition-base;
+
+  &::placeholder { color: $zinc-400; }
+
+  &:focus {
+    border-color: $amber-400;
+    background: white;
+    box-shadow: 0 0 0 2px rgba($amber-500, 0.2);
+  }
+}
+
+.emailWrapper {
+  position: relative;
+}
+
+.emailIcon {
+  position: absolute;
+  left: $sp-4;
+  top: 50%;
+  transform: translateY(-50%);
+  color: $zinc-400;
+  pointer-events: none;
+}
+
+.fieldInputReadonly {
+  @extend .fieldInput;
+  padding-left: 2.75rem;
+  background: rgba($zinc-100, 0.8);
+  border-color: rgba($zinc-200, 0.5);
+  color: $zinc-500;
+  cursor: not-allowed;
+
+  &:focus {
+    background: rgba($zinc-100, 0.8);
+    border-color: rgba($zinc-200, 0.5);
+    box-shadow: none;
+  }
+}
+
+.fieldHint {
+  font-size: 0.75rem;
+  color: $zinc-400;
+  margin-top: $sp-2;
+  padding: 0 $sp-1;
+}
+
+// Actions footer
+.panelFooter {
+  margin-top: $sp-8;
+  padding-top: $sp-6;
+  border-top: 1px solid rgba($zinc-200, 0.6);
+  display: flex;
+  justify-content: flex-end;
+}
+
+.saveBtn {
+  @include btn-reset;
+  display: inline-flex;
+  align-items: center;
+  gap: $sp-2;
+  padding: $sp-2_5 $sp-6;
+  background: $amber-400;
+  color: $amber-950;
+  font-family: $font-headline;
+  font-weight: 700;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-sm;
+  transition: $transition-base;
+
+  &:hover:not(:disabled) { background: $amber-500; }
+  &:active:not(:disabled) { transform: scale(0.98); }
+  &:disabled { opacity: 0.5; cursor: not-allowed; }
+}

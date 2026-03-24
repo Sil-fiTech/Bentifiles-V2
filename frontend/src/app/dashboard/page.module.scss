@@ -1,0 +1,533 @@
+// page.module.scss — Dashboard
+@use '../../styles/tokens' as *;
+@use '../../styles/mixins' as *;
+// ------------------------------------------------------------------
+// Root
+// ------------------------------------------------------------------
+.root {
+  background: var(--color-background);
+  font-family: $font-body;
+  color: var(--color-on-surface);
+  overflow: hidden;
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  position: relative;
+}
+
+.main {
+  flex: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--color-surface);
+  overflow-y: auto;
+  position: relative;
+  width: 100%;
+  @include custom-scrollbar;
+}
+
+.canvas {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: $sp-6 $sp-4 $sp-16;
+
+  @include md { padding: $sp-8 $sp-6 $sp-16; }
+  @include lg { padding: $sp-8 $sp-8 $sp-16; }
+}
+
+// ------------------------------------------------------------------
+// Loading
+// ------------------------------------------------------------------
+.loadingScreen {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+}
+
+// ------------------------------------------------------------------
+// Section header
+// ------------------------------------------------------------------
+.sectionHeader {
+  @include flex-between;
+  margin-bottom: $sp-6;
+  align-items: flex-end;
+}
+
+.sectionTitle {
+  font-family: $font-headline;
+  font-size: 1.875rem;
+  font-weight: 900;
+  color: $zinc-900;
+  letter-spacing: -0.04em;
+}
+
+.sectionSubtitle {
+  font-size: 0.875rem;
+  color: $zinc-500;
+  font-weight: 500;
+  margin-top: $sp-1;
+}
+
+.sectionIndicator {
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  margin-top: $sp-1;
+}
+
+.sectionDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: $radius-full;
+  background: var(--color-tertiary);
+}
+
+// ------------------------------------------------------------------
+// Empty state
+// ------------------------------------------------------------------
+.emptyState {
+  @include card-base;
+  padding: $sp-6;
+  text-align: center;
+}
+
+.emptyText {
+  color: $zinc-500;
+}
+
+.emptyBtn {
+  @include btn-reset;
+  margin-top: $sp-4;
+  padding: $sp-2_5 $sp-6;
+  background: $amber-50;
+  color: $amber-600;
+  font-weight: 700;
+  border-radius: $radius-lg;
+  transition: $transition-base;
+
+  &:hover { background: rgba($amber-100, 0.8); }
+  &:active { transform: scale(0.98); }
+}
+
+// ------------------------------------------------------------------
+// Projects horizontal scroll row
+// ------------------------------------------------------------------
+.projectsRow {
+  display: flex;
+  gap: $sp-6;
+  overflow-x: auto;
+  padding-bottom: $sp-4;
+  margin: 0 -$sp-2;
+  padding-left: $sp-2;
+  padding-right: $sp-2;
+  @include custom-scrollbar;
+}
+
+.projectCardWrapper {
+  flex-shrink: 0;
+  width: 280px;
+  
+  @include sm { width: 320px; }
+  @include md { width: 400px; }
+  cursor: pointer;
+}
+
+.projectCard {
+  @include card-base;
+  overflow: hidden;
+  transition: background-color 0.15s;
+
+  &:hover { background: var(--color-primary-fixed); }
+}
+
+.projectThumb {
+  height: 12rem;
+  position: relative;
+  overflow: hidden;
+  background: $zinc-800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.projectThumbPattern {
+  position: absolute;
+  inset: 0;
+  opacity: 0.2;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(255, 255, 255, 0.2) 10px,
+    rgba(255, 255, 255, 0.2) 20px
+  );
+}
+
+.projectFolderIcon {
+  color: $amber-400;
+  opacity: 0.8;
+  transition: transform 0.3s;
+
+  .projectCardWrapper:hover & { transform: scale(1.1); }
+}
+
+.projectBadge {
+  position: absolute;
+  top: $sp-4;
+  left: $sp-4;
+  background: var(--color-tertiary-container);
+  color: var(--color-on-tertiary-container);
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: $sp-1 $sp-2;
+  border-radius: $radius-full;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.projectInfo {
+  padding: $sp-6;
+}
+
+.projectName {
+  font-family: $font-headline;
+  font-weight: 700;
+  font-size: 1.25rem;
+  margin-bottom: $sp-1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.projectDate {
+  font-size: 0.875rem;
+  color: $zinc-500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-bottom: $sp-4;
+}
+
+.projectAvatar {
+  width: 2rem;
+  height: 2rem;
+  border-radius: $radius-full;
+  background: $zinc-200;
+  border: 2px solid white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+  font-weight: 700;
+  color: $zinc-700;
+}
+
+// ------------------------------------------------------------------
+// Tab switcher
+// ------------------------------------------------------------------
+.tabsWrapper {
+  display: flex;
+  gap: $sp-4;
+  overflow-x: auto;
+  padding-bottom: $sp-2;
+  @include custom-scrollbar;
+}
+
+.tabGroup {
+  display: flex;
+  background: rgba($zinc-100, 0.8);
+  padding: $sp-2;
+  border-radius: $radius-xl;
+  border: 1px solid rgba($zinc-200, 0.6);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.tabBtn {
+  @include btn-reset;
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  padding: $sp-2 $sp-4;
+
+  @include sm { padding: $sp-3_5 $sp-8; gap: $sp-3; }
+  font-size: 0.875rem;
+
+  @include sm { font-size: 0.9375rem; }
+  font-weight: 700;
+  border-radius: $radius-xl;
+  white-space: nowrap;
+  transition: $transition-slow;
+  color: $zinc-500;
+
+  &:hover { color: $zinc-700; background: $zinc-50; }
+  &:active { transform: scale(0.98); }
+
+  &.active {
+    background: white;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    color: $zinc-900;
+    outline: 1px solid rgba($zinc-200, 0.5);
+  }
+}
+
+.tabIcon {
+  transition: color 0.3s;
+  color: $zinc-400;
+
+  .active & { color: $amber-500; }
+}
+
+.tabBadge {
+  margin-left: $sp-1_5;
+  padding: $sp-0_5 $sp-2_5;
+  border-radius: $radius-full;
+  font-size: 0.6875rem;
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  background: $zinc-200;
+  color: $zinc-500;
+
+  .active & {
+    background: $amber-100;
+    color: $amber-700;
+  }
+}
+
+// ------------------------------------------------------------------
+// Stats cards
+// ------------------------------------------------------------------
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $sp-6;
+  margin-bottom: $sp-8;
+
+  @include sm { grid-template-columns: repeat(3, 1fr); }
+}
+
+.statCard {
+  @include card-base;
+  padding: $sp-6;
+}
+
+.statHeader {
+  display: flex;
+  align-items: center;
+  gap: $sp-3;
+  margin-bottom: $sp-2;
+}
+
+.statIcon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: $radius-sm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.neutral  { background: $zinc-100; color: $zinc-500; }
+  &.positive { background: var(--color-tertiary-container); color: var(--color-tertiary); }
+  &.warning  { background: $amber-50; color: $amber-500; }
+}
+
+.statLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $zinc-400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.statValue {
+  @include text-stat;
+}
+
+// ------------------------------------------------------------------
+// File cards grid
+// ------------------------------------------------------------------
+.fileGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $sp-6;
+
+  @include md { grid-template-columns: repeat(2, 1fr); }
+  @include lg { grid-template-columns: repeat(3, 1fr); }
+  @include xl { grid-template-columns: repeat(4, 1fr); }
+}
+
+.fileCard {
+  @include card-base;
+  padding: $sp-6;
+  transition: background-color 0.15s;
+  position: relative;
+
+  &:hover { background: var(--color-primary-fixed); }
+}
+
+.fileThumb {
+  aspect-ratio: 1;
+  background: $zinc-50;
+  border-radius: $radius-md;
+  overflow: hidden;
+  margin-bottom: $sp-4;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fileThumbImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.fileIcon {
+  color: $zinc-300;
+  transition: color 0.15s;
+
+  .fileCard:hover & { color: $amber-500; }
+}
+
+.fileMeta {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.fileInfo {
+  flex: 1;
+  padding-right: $sp-4;
+  position: relative;
+  width: 100%;
+}
+
+.fileName {
+  font-family: $font-headline;
+  font-weight: 700;
+  color: var(--color-on-surface);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  padding-right: $sp-2;
+}
+
+.fileBy {
+  font-family: $font-headline;
+  font-size: 0.75rem;
+  color: $zinc-600;
+  margin-top: $sp-1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+
+.fileProject {
+  @extend .fileBy;
+  margin-top: 0;
+}
+
+.fileSize {
+  font-size: 0.625rem;
+  color: $zinc-500;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: $sp-0_5;
+}
+
+.fileFooter {
+  margin-top: $sp-4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: $sp-1 $sp-3;
+  border-radius: $radius-full;
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+
+.statusDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: $radius-full;
+}
+
+// ------------------------------------------------------------------
+// Floating processing bar
+// ------------------------------------------------------------------
+.processingBar {
+  position: fixed;
+  bottom: $sp-8;
+  right: $sp-8;
+  background: $zinc-900;
+  color: white;
+  padding: $sp-4;
+  border-radius: $radius-xl;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  gap: $sp-4;
+  z-index: 50;
+  border-left: 4px solid $amber-400;
+}
+
+.processingIconWrapper {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: $radius-full;
+  background: rgba($amber-400, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.processingTitle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: $font-headline;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: $amber-50;
+}
+
+.processingProgress {
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  margin-top: $sp-1;
+}
+
+.progressTrack {
+  width: 6rem;
+  height: 0.25rem;
+  background: $zinc-700;
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: $amber-400;
+  transition: width 0.5s;
+}
+
+.processingCount {
+  font-size: 0.625rem;
+  font-weight: 500;
+  color: $zinc-400;
+  white-space: nowrap;
+}

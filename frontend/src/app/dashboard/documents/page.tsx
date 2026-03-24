@@ -4,9 +4,10 @@ import api from '@/lib/api';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
-import { Plus, Loader2, Trash2, Edit2, Save, X, FileText, Settings, Key, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { Plus, Loader2, Trash2, Edit2, FileText, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
 import { Nav } from '@/components/Nav';
+import styles from './page.module.scss';
 
 interface DocumentType {
     id: string;
@@ -127,67 +128,65 @@ export default function DocumentTypesDashboard() {
 
     if (loading) {
         return (
-            <div className="h-screen w-full flex items-center justify-center bg-surface">
-                <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+            <div className={styles.loadingScreen}>
+                <Loader2 className="animate-spin" style={{ width: 32, height: 32, color: '#f59e0b' }} />
             </div>
         );
     }
 
     return (
-        <div className="bg-background font-body text-on-surface antialiased overflow-hidden flex h-screen w-full relative">
-            <main className="flex-1 h-screen flex flex-col items-center bg-surface overflow-y-auto relative w-full custom-scrollbar">
+        <div className={styles.root}>
+            <main className={styles.main}>
                 <Nav
                     userInitials={userInitials}
                     onLogout={handleLogout}
                 />
 
-                <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-8 md:space-y-12 pb-24">
+                <div className={styles.canvas}>
                     
-                    <header className="mb-8">
-                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                            <div>
-                                <h2 className="text-3xl font-headline font-black text-zinc-900 tracking-tighter">Tipos de Documento</h2>
-                                <p className="text-sm text-zinc-500 font-medium mt-1">Gerencie os tipos de documentos globais do sistema.</p>
-                            </div>
+                    <header className={styles.sectionHeader}>
+                        <div>
+                            <h2 className={styles.sectionTitle}>Tipos de Documento</h2>
+                            <p className={styles.sectionSubtitle}>Gerencie os tipos de documentos globais do sistema.</p>
                         </div>
                     </header>
 
                     {/* Novo Tipo de Documento Card */}
-                    <section className="bg-white border border-zinc-200/60 p-6 rounded-xl shadow-sm">
-                        <div className="flex items-center gap-3 mb-6">
-                            <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center border border-amber-100">
-                                <FileText className="text-amber-500" size={20} />
+                    <section className={styles.createSection}>
+                        <div className={styles.createHeader}>
+                            <div className={styles.createIconWrapper}>
+                                <FileText size={20} />
                             </div>
                             <div>
-                                <h3 className="font-headline font-bold text-lg text-zinc-900">Novo Tipo de Documento</h3>
+                                <h3 className={styles.createTitle}>Novo Tipo de Documento</h3>
                             </div>
                         </div>
 
-                        <div className="flex flex-col md:flex-row gap-4 items-start md:items-center">
-                            <div className="w-full md:w-1/3">
-                                <label className="block text-[11px] font-bold text-zinc-600 uppercase tracking-widest mb-1.5 px-1">Nome</label>
+                        <div className={styles.createForm}>
+                            <div className={`${styles.fieldGroup} ${styles.nameField}`}>
+                                <label className={styles.fieldLabel}>Nome</label>
                                 <input
-                                    className="w-full px-4 py-3 bg-zinc-50/50 border border-zinc-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 focus:bg-white transition-all outline-none text-zinc-900 text-sm font-medium placeholder:text-zinc-400 shadow-sm"
+                                    className={styles.fieldInput}
                                     placeholder="Ex: CNH, RG..."
                                     value={newName}
                                     onChange={(e) => setNewName(e.target.value)}
                                 />
                             </div>
-                            <div className="w-full md:flex-1">
-                                <label className="block text-[11px] font-bold text-zinc-600 uppercase tracking-widest mb-1.5 px-1">Descrição</label>
+                            <div className={styles.fieldGroup}>
+                                <label className={styles.fieldLabel}>Descrição</label>
                                 <input
-                                    className="w-full px-4 py-3 bg-zinc-50/50 border border-zinc-200/80 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-400 focus:bg-white transition-all outline-none text-zinc-900 text-sm font-medium placeholder:text-zinc-400 shadow-sm"
+                                    className={styles.fieldInput}
                                     placeholder="Descrição (opcional)"
                                     value={newDescription}
                                     onChange={(e) => setNewDescription(e.target.value)}
                                     onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
                                 />
                             </div>
-                            <div className="w-full md:w-auto md:mt-6">
+                            <div>
                                 <button
                                     onClick={handleCreate}
                                     disabled={isCreating}
-                                    className="w-full md:w-auto px-5 py-2.5 bg-amber-400 hover:bg-amber-500 disabled:bg-zinc-300 disabled:cursor-not-allowed text-amber-950 rounded-xl font-headline font-bold text-sm shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 active:scale-[0.98]"
+                                    className={styles.addBtn}
                                 >
                                     {isCreating ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                                     Adicionar
@@ -196,10 +195,10 @@ export default function DocumentTypesDashboard() {
                         </div>
 
                         {newName.trim().length >= 3 && documentTypes.some(d => d.name.toLowerCase().includes(newName.toLowerCase())) && (
-                            <div className="mt-4 flex items-center gap-2 bg-amber-50 text-amber-700 p-3 rounded-lg border border-amber-200/50 text-sm font-medium">
-                                <AlertTriangle size={16} className="text-amber-500 shrink-0" />
+                            <div className={styles.alertBox}>
+                                <AlertTriangle size={16} />
                                 <span>
-                                    Já existem documentos semelhantes (<span className="font-bold">{documentTypes.filter(d => d.name.toLowerCase().includes(newName.toLowerCase())).map(d => d.name).join(', ')}</span>). Evite criar duplicatas.
+                                    Já existem documentos semelhantes (<span className={styles.bold}>{documentTypes.filter(d => d.name.toLowerCase().includes(newName.toLowerCase())).map(d => d.name).join(', ')}</span>). Evite criar duplicatas.
                                 </span>
                             </div>
                         )}
@@ -208,79 +207,79 @@ export default function DocumentTypesDashboard() {
                     {/* Lista de Documentos */}
                     <section>
                         {documentTypes.length === 0 ? (
-                            <div className="bg-white p-6 rounded-xl shadow-sm border border-zinc-200/60 text-center">
-                                <p className="text-zinc-500">Nenhum tipo de documento cadastrado ainda.</p>
+                            <div className={styles.emptyState}>
+                                <p className={styles.emptyText}>Nenhum tipo de documento cadastrado ainda.</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div className={styles.docGrid}>
                                 {documentTypes.map(doc => {
                                     const isEditing = editingId === doc.id;
 
                                     return (
-                                        <div key={doc.id} className="bg-white border border-zinc-200/60 p-6 rounded-xl shadow-sm hover:shadow-md hover:border-zinc-300 transition-all duration-300 group flex flex-col h-full">
+                                        <div key={doc.id} className={styles.docCard}>
                                             
                                             {isEditing ? (
-                                                <div className="flex flex-col gap-3 flex-1">
-                                                    <div>
-                                                        <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 ml-1">Nome</label>
+                                                <div className={styles.editMode}>
+                                                    <div className={styles.editFieldGroup}>
+                                                        <label className={styles.editLabel}>Nome</label>
                                                         <input
-                                                            className="w-full px-3 py-2 bg-white border border-amber-400/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-zinc-900 text-sm font-medium"
+                                                            className={styles.editInput}
                                                             value={editName}
                                                             onChange={(e) => setEditName(e.target.value)}
                                                             autoFocus
                                                         />
                                                     </div>
-                                                    <div className="flex-1">
-                                                        <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-1 ml-1">Descrição</label>
+                                                    <div className={styles.editFieldGroup}>
+                                                        <label className={styles.editLabel}>Descrição</label>
                                                         <textarea
-                                                            className="w-full px-3 py-2 bg-white border border-amber-400/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500/20 text-zinc-900 text-xs text-zinc-600 resize-none h-20"
+                                                            className={styles.editTextarea}
                                                             value={editDescription}
                                                             onChange={(e) => setEditDescription(e.target.value)}
                                                         />
                                                     </div>
                                                 </div>
                                             ) : (
-                                                <div className="flex-1">
-                                                    <div className="flex items-start justify-between mb-3">
-                                                        <div className="w-10 h-10 rounded-lg bg-zinc-50 flex items-center justify-center border border-zinc-200/60 text-zinc-400 group-hover:text-amber-500 group-hover:border-amber-100 group-hover:bg-amber-50/50 transition-colors">
+                                                <div className={styles.docCardContent}>
+                                                    <div className={styles.docCardHeader}>
+                                                        <div className={styles.docIconWrapper}>
                                                             {doc.isDefault ? <ShieldCheck size={20} /> : <FileText size={20} />}
                                                         </div>
                                                         {doc.isDefault && (
-                                                            <span className="bg-zinc-100 text-zinc-500 text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-widest">
+                                                            <span className={styles.systemBadge}>
                                                                 Sistema
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <h3 className="font-headline font-bold text-lg text-zinc-900 line-clamp-1 mb-1" title={doc.name}>
+                                                    <h3 className={styles.docName} title={doc.name}>
                                                         {doc.name}
                                                     </h3>
-                                                    <p className="text-zinc-500 text-sm line-clamp-2 min-h-[40px]" title={doc.description || ''}>
-                                                        {doc.description || <span className="italic opacity-50">Sem descrição</span>}
+                                                    <p className={styles.docDescription} title={doc.description || ''}>
+                                                        {doc.description || <span className={styles.italic}>Sem descrição</span>}
                                                     </p>
                                                 </div>
                                             )}
 
-                                            <div className="mt-6 pt-4 border-t border-zinc-200/60 flex items-center justify-end gap-2">
+                                            <div className={styles.cardFooter}>
                                                 {isEditing ? (
-                                                    <>
-                                                        <button onClick={cancelEdit} className="px-3 py-1.5 text-xs font-bold text-zinc-500 hover:text-zinc-700 hover:bg-zinc-100 rounded-lg transition-colors flex items-center gap-1.5">
+                                                    <div className={styles.editBtnGroup}>
+                                                        <button onClick={cancelEdit} className={styles.cancelBtn}>
                                                             Cancelar
                                                         </button>
-                                                        <button onClick={() => saveEdit(doc.id)} className="px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors flex items-center gap-1.5 active:scale-[0.98]">
+                                                        <button onClick={() => saveEdit(doc.id)} className={styles.saveBtn}>
                                                             Salvar
                                                         </button>
-                                                    </>
+                                                    </div>
                                                 ) : !doc.isDefault ? (
                                                     <>
-                                                        <button onClick={() => startEdit(doc)} className="p-2 text-zinc-400 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors active:scale-[0.95]" title="Editar">
+                                                        <button onClick={() => startEdit(doc)} className={styles.actionBtn} title="Editar">
                                                             <Edit2 size={16} />
                                                         </button>
-                                                        <button onClick={() => handleDelete(doc.id)} className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors active:scale-[0.95]" title="Remover">
+                                                        <button onClick={() => handleDelete(doc.id)} className={`${styles.actionBtn} ${styles.danger}`} title="Remover">
                                                             <Trash2 size={16} />
                                                         </button>
                                                     </>
                                                 ) : (
-                                                    <span className="text-[10px] text-zinc-400 font-medium italic">Não editável</span>
+                                                    <span className={styles.readOnlyText}>Não editável</span>
                                                 )}
                                             </div>
                                             
@@ -295,3 +294,4 @@ export default function DocumentTypesDashboard() {
         </div>
     );
 }
+

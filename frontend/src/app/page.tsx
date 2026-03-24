@@ -5,12 +5,15 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { signIn } from 'next-auth/react';
+import { Turnstile } from '@marsidev/react-turnstile';
+import styles from './page.module.scss';
 
 function HomeContent() {
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -25,11 +28,19 @@ function HomeContent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!turnstileToken) {
+      toast.error('Por favor, complete a verificação de segurança');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const endpoint = isLogin ? '/api/users/login' : '/api/users/register';
-      const payload = isLogin ? { email, password } : { name, email, password };
+      const payload = isLogin 
+        ? { email, password, turnstileToken } 
+        : { name, email, password, turnstileToken };
 
       const res = await api.post(endpoint, payload);
 
@@ -54,52 +65,45 @@ function HomeContent() {
   };
 
   return (
-    <div className="min-h-screen w-full relative flex items-center justify-center bg-zinc-50 overflow-hidden font-body text-zinc-900 selection:bg-amber-200">
-      
-      {/* Premium Background Orbs & Ambient Glow */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-amber-300/40 rounded-full blur-[120px] mix-blend-multiply animate-pulse" style={{ animationDuration: '8s' }} />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-300/30 rounded-full blur-[120px] mix-blend-multiply animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
-      <div className="absolute top-[20%] right-[10%] w-[30%] h-[30%] bg-rose-200/30 rounded-full blur-[100px] mix-blend-multiply animate-pulse" style={{ animationDuration: '12s', animationDelay: '4s' }} />
+    <div className={styles.root}>
 
-      {/* Decorative Grid Pattern */}
-      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMWgydjJIMUMxeiIgZmlsbD0iI2Y0ZjRmNSIgZmlsbC1vcGFjaXR5PSIwLjM1IiBmaWxsLXJ1bGU9ImV2ZW5vZGQiLz48L3N2Zz4=')] [mask-image:linear-gradient(to_bottom,white,transparent)] opacity-60"></div>
+      {/* Background decoration */}
+      <div className={styles.orb1} />
+      <div className={styles.orb2} />
+      <div className={styles.orb3} />
+      <div className={styles.gridPattern} />
 
-      <main className="relative z-10 w-full max-w-[460px] p-6 lg:p-0">
-        
-        {/* Brand Header */}
-        <div className="mb-10 text-center animate-fade-in-up flex flex-col items-center">
-          <div className="inline-flex items-center justify-center p-3 mb-6 hover:scale-105 transition-transform duration-500">
-             {/* <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-amber-500">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 17L12 22L22 17" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-             </svg> */}
-             <img src="./favicon.ico" alt="Logo" width={36} height={36} style={{width: "100px", height: "100px"}}/>
+      <main className={styles.main}>
+
+        {/* Brand header */}
+        <div className={styles.brand}>
+          <div className={styles.logoWrapper}>
+            <img src="./favicon.ico" alt="Logo" className={styles.logoImg} />
           </div>
-          <h1 className="font-headline text-5xl md:text-6xl font-black tracking-tighter text-zinc-900 drop-shadow-sm">
-            Benti<span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-amber-600">Files</span>
+          <h1 className={styles.headline}>
+            Benti<span className={styles.headlineAccent}>Files</span>
           </h1>
-          <p className="mt-4 text-[15px] text-zinc-500 font-medium tracking-tight">Validação Inteligente & Gestão de Documentos</p>
+          <p className={styles.tagline}>Validação Inteligente &amp; Gestão de Documentos</p>
         </div>
 
-        {/* Glassmorphism Auth Card */}
-        <div className="bg-white/70 backdrop-blur-2xl p-8 sm:p-10 rounded-[2.5rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] border border-white">
-          <div className="flex flex-col mb-8">
-            <h2 className="font-headline text-2xl font-black text-zinc-900 tracking-tight">
+        {/* Auth card */}
+        <div className={styles.card}>
+          <div className={styles.cardHeader}>
+            <h2 className={styles.cardTitle}>
               {isLogin ? 'Bem-vindo(a) de volta' : 'Crie sua conta'}
             </h2>
-            <p className="text-sm text-zinc-500 mt-1 font-medium">
+            <p className={styles.cardSubtitle}>
               {isLogin ? 'Faça o login para acessar o workspace.' : 'Junte-se a nós para gerenciar seus arquivos.'}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <form onSubmit={handleSubmit} className={styles.form}>
             {!isLogin && (
-              <div className="group">
-                <label className="block text-[11px] font-bold text-zinc-600 uppercase tracking-widest mb-2 px-1 transition-colors group-focus-within:text-amber-600">Nome</label>
+              <div className={styles.fieldGroup}>
+                <label className={styles.fieldLabel}>Nome</label>
                 <input
                   type="text"
-                  className="w-full px-5 py-4 bg-white/50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-400 focus:bg-white transition-all outline-none text-zinc-900 text-[15px] font-medium placeholder:text-zinc-400 shadow-sm"
+                  className={styles.fieldInput}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required={!isLogin}
@@ -108,11 +112,11 @@ function HomeContent() {
               </div>
             )}
 
-            <div className="group">
-              <label className="block text-[11px] font-bold text-zinc-600 uppercase tracking-widest mb-2 px-1 transition-colors group-focus-within:text-amber-600">E-mail</label>
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel}>E-mail</label>
               <input
                 type="email"
-                className="w-full px-5 py-4 bg-white/50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-400 focus:bg-white transition-all outline-none text-zinc-900 text-[15px] font-medium placeholder:text-zinc-400 shadow-sm"
+                className={styles.fieldInput}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -120,11 +124,11 @@ function HomeContent() {
               />
             </div>
 
-            <div className="group">
-              <label className="block text-[11px] font-bold text-zinc-600 uppercase tracking-widest mb-2 px-1 transition-colors group-focus-within:text-amber-600">Senha</label>
+            <div className={styles.fieldGroup}>
+              <label className={styles.fieldLabel}>Senha</label>
               <input
                 type="password"
-                className="w-full px-5 py-4 bg-white/50 border border-zinc-200/80 rounded-2xl focus:outline-none focus:ring-4 focus:ring-amber-500/10 focus:border-amber-400 focus:bg-white transition-all outline-none text-zinc-900 text-[15px] font-medium placeholder:text-zinc-400 shadow-sm"
+                className={styles.fieldInput}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -132,25 +136,33 @@ function HomeContent() {
               />
             </div>
 
+            <Turnstile 
+              siteKey="0x4AAAAAACvFRhV6i6pVbKYu" 
+              onSuccess={(token: string) => setTurnstileToken(token)}
+              options={{ theme: 'light' }}
+            />
+
             <button
               type="submit"
-              className="mt-2 w-full py-4 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-400 hover:to-amber-500 text-amber-950 rounded-2xl font-headline font-black text-base tracking-wide shadow-xl shadow-amber-500/20 hover:shadow-amber-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] transition-all flex items-center justify-center gap-3 relative overflow-hidden group/btn"
+              className={styles.submitBtn}
               disabled={loading}
             >
-              <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300 ease-in-out"></div>
-              <span className="relative">{loading ? 'Validando...' : isLogin ? 'Acessar Plataforma' : 'Criar Conta Agora'}</span>
+              <div className={styles.submitBtnSheen} />
+              <span className={styles.submitBtnText}>
+                {loading ? 'Validando...' : isLogin ? 'Acessar Plataforma' : 'Criar Conta Agora'}
+              </span>
             </button>
           </form>
 
-          <div className="flex items-center gap-4 my-8 mx-2">
-            <hr className="flex-1 border-t border-zinc-200/80" />
-            <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest px-3 bg-white/50 rounded-full py-1.5">Ou conecte com</span>
-            <hr className="flex-1 border-t border-zinc-200/80" />
+          <div className={styles.divider}>
+            <hr className={styles.dividerLine} />
+            <span className={styles.dividerLabel}>Ou conecte com</span>
+            <hr className={styles.dividerLine} />
           </div>
 
           <button
             type="button"
-            className="w-full py-4 bg-white border border-zinc-200/80 text-zinc-700 hover:bg-zinc-50 hover:border-zinc-300 rounded-2xl font-headline font-bold text-[15px] shadow-sm hover:shadow active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+            className={styles.googleBtn}
             onClick={handleGoogleLogin}
             disabled={loading}
           >
@@ -163,17 +175,16 @@ function HomeContent() {
             </svg>
             Google Auth
           </button>
-          
         </div>
 
-        {/* Footer actions */}
-        <div className="mt-8 text-center bg-white/30 backdrop-blur-md py-4 px-6 rounded-2xl border border-white/40 shadow-[0_8px_30px_rgb(0,0,0,0.04)] max-w-[max-content] mx-auto">
-          <span className="text-14px text-zinc-600 font-medium">
-            {isLogin ? "Ainda não tem acesso? " : "Já possui um cadastro? "}
+        {/* Footer toggle */}
+        <div className={styles.footer}>
+          <span className={styles.footerText}>
+            {isLogin ? 'Ainda não tem acesso? ' : 'Já possui um cadastro? '}
           </span>
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-amber-600 font-black hover:text-amber-700 transition-colors ml-1.5 underline decoration-amber-600/30 underline-offset-4 hover:decoration-amber-600"
+            className={styles.footerToggle}
           >
             {isLogin ? 'Solicitar Cadastro' : 'Entrar na Conta'}
           </button>
@@ -189,5 +200,5 @@ export default function Home() {
     <Suspense fallback={<div>Carregando...</div>}>
       <HomeContent />
     </Suspense>
-  )
+  );
 }

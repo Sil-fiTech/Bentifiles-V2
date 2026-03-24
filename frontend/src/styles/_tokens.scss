@@ -1,0 +1,126 @@
+// ============================================================
+// _tokens.scss — Bentifiles Design Tokens
+// Single source of truth for all visual constants.
+// ============================================================
+
+// ----------------------------------------------------------
+// Font Families
+// ----------------------------------------------------------
+$font-headline: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+$font-body:     'Manrope', 'Nunito', sans-serif;
+$font-label:    'Manrope', sans-serif;
+
+// ----------------------------------------------------------
+// Spacing Scale (0.25rem = 1 unit)
+// ----------------------------------------------------------
+$sp-0:   0;
+$sp-0_5: 0.125rem;  //  2px
+$sp-1:   0.25rem;   //  4px
+$sp-1_5: 0.375rem;  //  6px
+$sp-2:   0.5rem;    //  8px
+$sp-2_5: 0.625rem;  // 10px
+$sp-3:   0.75rem;   // 12px
+$sp-3_5: 0.875rem;  // 14px
+$sp-4:   1rem;      // 16px
+$sp-5:   1.25rem;   // 20px
+$sp-6:   1.5rem;    // 24px
+$sp-8:   2rem;      // 32px
+$sp-10:  2.5rem;    // 40px
+$sp-12:  3rem;      // 48px
+$sp-16:  4rem;      // 64px
+
+// ----------------------------------------------------------
+// Border Radius
+// ----------------------------------------------------------
+$radius-sm:   0.5rem;    //  8px
+$radius-md:   0.75rem;   // 12px
+$radius-lg:   1rem;      // 16px
+$radius-xl:   1.25rem;   // 20px
+$radius-2xl:  1.5rem;    // 24px
+$radius-3xl:  2.5rem;    // 40px
+$radius-full: 9999px;
+
+// ----------------------------------------------------------
+// Shadows
+// ----------------------------------------------------------
+$shadow-sm:   0 1px 3px 0 rgba(0, 0, 0, 0.08);
+$shadow-md:   0 4px 12px 0 rgba(0, 0, 0, 0.08);
+$shadow-lg:   0 8px 24px 0 rgba(0, 0, 0, 0.10);
+$shadow-xl:   0 20px 60px -15px rgba(0, 0, 0, 0.12);
+$shadow-2xl:  0 25px 50px -12px rgba(0, 0, 0, 0.18);
+
+// ----------------------------------------------------------
+// Transitions
+// ----------------------------------------------------------
+$transition-fast:   all 0.15s ease;
+$transition-base:   all 0.2s ease;
+$transition-slow:   all 0.3s ease;
+
+// ----------------------------------------------------------
+// Breakpoints
+// ----------------------------------------------------------
+$bp-sm:  640px;
+$bp-md:  768px;
+$bp-lg:  1024px;
+$bp-xl:  1280px;
+$bp-2xl: 1536px;
+
+// ----------------------------------------------------------
+// Color Palette (static)
+// ----------------------------------------------------------
+
+// Amber / Primary brand
+$amber-50:  #fffbeb;
+$amber-100: #fef3c7;
+$amber-200: #fde68a;
+$amber-300: #fcd34d;
+$amber-400: #fbbf24;
+$amber-500: #f59e0b;
+$amber-600: #d97706;
+$amber-700: #b45309;
+$amber-800: #92400e;
+$amber-950: #451a03;
+
+// Zinc / Neutral
+$zinc-50:  #fafafa;
+$zinc-100: #f4f4f5;
+$zinc-200: #e4e4e7;
+$zinc-300: #d4d4d8;
+$zinc-400: #a1a1aa;
+$zinc-500: #71717a;
+$zinc-600: #52525b;
+$zinc-700: #3f3f46;
+$zinc-800: #27272a;
+$zinc-900: #18181b;
+
+// Status colors
+$emerald-50:  #ecfdf5;
+$emerald-100: #d1fae5;
+$emerald-200: #a7f3d0;
+$emerald-500: #10b981;
+$emerald-700: #047857;
+
+$red-50:  #fef2f2;
+$red-100: #fee2e2;
+$red-200: #fecaca;
+$red-500: #ef4444;
+$red-600: #dc2626;
+$red-700: #b91c1c;
+
+$blue-50:  #eff6ff;
+$blue-500: #3b82f6;
+$blue-700: #1d4ed8;
+
+// Surface / Background
+$surface:     #f9f9f9;
+$surface-dim: #dadada;
+$background:  #f9f9f9;
+
+// ----------------------------------------------------------
+// CSS Custom Properties (injected into :root)
+// Keep in sync with globals.scss :root block.
+// ----------------------------------------------------------
+//  --color-primary:   #{$amber-400}
+//  --color-surface:   #{$surface}
+//  --color-on-surface: #{$zinc-900}
+// (defined in globals.scss :root)
