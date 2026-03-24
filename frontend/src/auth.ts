@@ -1,6 +1,7 @@
 import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import type { DefaultSession } from "next-auth"
+import api from '@/lib/api';
 
 declare module "next-auth" {
     interface Session {
@@ -24,27 +25,19 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (account?.provider === 'google' && user) {
                 try {
                     // Chama o backend para criar ou buscar o usuário do banco
-                    const res = await fetch(`${process.env.NEXT_LOCAL_API_URL || process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/google`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            email: user.email,
-                            name: user.name,
-                            image: user.image,
-                            providerId: user.id || account.providerAccountId,
-                        }),
+                    const res = await api.post(`/api/auth/google`, {
+                        email: user.email,
+                        name: user.name,
+                        image: user.image,
+                        providerId: user.id || account.providerAccountId,
                     });
 
-                    const data = await res.json();
-
-                    if (res.ok && data.user && data.token) {
+                    if (res.data.user && res.data.token) {
                         // Salva os dados do backend no token do NextAuth
-                        token.backendToken = data.token;
-                        token.backendUserId = data.user.id;
+                        token.backendToken = res.data.token;
+                        token.backendUserId = res.data.user.id;
                     } else {
-                        throw new Error(data.message || 'Erro ao sincronizar com backend');
+                        throw new Error(res.data.message || 'Erro ao sincronizar com backend');
                     }
                 } catch (error) {
                     console.error('Erro na sincronização Google->Backend:', error);
