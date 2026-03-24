@@ -35,7 +35,7 @@
 
 .canvas {
   width: 100%;
-  max-width: 1280px;
+  max-width: 1200px; /* narrowed for a settings page feel */
   margin: 0 auto;
   padding: $sp-6 $sp-4 $sp-16;
   display: flex;
@@ -71,7 +71,24 @@
 }
 
 .header {
-  margin-bottom: $sp-8;
+  margin-bottom: $sp-2;
+}
+
+.headerTitleRow {
+  display: flex;
+  align-items: center;
+  gap: $sp-4;
+}
+
+.headerIconWrapper {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: $radius-xl;
+  background: $zinc-100;
+  color: $zinc-700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .title {
@@ -80,19 +97,20 @@
   font-weight: 900;
   letter-spacing: -0.04em;
   color: $zinc-900;
+  line-height: 1.1;
 }
 
 .subtitle {
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: $zinc-500;
   font-weight: 500;
-  margin-top: $sp-1;
+  margin-top: $sp-2;
 }
 
 .layoutGrid {
   display: flex;
   flex-direction: column;
-  gap: $sp-8;
+  gap: $sp-6;
 
   @include lg {
     flex-direction: row;
@@ -100,22 +118,34 @@
   }
 }
 
-.adminPanel {
+.mainCol {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-6;
+}
+
+.sideCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-6;
+}
+
+.card {
   @include card-base;
   padding: $sp-6;
   width: 100%;
-
-  @include lg { width: 33.333%; }
 }
 
-.panelHeader {
+.cardHeader {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: $sp-3;
   margin-bottom: $sp-6;
 }
 
-.panelIcon {
+.cardIcon {
   width: 2.5rem;
   height: 2.5rem;
   border-radius: $radius-md;
@@ -128,41 +158,378 @@
   flex-shrink: 0;
 }
 
-.panelTitle {
+.cardTitle {
   font-family: $font-headline;
   font-weight: 700;
   font-size: 1.125rem;
   color: $zinc-900;
+  margin-top: 0.25rem;
 }
 
-.panelDescription {
+.cardDesc {
   font-size: 0.875rem;
   color: $zinc-500;
   font-weight: 500;
-  margin-bottom: $sp-6;
+  margin-top: $sp-1;
 }
 
-.configList {
+// Project Info Grid
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $sp-4;
+  
+  @include md {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.infoItem {
   display: flex;
   flex-direction: column;
-  gap: $sp-4;
+  gap: $sp-1;
+  padding: $sp-3 $sp-4;
+  background: $zinc-50;
+  border-radius: $radius-lg;
+  border: 1px solid rgba($zinc-200, 0.6);
 }
 
-.checkboxLabel {
-  display: flex;
-  align-items: flex-start;
-  gap: $sp-3;
-  cursor: pointer;
+.infoLabel {
+  font-size: 0.75rem;
+  color: $zinc-500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
 
-  &:hover .checkboxName {
+.infoValue {
+  font-size: 0.875rem;
+  color: $zinc-900;
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.statusBadge {
+  display: inline-flex;
+  padding: 0.125rem 0.5rem;
+  border-radius: $radius-full;
+  font-size: 0.75rem;
+  font-weight: 700;
+  
+  &.statusActive {
+    background: #d1fae5;
+    color: #047857;
+  }
+  
+  &.statusArchived {
+    background: $zinc-200;
+    color: $zinc-600;
+  }
+}
+
+// Templates
+.templateSection {
+  margin-bottom: $sp-8;
+  padding: $sp-5;
+  background: $zinc-50;
+  border-radius: $radius-xl;
+  border: 1px solid rgba($zinc-200, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+}
+
+.templateSectionHeader {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-1;
+}
+
+.templateSectionTitle {
+  font-size: 1rem;
+  font-family: $font-headline;
+  font-weight: 700;
+  color: $zinc-900;
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+
+  svg {
+    color: $amber-500;
+  }
+}
+
+.templateSectionDesc {
+  font-size: 0.8125rem;
+  color: $zinc-500;
+  line-height: 1.4;
+}
+
+.templateSectionForm {
+  display: flex;
+  gap: $sp-3;
+  align-items: center;
+  margin-top: $sp-2;
+  flex-direction: column;
+  
+  @include md {
+    flex-direction: row;
+  }
+}
+
+// Search Input
+.searchWrapper {
+  width: 100%;
+  position: relative;
+  
+  @include md {
+    width: auto;
+    flex: 2;
+  }
+}
+
+.searchInput {
+  width: 100%;
+  padding: $sp-2_5 $sp-4;
+  border-radius: $radius-lg;
+  border: 1px solid $zinc-200;
+  outline: none;
+  background: white;
+  font-size: 0.875rem;
+  font-family: $font-body;
+  color: $zinc-800;
+  transition: $transition-base;
+  box-shadow: $shadow-sm;
+
+  &::placeholder {
+    color: $zinc-400;
+  }
+
+  &:focus {
+    border-color: $amber-400;
+    box-shadow: 0 0 0 3px rgba($amber-400, 0.1);
+  }
+}
+
+.suggestionsList {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: $sp-1;
+  background: white;
+  border: 1px solid $zinc-200;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 50;
+  list-style: none;
+  padding: $sp-1 0;
+  @include custom-scrollbar;
+}
+
+.suggestionItem {
+  padding: $sp-2 $sp-3;
+  font-size: 0.875rem;
+  color: $zinc-800;
+  cursor: pointer;
+  transition: $transition-base;
+
+  &:hover {
+    background: $zinc-50;
     color: $amber-600;
   }
 }
 
+.emptySuggestionItem {
+  padding: $sp-2 $sp-3;
+  font-size: 0.875rem;
+  color: $zinc-500;
+  font-style: italic;
+  text-align: center;
+}
+
+.templateSelect {
+  width: 100%;
+  padding: $sp-2_5 $sp-4;
+  border-radius: $radius-lg;
+  border: 1px solid $zinc-200;
+  outline: none;
+  background: white;
+  font-size: 0.875rem;
+  font-family: $font-body;
+  color: $zinc-800;
+  cursor: pointer;
+  transition: $transition-base;
+  box-shadow: $shadow-sm;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2371717a'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1rem;
+  padding-right: 2.5rem;
+
+  @include md {
+    width: auto;
+    flex: 1;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: $zinc-300;
+  }
+
+  &:focus:not(:disabled) {
+    border-color: $amber-400;
+    box-shadow: 0 0 0 3px rgba($amber-400, 0.1);
+  }
+
+  &:disabled {
+    background-color: $zinc-100;
+    cursor: not-allowed;
+    color: $zinc-400;
+  }
+}
+
+.templateApplyBtn {
+  @include btn-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: $sp-2;
+  padding: $sp-2_5 $sp-6;
+  background: $amber-500;
+  color: white;
+  border-radius: $radius-lg;
+  font-weight: 800;
+  font-family: $font-body;
+  font-size: 0.875rem;
+  transition: $transition-base;
+  box-shadow: $shadow-sm;
+
+  @include md {
+    width: auto;
+  }
+
+  &:hover:not(:disabled) {
+    background: $amber-600;
+    transform: translateY(-1px);
+    box-shadow: $shadow-md;
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    background: $zinc-100;
+    color: $zinc-400;
+    cursor: not-allowed;
+    box-shadow: none;
+    border: 1px solid $zinc-200;
+  }
+}
+
+// Global Document Types Tables
+.configList {
+  display: flex;
+  flex-direction: column;
+}
+
+.configListHeader {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-4;
+  margin-bottom: $sp-4;
+  padding-bottom: $sp-3;
+  border-bottom: 1px solid $zinc-100;
+
+  @include md {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .searchInput {
+    @include md {
+      width: 250px;
+    }
+  }
+}
+
+.configListTitle {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: $zinc-800;
+}
+
+.tableWrapper {
+  width: 100%;
+  max-height: 400px;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid rgba($zinc-200, 0.6);
+  border-radius: $radius-lg;
+  background: white;
+  @include custom-scrollbar;
+}
+
+.dataTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.dataTable th, .dataTable td {
+  padding: $sp-3 $sp-4;
+  border-bottom: 1px solid $zinc-100;
+}
+
+.dataTable thead th {
+  background: $zinc-50;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $zinc-500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tableThCheckbox {
+  width: 4rem;
+  text-align: center !important;
+}
+
+.tableRow {
+  transition: background-color 0.15s;
+  cursor: pointer;
+
+  &:hover {
+    background-color: $zinc-50;
+  }
+  
+  &:last-child td {
+    border-bottom: none;
+  }
+}
+
+.tableTdCheckbox {
+  width: 4rem;
+  text-align: center !important;
+  vertical-align: middle;
+}
+
+.emptyStateContainer {
+  padding: $sp-8 !important;
+  text-align: center;
+}
+
 .checkboxInput {
-  margin-top: 0.25rem;
-  width: 1rem;
-  height: 1rem;
+  width: 1.125rem;
+  height: 1.125rem;
   cursor: pointer;
   border-radius: $radius-sm;
   border: 1px solid $zinc-300;
@@ -177,7 +544,7 @@
 .checkboxText {
   display: flex;
   flex-direction: column;
-  gap: $sp-0_5;
+  gap: $sp-1;
 }
 
 .checkboxTitleRow {
@@ -190,7 +557,6 @@
   font-weight: 700;
   font-size: 0.875rem;
   color: $zinc-900;
-  transition: color 0.15s;
 }
 
 .systemBadge {
@@ -207,35 +573,149 @@
 .checkboxDesc {
   font-size: 0.75rem;
   color: $zinc-500;
+  line-height: 1.3;
 }
 
-.emptyState {
-  color: $zinc-500;
-  font-size: 0.875rem;
-}
-
-.contentPanel {
-  @include card-base;
-  padding: $sp-6;
-  flex: 1;
-  width: 100%;
-}
-
-.docList {
+// Members
+.memberList {
   display: flex;
   flex-direction: column;
-  gap: $sp-4;
+  gap: $sp-3;
 }
 
-.docCard {
-  padding: $sp-4;
+.memberItem {
+  display: flex;
+  align-items: center;
+  gap: $sp-3;
+  padding: $sp-3;
   background: $zinc-50;
-  border-radius: $radius-xl;
+  border-radius: $radius-lg;
   border: 1px solid rgba($zinc-200, 0.6);
+}
+
+.memberAvatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: $radius-full;
+  background: $amber-100;
+  color: $amber-800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.memberInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; // enables truncation
+}
+
+.memberName {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: $zinc-900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.meBadge {
+  font-size: 0.6875rem;
+  color: $zinc-500;
+  font-weight: 500;
+  margin-left: $sp-1;
+}
+
+.memberEmail {
+  font-size: 0.75rem;
+  color: $zinc-500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.memberActions {
+  display: flex;
+  align-items: center;
+  gap: $sp-3;
+}
+
+.roleBadge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: $radius-sm;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &.roleAdmin {
+    background: #e0e7ff;
+    color: #4f46e5;
+  }
+
+  &.roleMember {
+    background: $zinc-200;
+    color: $zinc-600;
+  }
+}
+
+.removeMemberBtn {
+  @include btn-reset;
+  color: $zinc-400;
+  display: flex;
+  padding: $sp-1;
+  border-radius: $radius-sm;
+  transition: $transition-base;
+
+  &:hover:not(:disabled) {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+// Danger Zone
+.dangerZone {
+  border: 1px solid #fecaca;
+  background: #fff;
+}
+
+.dangerIcon {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #ef4444;
+}
+
+.dangerTitle {
+  color: #b91c1c;
+}
+
+.dangerDesc {
+  font-size: 0.875rem;
+  color: #991b1b;
+  font-weight: 500;
+  margin-top: $sp-1;
+}
+
+.dangerActions {
   display: flex;
   flex-direction: column;
   gap: $sp-4;
+}
 
+.dangerItem {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+  
   @include md {
     flex-direction: row;
     align-items: center;
@@ -243,131 +723,71 @@
   }
 }
 
-.docCardLeft {
+.dangerItemInfo {
   display: flex;
   flex-direction: column;
+  gap: $sp-0_5;
+
+  strong {
+    font-size: 0.875rem;
+    color: $zinc-900;
+  }
+
+  p {
+    font-size: 0.75rem;
+    color: $zinc-500;
+  }
 }
 
-.docTypeTag {
-  font-size: 0.6875rem;
-  color: $amber-600;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: $sp-1;
-}
-
-.docCardTitle {
-  font-family: $font-headline;
-  font-weight: 700;
-  font-size: 0.875rem;
-  color: $zinc-900;
-}
-
-.docCardSubtitle {
-  font-size: 0.75rem;
-  color: $zinc-500;
-  margin-top: $sp-0_5;
-}
-
-.docCardRight {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: $sp-4;
-}
-
-.statusBadge {
-  padding: $sp-1_5 $sp-3;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  border-radius: $radius-full;
-  
-  &.approved { background: #d1fae5; color: #047857; }
-  &.rejected { background: #fee2e2; color: #b91c1c; }
-  &.pending { background: #fef3c7; color: #b45309; }
-}
-
-.rejectionReason {
+.dangerLine {
+  height: 1px;
+  background: $zinc-100;
   width: 100%;
-  margin-top: $sp-2;
-  padding: $sp-2 $sp-3;
-  background: #fef2f2;
-  border-left: 4px solid #ef4444;
-  border-radius: $radius-md;
-  font-size: 0.875rem;
-  color: #b91c1c;
 }
 
-.actionButtons {
-  display: flex;
-  gap: $sp-2;
-  margin-top: $sp-4;
-
-  @include md { margin-top: 0; }
-}
-
-.actionBtn {
+.dangerBtn {
   @include btn-reset;
   display: inline-flex;
   align-items: center;
-  gap: $sp-1_5;
-  padding: $sp-2 $sp-4;
-  border-radius: $radius-lg;
-  font-weight: 700;
-  font-size: 0.6875rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  transition: $transition-base;
-  box-shadow: $shadow-sm;
-
-  &:active { transform: scale(0.98); }
-
-  &.approve {
-    background: #ecfdf5;
-    color: #047857;
-    border: 1px solid #a7f3d0;
-    &:hover { background: #d1fae5; }
-  }
-
-  &.reject {
-    background: #fef2f2;
-    color: #b91c1c;
-    border: 1px solid #fecaca;
-    &:hover { background: #fee2e2; }
-  }
-}
-
-// Dropzone wrapper classes
-.dropzoneWrapper {
-  display: inline-flex;
-  align-items: center;
+  justify-content: center;
   gap: $sp-2;
   padding: $sp-2 $sp-4;
   border-radius: $radius-lg;
-  cursor: pointer;
-  transition: $transition-base;
-  font-size: 0.875rem;
   font-weight: 700;
+  font-size: 0.8125rem;
+  transition: $transition-base;
 
-  &.idle {
-    border: 1px dashed $zinc-300;
-    color: $zinc-600;
-    &:hover {
-      border-color: $amber-400;
-      color: $amber-600;
-      background: rgba($amber-50, 0.5);
-    }
-  }
-
-  &.uploading {
-    background: $zinc-100;
-    color: $zinc-400;
+  &:active:not(:disabled) { transform: scale(0.98); }
+  &:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
   }
 
-  &.dragActive {
-    border-color: $amber-400;
-    background: rgba($amber-50, 0.5);
+  &.btnArchive {
+    background: #fffbeb;
+    color: #b45309;
+    border: 1px solid #fde68a;
+
+    &:hover:not(:disabled) {
+      background: #fef3c7;
+      border-color: #fcd34d;
+    }
   }
+
+  &.btnDelete {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+
+    &:hover:not(:disabled) {
+      background: #fee2e2;
+      border-color: #fca5a5;
+    }
+  }
+}
+
+.emptyState {
+  color: $zinc-500;
+  font-size: 0.875rem;
+  font-style: italic;
 }

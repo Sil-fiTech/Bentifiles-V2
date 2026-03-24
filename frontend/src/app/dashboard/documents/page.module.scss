@@ -76,6 +76,116 @@
 }
 
 // ------------------------------------------------------------------
+// Tabs
+// ------------------------------------------------------------------
+.tabsContainer {
+  display: flex;
+  gap: $sp-4;
+  margin-bottom: $sp-6;
+  border-bottom: 1px solid rgba($zinc-200, 0.6);
+  padding-bottom: $sp-2;
+}
+
+.tabBtn {
+  @include btn-reset;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: $zinc-500;
+  padding: $sp-2 0;
+  position: relative;
+  transition: $transition-base;
+
+  &:hover {
+    color: $zinc-900;
+  }
+
+  &.active {
+    color: $amber-600;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -$sp-2;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: $amber-500;
+      border-radius: $radius-full 2px 0 0;
+    }
+  }
+}
+
+// ------------------------------------------------------------------
+// Template Form Specifics
+// ------------------------------------------------------------------
+.templateDocsList {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+  margin-top: $sp-4;
+  width: 100%;
+}
+
+.templateTableSearch {
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  padding: $sp-2 $sp-3;
+  margin-bottom: $sp-3;
+  border: 1px solid rgba(228, 228, 231, 0.6);
+  border-radius: 0.5rem;
+  background: #fafafe;
+
+  input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 0.875rem;
+    outline: none;
+    color: #3f3f46;
+  }
+}
+
+.templateTableWrapper {
+  max-height: 250px;
+  overflow-y: auto;
+  border: 1px solid rgba(228, 228, 231, 0.6);
+  border-radius: 0.5rem;
+  background: #ffffff;
+  padding: 0.25rem;
+  
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: #d4d4d8;
+    border-radius: 3px;
+  }
+}
+
+.templateDocRow {
+  display: flex;
+  gap: $sp-3;
+  align-items: center;
+  
+  .nameInput {
+    flex: 1;
+    @include input-base;
+    padding: $sp-2;
+  }
+  
+  .reqToggle {
+    display: flex;
+    align-items: center;
+    gap: $sp-2;
+    font-size: 0.75rem;
+    color: $zinc-600;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+// ------------------------------------------------------------------
 // Create Card
 // ------------------------------------------------------------------
 .createSection {

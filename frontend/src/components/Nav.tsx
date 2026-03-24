@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import api from '@/lib/api';
+import { useSession } from 'next-auth/react';
 import {
     LayoutGrid,
     Folder,
@@ -21,7 +23,7 @@ import {
 import styles from './Nav.module.scss';
 
 interface NavProps {
-    userInitials: string;
+    userInitials?: string;
     hasActiveProcessing?: boolean;
     creating?: boolean;
     onCreateProject?: () => void;
@@ -44,8 +46,9 @@ export function Nav({
     const router = useRouter();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [navUserName, setNavUserName] = useState('');
     const profileRef = useRef<HTMLDivElement>(null);
-
+    const { data: session, status } = useSession();
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
@@ -58,6 +61,27 @@ export function Nav({
 
     const isSticky = !className;
 
+    useEffect(() => {
+        const fetchProfile = async () => {
+            const localToken = localStorage.getItem('token');
+            const activeToken = session?.user?.token || localToken;
+            if (!activeToken) return;
+
+            try {
+                const profileRes = await api.get('/api/users/me', { headers: { Authorization: `Bearer ${activeToken}` } });
+                if (profileRes.data?.name) {
+                    setNavUserName(profileRes.data.name);
+                }
+            } catch (error) {
+                console.error('Failed to fetch profile in Nav', error);
+            }
+        };
+        fetchProfile();
+    }, [session]);
+
+    // Determinar as iniciais dando preferência à API, depois à sessão, depois às props e finalmente 'US'
+    const nameToUse = navUserName || session?.user?.name;
+    const finalInitials = nameToUse ? nameToUse.substring(0, 2).toUpperCase() : (userInitials || 'US');
     return (
         <header className={`${styles.header} ${isSticky ? styles.sticky : ''} ${className || ''}`}>
             <div className={styles.inner}>
@@ -84,7 +108,7 @@ export function Nav({
                         >
                             <LayoutGrid size={16} /> Dashboard
                         </button>
-                        {context === 'dashboard' ? (
+                          {context === 'dashboard' ? (
                             <>
                                 <button
                                     onClick={onCreateProject}
@@ -99,12 +123,12 @@ export function Nav({
                                     onClick={() => router.push('/dashboard/documents')}
                                     className={styles.navBtn}
                                 >
-                                    <Folder size={16} /> Tipos de Doc
+                                    <Folder size={16} /> Tipos & Templates
                                 </button>
                             </>
                         ) : (
                             <>
-
+                              
                                 <span className={styles.projectName}>
                                     {projectName || 'Projeto Atual'}
                                 </span>
@@ -113,9 +137,9 @@ export function Nav({
                                     onClick={() => router.push('/dashboard/documents')}
                                     className={styles.navBtn}
                                 >
-                                    <Folder size={16} /> Tipos de Doc
+                                    <Folder size={16} /> Tipos & Templates
                                 </button>
-                                {/*  <button
+                               {/*  <button
                                     onClick={() => router.push('/dashboard/documents')}
                                     className={styles.navBtn}
                                 >
@@ -142,7 +166,7 @@ export function Nav({
                             <Bell size={18} />
                             {hasActiveProcessing && <span className={styles.notifDot} />}
                         </button>
-                      
+
                         <div className={styles.divider} />
 
                         <div className={styles.profileWrapper} ref={profileRef}>
@@ -150,7 +174,7 @@ export function Nav({
                                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                                 className={styles.profileBtn}
                             >
-                                <div className={styles.avatar}>{userInitials}</div>
+                                <div className={styles.avatar}>{finalInitials}</div>
                                 <ChevronDown size={14} className={styles.chevron} />
                             </button>
 
@@ -199,9 +223,18 @@ export function Nav({
                         {context === 'dashboard' ? (
                             <>
                                 <button
+                                    className={styles.mobileNavBtn}
                                     onClick={() => {
-                                        if (onCreateProject) onCreateProject();
                                         setIsMobileMenuOpen(false);
+                                        router.push('/dashboard');
+                                    }}
+                                >
+                                    <LayoutGrid size={16} /> Dashboard
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        setIsMobileMenuOpen(false);
+                                        if (onCreateProject) onCreateProject();
                                     }}
                                     disabled={creating}
                                     className={styles.mobileNavBtn}
@@ -209,14 +242,15 @@ export function Nav({
                                     {creating ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                                     Novo Projeto
                                 </button>
+
                                 <button
                                     onClick={() => {
-                                        router.push('/dashboard/documents');
                                         setIsMobileMenuOpen(false);
+                                        router.push('/dashboard/documents');
                                     }}
                                     className={styles.mobileNavBtn}
                                 >
-                                    <Folder size={16} /> Tipos de Doc
+                                    <Folder size={16} /> Tipos & Templates
                                 </button>
                             </>
                         ) : (
@@ -224,23 +258,29 @@ export function Nav({
                                 <button
                                     className={styles.mobileNavBtn}
                                     onClick={() => {
-                                        router.push('/dashboard');
                                         setIsMobileMenuOpen(false);
+                                        router.push('/dashboard');
                                     }}
                                 >
                                     <LayoutGrid size={16} /> Dashboard
                                 </button>
+                                <span className={styles.projectName} style={{ padding: '0.25rem 1rem' }}>
+                                    {projectName || 'Projeto Atual'}
+                                </span>
+
                                 <button
                                     onClick={() => {
-                                        router.push('/dashboard/documents');
                                         setIsMobileMenuOpen(false);
+                                        router.push('/dashboard/documents');
                                     }}
                                     className={styles.mobileNavBtn}
                                 >
-                                    <Folder size={16} /> Tipos de Doc
+                                    <Folder size={16} /> Tipos & Templates
                                 </button>
                             </>
                         )}
+
+                        <div className={styles.mobileDivider} />
 
                         <div className={styles.mobileSearchWrapper}>
                             <Search className={styles.searchIcon} size={16} />
@@ -250,6 +290,48 @@ export function Nav({
                                 type="text"
                             />
                         </div>
+
+                        <div className={styles.mobileDivider} />
+
+                        <button 
+                            className={styles.mobileNavBtn}
+                            onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                            <Bell size={16} /> Notificações
+                            {hasActiveProcessing && (
+                                <span className={styles.mobileNotifDot} />
+                            )}
+                        </button>
+                        
+                        <button
+                            className={styles.mobileNavBtn}
+                            onClick={() => {
+                                setIsMobileMenuOpen(false);
+                                router.push('/profile');
+                            }}
+                        >
+                            <User size={16} /> Perfil
+                        </button>
+
+                        <button
+                            className={styles.mobileNavBtn}
+                            onClick={() => {
+                                setIsMobileMenuOpen(false);
+                                router.push('/subscription');
+                            }}
+                        >
+                            <CreditCard size={16} /> Assinatura
+                        </button>
+
+                        <button
+                            onClick={() => {
+                                setIsMobileMenuOpen(false);
+                                if (onLogout) onLogout();
+                            }}
+                            className={styles.mobileNavBtnDanger}
+                        >
+                            <LogOut size={16} /> Sair
+                        </button>
                     </nav>
                 </div>
             )}

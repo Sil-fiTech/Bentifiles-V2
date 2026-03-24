@@ -30,7 +30,7 @@
 
 .canvas {
   width: 100%;
-  max-width: 1280px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: $sp-6 $sp-4 $sp-16;
 
@@ -116,25 +116,103 @@
 }
 
 // ------------------------------------------------------------------
-// Projects horizontal scroll row
+// Projects list & search
 // ------------------------------------------------------------------
-.projectsRow {
+.projectActionsWrapper {
   display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: $sp-3;
+  width: 100%;
+
+  @include sm {
+    flex-direction: row;
+    align-items: center;
+    width: auto;
+  }
+}
+
+.filterArchivedBtn {
+  @include btn-reset;
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: $zinc-500;
+  background: white;
+  border: 1px solid rgba($zinc-300, 0.8);
+  padding: $sp-2 $sp-3_5;
+  border-radius: $radius-full;
+  transition: $transition-base;
+  white-space: nowrap;
+
+  &:hover {
+    color: $zinc-700;
+    border-color: $zinc-400;
+    background: $zinc-50;
+  }
+
+  &.active {
+    background: $zinc-100;
+    color: $zinc-500;
+    border-color: rgba($zinc-300, 0.8);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+  }
+}
+
+.projectSearchWrapper {
+  display: flex;
+  align-items: center;
+  margin-top: $sp-2;
+
+  @include sm {
+    margin-top: 0;
+    max-width: 250px;
+    width: 100%;
+  }
+}
+
+.projectSearchInput {
+  width: 100%;
+  padding: $sp-2_5 $sp-4;
+  font-size: 0.875rem;
+  font-family: $font-body;
+  border: 1px solid rgba($zinc-300, 0.8);
+  border-radius: $radius-full;
+  background: white;
+  transition: $transition-base;
+  outline: none;
+
+  &:focus {
+    border-color: $zinc-400;
+    box-shadow: 0 0 0 3px rgba($zinc-200, 0.4);
+  }
+
+  &::placeholder {
+    color: $zinc-400;
+  }
+}
+
+.projectsRow {
+  display: grid;
+  grid-template-columns: 1fr;
   gap: $sp-6;
-  overflow-x: auto;
-  padding-bottom: $sp-4;
-  margin: 0 -$sp-2;
-  padding-left: $sp-2;
-  padding-right: $sp-2;
+  padding: $sp-1;
+  /* Define a altura exata para mostrar apenas a primeira linha (1 cartão de altura) */
+  max-height: 335px;
+  overflow-y: auto;
   @include custom-scrollbar;
+
+  @include sm { grid-template-columns: repeat(2, 1fr); }
+  @include lg { grid-template-columns: repeat(3, 1fr); }
+  @include xl { grid-template-columns: repeat(4, 1fr); }
 }
 
 .projectCardWrapper {
-  flex-shrink: 0;
-  width: 280px;
-  
-  @include sm { width: 320px; }
-  @include md { width: 400px; }
+  width: 100%;
   cursor: pointer;
 }
 
@@ -154,6 +232,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
+  &.archived {
+    background: $zinc-100;
+  }
 }
 
 .projectThumbPattern {
@@ -175,6 +257,10 @@
   transition: transform 0.3s;
 
   .projectCardWrapper:hover & { transform: scale(1.1); }
+
+  .archived & {
+    color: $zinc-400;
+  }
 }
 
 .projectBadge {
@@ -189,6 +275,12 @@
   border-radius: $radius-full;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+
+  &.badgeArchived {
+    background: white;
+    color: $zinc-500;
+    border: 1px solid rgba($zinc-200, 0.5);
+  }
 }
 
 .projectInfo {
@@ -353,8 +445,12 @@
 // ------------------------------------------------------------------
 .fileGrid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 2fr;
   gap: $sp-6;
+  max-height: 520px;
+  overflow-y: auto;
+  @include custom-scrollbar;
+  padding: $sp-1;
 
   @include md { grid-template-columns: repeat(2, 1fr); }
   @include lg { grid-template-columns: repeat(3, 1fr); }
@@ -433,6 +529,24 @@
 .fileProject {
   @extend .fileBy;
   margin-top: 0;
+}
+
+.fileRejection {
+  font-size: 0.6875rem;
+  color: $red-600;
+  font-weight: 700;
+  margin-top: $sp-1_5;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.2;
+
+  span {
+    color: $red-500;
+    font-weight: 500;
+  }
 }
 
 .fileSize {

@@ -81,6 +81,7 @@ export default function ProjectPage() {
     const toggleUserExpand = (userId: string) => setExpandedUsers(prev => ({ ...prev, [userId]: !prev[userId] }));
 
     const generateInvite = async () => {
+        if (project?.status === 'ARCHIVED') { toast.error('Projeto arquivado. Não é possível gerar convites.'); return; }
         try {
             const token = session?.user?.token || localStorage.getItem('token');
             const res = await api.post(`/api/projects/${id}/invites`, {}, {
@@ -93,6 +94,7 @@ export default function ProjectPage() {
     };
 
     const handleRename = async () => {
+        if (project?.status === 'ARCHIVED') { toast.error('Projeto arquivado.'); setIsEditingName(false); return; }
         if (!newName.trim() || newName === project?.name) { setIsEditingName(false); return; }
         try {
             const token = session?.user?.token || localStorage.getItem('token');
@@ -106,6 +108,7 @@ export default function ProjectPage() {
     };
 
     const handleUploadSpecificDocument = async (acceptedFiles: File[], docTypeId: string, targetUserId?: string) => {
+        if (project?.status === 'ARCHIVED') { toast.error('Projeto arquivado.'); return; }
         if (!hasPermission('DOCUMENT_UPLOAD') && !isAdmin) { toast.error('Você não tem permissão para enviar documentos'); return; }
         if (acceptedFiles.length === 0) return;
 
@@ -222,7 +225,7 @@ export default function ProjectPage() {
     const approvedDocs = clientDocs.filter(d => d.status === 'approved' && nonAdminMembers.some(m => m.userId === d.ownerUserId)).length;
     const completionRate = targetDocs > 0 ? Math.round((approvedDocs / targetDocs) * 100) : 100;
     const timeAgo = project?.updatedAt ? new Date(project.updatedAt).toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Recentemente';
-
+    console.log(project)
     const membersToDisplay = isAdmin
         ? members.filter(m => !m.permissions?.includes('PROJECT_EDIT'))
         : members.filter(m => m.userId === currentUser?.userId);
@@ -282,7 +285,7 @@ export default function ProjectPage() {
                                 ) : (
                                     <>
                                         <h1 className={styles.pageTitle}>{project?.name || 'Detalhes do Projeto'}</h1>
-                                        {isAdmin && (
+                                        {isAdmin && project?.status !== 'ARCHIVED' && (
                                             <button
                                                 onClick={() => { setNewName(project?.name || ''); setIsEditingName(true); }}
                                                 className={styles.editBtn}
@@ -295,18 +298,20 @@ export default function ProjectPage() {
                                 )}
                             </div>
                             <div className={styles.headerMeta}>
-                                <span className={styles.statusBadge}>
+                                <span className={`${styles.statusBadge} ${project?.status === 'ARCHIVED' ? styles.archived : ''}`}>
                                     <span className={styles.statusDot} />
-                                    {project?.status || 'Em andamento'}
+                                    {project?.status === 'ARCHIVED' ? 'Arquivado' : (project?.status === 'ACTIVE' ? 'Ativo' : 'Em andamento')}
                                 </span>
                                 <span className={styles.updatedAt}>Atualizado: {timeAgo}</span>
                             </div>
                         </div>
                         {isAdmin && (
                             <div className={styles.headerActions}>
-                                <button onClick={generateInvite} className={styles.inviteBtn}>
-                                    <Share size={16} /> Convite
-                                </button>
+                                {project?.status !== 'ARCHIVED' && (
+                                    <button onClick={generateInvite} className={styles.inviteBtn}>
+                                        <Share size={16} /> Convite
+                                    </button>
+                                )}
                                 <button
                                     onClick={() => router.push(`/projects/${id}/documents`)}
                                     className={styles.inviteBtn}    
@@ -496,13 +501,15 @@ export default function ProjectPage() {
                                                                         {(!doc || doc.status === 'rejected') && (!isAdmin || (isAdmin && !doc)) && (
                                                                             <>
                                                                                 {doc && <span className={styles.docActionSep}>|</span>}
-                                                                                <DropzoneUploader
-                                                                                    onUpload={(files) => handleUploadSpecificDocument(files, rd.documentTypeId, member.userId)}
-                                                                                    isUploading={isUploading}
-                                                                                    progress={progress}
-                                                                                    label={doc ? 'Re-enviar' : 'Upload'}
-                                                                                    moduleStyles={styles}
-                                                                                />
+                                                                                {project?.status !== 'ARCHIVED' && (
+                                                                                    <DropzoneUploader
+                                                                                        onUpload={(files) => handleUploadSpecificDocument(files, rd.documentTypeId, member.userId)}
+                                                                                        isUploading={isUploading}
+                                                                                        progress={progress}
+                                                                                        label={doc ? 'Re-enviar' : 'Upload'}
+                                                                                        moduleStyles={styles}
+                                                                                    />
+                                                                                )}
                                                                             </>
                                                                         )}
                                                                     </div>
