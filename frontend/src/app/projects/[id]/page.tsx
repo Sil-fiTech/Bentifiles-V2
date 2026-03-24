@@ -12,7 +12,9 @@ import {
     FileText, Search as SearchIcon, ChevronDown,
     File as FileIcon, Eye,
     UploadCloud, ArrowLeft, Shield, AlertTriangle, CheckCircle, XCircle,
-    Download, LayoutGrid
+    Download, LayoutGrid,
+    Folder,
+    Settings
 } from 'lucide-react';
 import { Nav } from '@/components/Nav';
 import styles from './page.module.scss';
@@ -305,6 +307,12 @@ export default function ProjectPage() {
                                 <button onClick={generateInvite} className={styles.inviteBtn}>
                                     <Share size={16} /> Convite
                                 </button>
+                                <button
+                                    onClick={() => router.push(`/projects/${id}/documents`)}
+                                    className={styles.inviteBtn}    
+                                >
+                                    <Settings size={16} /> Configurações do projeto
+                                </button>
                             </div>
                         )}
                     </header>
@@ -426,6 +434,7 @@ export default function ProjectPage() {
                                     </div>
 
                                     {isExpanded && (
+                                        
                                         <div className={styles.docSection}>
                                             {requiredDocs.length === 0 ? (
                                                 <p className={styles.docEmpty}>Nenhum documento obrigatório configurado para este projeto.</p>

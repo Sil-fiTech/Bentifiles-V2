@@ -7,6 +7,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { ArrowLeft, CheckCircle, AlertTriangle, XCircle, FileText, Loader2, UploadCloud, Check, X } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import { Nav } from '@/components/Nav';
+import styles from './page.module.scss';
 
 export default function ProjectDocumentsPage() {
     const { id } = useParams();
@@ -167,9 +168,9 @@ export default function ProjectDocumentsPage() {
 
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'approved': return <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs font-bold">Aprovado</span>;
-            case 'rejected': return <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-bold">Rejeitado</span>;
-            case 'pending': return <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-xs font-bold">Pendente</span>;
+            case 'approved': return <span className={`${styles.statusBadge} ${styles.approved}`}>Aprovado</span>;
+            case 'rejected': return <span className={`${styles.statusBadge} ${styles.rejected}`}>Rejeitado</span>;
+            case 'pending': return <span className={`${styles.statusBadge} ${styles.pending}`}>Pendente</span>;
             default: return null;
         }
     };
@@ -188,15 +189,15 @@ export default function ProjectDocumentsPage() {
 
     if (loading) {
         return (
-            <div className="h-screen w-full flex items-center justify-center bg-surface">
-                <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+            <div className={styles.loadingScreen}>
+                <Loader2 size={32} className="animate-spin" style={{ color: '#f59e0b' }} />
             </div>
         );
     }
 
     return (
-        <div className="bg-background font-body text-on-surface antialiased overflow-hidden flex h-screen w-full relative">
-            <main className="flex-1 h-screen flex flex-col items-center bg-surface overflow-y-auto relative w-full custom-scrollbar">
+        <div className={styles.root}>
+            <main className={styles.main}>
                 <Nav
                     context="project"
                     projectName={project?.name}
@@ -204,87 +205,87 @@ export default function ProjectDocumentsPage() {
                     onLogout={handleLogout}
                 />
 
-                <div className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6 md:py-8 space-y-8 pb-24">
-                    <button onClick={() => router.push(`/projects/${id}`)} className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 hover:bg-white px-4 py-2 rounded-lg shadow-sm font-bold text-sm transition-all w-fit active:scale-[0.98]">
+                <div className={styles.canvas}>
+                    <button onClick={() => router.push(`/projects/${id}`)} className={styles.backBtn}>
                         <ArrowLeft size={18} /> Voltar ao Projeto
                     </button>
 
-                    <header className="mb-8">
-                        <h1 className="text-3xl font-headline font-black text-zinc-900 tracking-tighter">Gestão de Documentos</h1>
-                        <p className="text-sm text-zinc-500 font-medium mt-1">{project?.name}</p>
+                    <header className={styles.header}>
+                        <h1 className={styles.title}>Gestão de Documentos</h1>
+                        <p className={styles.subtitle}>{project?.name}</p>
                     </header>
 
-                    <div className="flex flex-col lg:flex-row gap-8">
+                    <div className={styles.layoutGrid}>
 
                         {/* ADMIN CONFIG SECTION */}
                         {isAdmin && (
-                            <div className="bg-white border border-zinc-200/60 rounded-xl shadow-sm p-6 lg:w-1/3 self-start">
-                                <div className="flex items-center gap-3 mb-6">
-                                    <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center border border-amber-100">
-                                        <FileText size={20} className="text-amber-500" />
+                            <div className={styles.adminPanel}>
+                                <div className={styles.panelHeader}>
+                                    <div className={styles.panelIcon}>
+                                        <FileText size={20} />
                                     </div>
-                                    <h2 className="font-headline font-bold text-lg text-zinc-900">Configuração de Documentos</h2>
+                                    <h2 className={styles.panelTitle}>Configuração de Documentos</h2>
                                 </div>
-                                <p className="text-sm text-zinc-500 font-medium mb-6">
+                                <p className={styles.panelDescription}>
                                     Selecione os documentos obrigatórios para os clientes deste projeto.
                                 </p>
-                                <div className="flex flex-col gap-4">
+                                <div className={styles.configList}>
                                     {globalTypes.map(type => {
                                         const isRequired = requiredDocs.some(rd => rd.documentTypeId === type.id);
                                         return (
-                                            <label key={type.id} className="flex items-center gap-3 cursor-pointer group">
+                                            <label key={type.id} className={styles.checkboxLabel}>
                                                 <input
                                                     type="checkbox"
                                                     checked={isRequired}
                                                     onChange={() => toggleRequiredDocument(type.id)}
-                                                    className="w-4 h-4 cursor-pointer rounded border-zinc-300 text-amber-500 focus:ring-amber-400"
+                                                    className={styles.checkboxInput}
                                                 />
-                                                <div>
-                                                    <span className="font-bold text-sm text-zinc-900 flex items-center gap-2">
-                                                        {type.name}
+                                                <div className={styles.checkboxText}>
+                                                    <span className={styles.checkboxTitleRow}>
+                                                        <span className={styles.checkboxName}>{type.name}</span>
                                                         {type.isDefault && (
-                                                            <span className="text-[10px] bg-zinc-100 text-zinc-500 px-2 py-0.5 rounded-full font-bold uppercase tracking-widest">
+                                                            <span className={styles.systemBadge}>
                                                                 Sistema
                                                             </span>
                                                         )}
                                                     </span>
-                                                    {type.description && <p className="text-xs text-zinc-500 mt-0.5">{type.description}</p>}
+                                                    {type.description && <p className={styles.checkboxDesc}>{type.description}</p>}
                                                 </div>
                                             </label>
                                         );
                                     })}
-                                    {globalTypes.length === 0 && <p className="text-zinc-500 text-sm">Nenhum tipo de documento global cadastrado.</p>}
+                                    {globalTypes.length === 0 && <p className={styles.emptyState}>Nenhum tipo de documento global cadastrado.</p>}
                                 </div>
                             </div>
                         )}
 
                         {/* USER/ADMIN DOCUMENTS VIEW */}
-                        <div className="flex-1 flex flex-col gap-6">
+                        <div className={styles.contentPanel}>
 
                             {/* User upload section */}
                             {!isAdmin && (
-                                <div className="bg-white border border-zinc-200/60 rounded-xl shadow-sm p-6">
-                                    <h2 className="font-headline font-bold text-lg text-zinc-900 mb-6">Meus Documentos Obrigatórios</h2>
-                                    <div className="flex flex-col gap-4">
+                                <div>
+                                    <h2 className={styles.panelTitle} style={{ marginBottom: '1.5rem' }}>Meus Documentos Obrigatórios</h2>
+                                    <div className={styles.docList}>
                                         {requiredDocs.map(rd => {
                                             // Check if user has uploaded this doc
                                             const userDoc = clientDocs.find(cd => cd.documentTypeId === rd.documentTypeId && cd.ownerUserId === currentUser?.userId);
 
                                             return (
-                                                <div key={rd.id} className="p-4 bg-zinc-50 rounded-xl border border-zinc-200/60 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                                                    <div>
-                                                        <h3 className="font-headline font-bold text-sm text-zinc-900">{rd.documentType.name}</h3>
-                                                        {rd.documentType.description && <p className="text-xs text-zinc-500 mt-0.5">{rd.documentType.description}</p>}
+                                                <div key={rd.id} className={styles.docCard}>
+                                                    <div className={styles.docCardLeft}>
+                                                        <h3 className={styles.docCardTitle}>{rd.documentType.name}</h3>
+                                                        {rd.documentType.description && <p className={styles.docCardSubtitle}>{rd.documentType.description}</p>}
                                                     </div>
 
                                                     {userDoc ? (
-                                                        <div className="flex items-center gap-4 flex-wrap">
+                                                        <div className={styles.docCardRight}>
                                                             {getStatusBadge(userDoc.status)}
-                                                            <span className="text-zinc-500 text-sm">{userDoc.file.originalName}</span>
+                                                            <span className={styles.docCardSubtitle}>{userDoc.file.originalName}</span>
                                                             {userDoc.status === 'rejected' && (
-                                                                <p className="text-red-500 text-xs font-medium w-full mt-2">
-                                                                    Motivo: {userDoc.rejectionReason || 'Recusado pelo administrador'}
-                                                                </p>
+                                                                <div className={styles.rejectionReason}>
+                                                                    <strong>Motivo: </strong> {userDoc.rejectionReason || 'Recusado pelo administrador'}
+                                                                </div>
                                                             )}
                                                         </div>
                                                     ) : (
@@ -296,47 +297,47 @@ export default function ProjectDocumentsPage() {
                                                 </div>
                                             );
                                         })}
-                                        {requiredDocs.length === 0 && <p className="text-zinc-500 text-sm">Nenhum documento exigido neste projeto.</p>}
+                                        {requiredDocs.length === 0 && <p className={styles.emptyState}>Nenhum documento exigido neste projeto.</p>}
                                     </div>
                                 </div>
                             )}
 
                             {/* Admin viewing all docs */}
                             {isAdmin && (
-                                <div className="bg-white border border-zinc-200/60 rounded-xl shadow-sm p-6">
-                                    <h2 className="font-headline font-bold text-lg text-zinc-900 mb-6">Documentos Recebidos</h2>
-                                    <div className="flex flex-col gap-4">
-                                        {clientDocs.length === 0 && <p className="text-zinc-500 text-sm">Nenhum documento enviado ainda.</p>}
+                                <div>
+                                    <h2 className={styles.panelTitle} style={{ marginBottom: '1.5rem', marginTop: isAdmin ? '0' : '2rem' }}>Documentos Recebidos</h2>
+                                    <div className={styles.docList}>
+                                        {clientDocs.length === 0 && <p className={styles.emptyState}>Nenhum documento enviado ainda.</p>}
                                         {clientDocs.map(doc => (
-                                            <div key={doc.id} className="p-4 bg-zinc-50 rounded-xl border border-zinc-200/60">
-                                                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
-                                                    <div>
-                                                        <p className="text-xs text-amber-600 font-bold uppercase tracking-widest">{doc.documentType.name}</p>
-                                                        <h3 className="font-headline font-bold text-sm text-zinc-900 mt-1">{doc.file.originalName}</h3>
-                                                        <p className="text-xs text-zinc-500 mt-0.5">
-                                                            Enviado por: {doc.ownerUser.name} ({doc.ownerUser.email})
-                                                        </p>
-                                                    </div>
+                                            <div key={doc.id} className={styles.docCard}>
+                                                <div className={styles.docCardLeft}>
+                                                    <p className={styles.docTypeTag}>{doc.documentType.name}</p>
+                                                    <h3 className={styles.docCardTitle}>{doc.file.originalName}</h3>
+                                                    <p className={styles.docCardSubtitle}>
+                                                        Enviado por: {doc.ownerUser.name} ({doc.ownerUser.email})
+                                                    </p>
+                                                </div>
+                                                <div className={styles.docCardRight}>
                                                     <div>{getStatusBadge(doc.status)}</div>
                                                 </div>
 
                                                 {doc.status === 'pending' && (
-                                                    <div className="flex gap-2 mt-4">
-                                                        <button onClick={() => updateDocStatus(doc.id, 'approved')} className="flex items-center gap-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-4 py-2 rounded-lg border border-emerald-200 transition-colors font-bold text-[11px] uppercase tracking-wider shadow-sm active:scale-[0.98]">
+                                                    <div className={styles.actionButtons}>
+                                                        <button onClick={() => updateDocStatus(doc.id, 'approved')} className={`${styles.actionBtn} ${styles.approve}`}>
                                                             <Check size={16} /> Aprovar
                                                         </button>
                                                         <button onClick={() => {
                                                             const reason = prompt('Motivo da rejeição:');
                                                             if (reason !== null) updateDocStatus(doc.id, 'rejected', reason);
-                                                        }} className="flex items-center gap-1.5 bg-red-50 text-red-700 hover:bg-red-100 px-4 py-2 rounded-lg border border-red-200 transition-colors font-bold text-[11px] uppercase tracking-wider shadow-sm active:scale-[0.98]">
+                                                        }} className={`${styles.actionBtn} ${styles.reject}`}>
                                                             <X size={16} /> Rejeitar
                                                         </button>
                                                     </div>
                                                 )}
 
                                                 {doc.status === 'rejected' && doc.rejectionReason && (
-                                                    <div className="mt-4 p-3 bg-red-50 border-l-4 border-red-500 rounded-lg text-sm">
-                                                        <span className="font-bold text-red-600">Motivo: </span>
+                                                    <div className={styles.rejectionReason}>
+                                                        <span style={{ fontWeight: 700 }}>Motivo: </span>
                                                         {doc.rejectionReason}
                                                     </div>
                                                 )}
@@ -363,11 +364,7 @@ function DropzoneUploader({ onUpload, isUploading }: { onUpload: (files: File[])
     return (
         <div
             {...getRootProps()}
-            className={`
-                flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all text-sm font-bold
-                ${isUploading ? 'bg-zinc-100 text-zinc-400 cursor-not-allowed' : 'border border-dashed border-zinc-300 text-zinc-600 hover:border-amber-400 hover:text-amber-600 hover:bg-amber-50/50'}
-                ${isDragActive ? 'border-amber-400 bg-amber-50/50' : ''}
-            `}
+            className={`${styles.dropzoneWrapper} ${isUploading ? styles.uploading : styles.idle} ${isDragActive ? styles.dragActive : ''}`}
         >
             <input {...getInputProps()} />
             {isUploading ? <Loader2 size={16} className="animate-spin" /> : <UploadCloud size={16} />}

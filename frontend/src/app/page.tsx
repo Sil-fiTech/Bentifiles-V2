@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import styles from './page.module.scss';
 
@@ -19,12 +19,28 @@ function HomeContent() {
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get('invite');
 
+  const { data: session, status } = useSession();
+
   useEffect(() => {
     if (inviteToken) {
       setIsLogin(false);
       localStorage.setItem('pendingInvite', inviteToken);
     }
   }, [inviteToken]);
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/dashboard');
+      return;
+    }
+    
+    if (status !== 'loading') {
+      const localToken = localStorage.getItem('token');
+      if (localToken) {
+        router.push('/dashboard');
+      }
+    }
+  }, [status, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

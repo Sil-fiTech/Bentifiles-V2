@@ -78,6 +78,12 @@ export function Nav({
                     </div>
 
                     <nav className={styles.nav}>
+                        <button
+                            className={styles.navBtn}
+                            onClick={() => router.push('/dashboard')}
+                        >
+                            <LayoutGrid size={16} /> Dashboard
+                        </button>
                         {context === 'dashboard' ? (
                             <>
                                 <button
@@ -98,12 +104,7 @@ export function Nav({
                             </>
                         ) : (
                             <>
-                                <button
-                                    className={styles.navBtn}
-                                    onClick={() => router.push('/dashboard')}
-                                >
-                                    <LayoutGrid size={16} /> Dashboard
-                                </button>
+
                                 <span className={styles.projectName}>
                                     {projectName || 'Projeto Atual'}
                                 </span>
@@ -114,7 +115,7 @@ export function Nav({
                                 >
                                     <Folder size={16} /> Tipos de Doc
                                 </button>
-                               {/*  <button
+                                {/*  <button
                                     onClick={() => router.push('/dashboard/documents')}
                                     className={styles.navBtn}
                                 >
@@ -141,9 +142,7 @@ export function Nav({
                             <Bell size={18} />
                             {hasActiveProcessing && <span className={styles.notifDot} />}
                         </button>
-                        <button className={styles.iconBtn}>
-                            <Settings size={18} />
-                        </button>
+                      
                         <div className={styles.divider} />
 
                         <div className={styles.profileWrapper} ref={profileRef}>
@@ -184,7 +183,7 @@ export function Nav({
                         </div>
                     </div>
 
-                    <button 
+                    <button
                         className={styles.mobileMenuToggle}
                         onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                     >
@@ -242,7 +241,7 @@ export function Nav({
                                 </button>
                             </>
                         )}
-                        
+
                         <div className={styles.mobileSearchWrapper}>
                             <Search className={styles.searchIcon} size={16} />
                             <input
