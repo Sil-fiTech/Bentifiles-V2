@@ -5,13 +5,10 @@
 # TODO:
 
 - RLS SUPABASE
-- AUTENTICACAO TERCEIRIZADA
-- Criacao de templates, ao criar o projeto que ele já venha com os tipos de documento pre definidos - V2
-- Arrumar página do projeto (Novo visual, novo layout, novas configurações (exemplo: Mudar nome do projeto, arquivar, deletar, etc))
+- AUTENTICACAO TERCEIRIZADA (casdoor - clerk - authentik - keycloak)
+- Verificacoes de seguranca
+- JWT por Cookies
 
-
-VALIDACAO DE EMAIL
-RECAPYCHA CLOUDFARA
 BUSCAR FUNCIONANDO
 NOTIFICACAO
 
@@ -21,6 +18,10 @@ NOTIFICACAO
 
 
 - # DONE:
+VALIDACAO DE EMAIL
+RECAPYCHA CLOUDFARA
+- Arrumar página do projeto (Novo visual, novo layout, novas configurações (exemplo: Mudar nome do projeto, arquivar, deletar, etc))
+- Criacao de templates, ao criar o projeto que ele já venha com os tipos de documento pre definidos - V2
 - Aplicar a paleta no sistema inteiro
 - desenhar no stitch as outras telas do sistema
 - Arrumar estilizacao do dashboard

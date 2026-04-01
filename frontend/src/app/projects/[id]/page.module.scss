@@ -161,6 +161,12 @@
   font-size: 0.75rem;
   font-weight: 700;
   border-radius: $radius-full;
+
+  &.archived {
+    background: $zinc-100;
+    color: $zinc-500;
+    border: 1px solid $zinc-200;
+  }
 }
 
 .statusDot {
@@ -169,6 +175,12 @@
   border-radius: $radius-full;
   background: var(--color-tertiary);
   animation: pulse 2s ease infinite;
+
+  .statusBadge.archived & {
+    background: $zinc-400;
+    animation: none;
+  }
+
   @keyframes pulse {
     0%, 100% { opacity: 1; }
     50%       { opacity: 0.5; }

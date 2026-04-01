@@ -8,15 +8,17 @@ import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { Nav } from '@/components/Nav';
 import {
-    Folder, Zap, CheckCircle2, XCircle, FileIcon, Loader2
+    Folder, Zap, CheckCircle2, XCircle, FileIcon, Loader2, Archive
 } from 'lucide-react';
 import styles from './page.module.scss';
+import { profile } from 'console';
 
 interface Project {
     id: string;
     name: string;
     createdByUserId: string;
     createdAt: string;
+    status?: string;
 }
 
 interface FileData {
@@ -34,15 +36,28 @@ interface FileData {
         score: number;
         recommendation?: string;
     }[];
+    clientDocuments?: {
+        status: string;
+        rejectionReason?: string;
+    }[];
 }
-
+interface UserProfile {
+    id: string;
+    name: string;
+    email: string;
+    image?: string;
+    createdAt: string;
+}
 interface DashboardStats {
     totalUploads: number;
     rejectedUploads: number;
 }
 
 export default function Dashboard() {
+    const [profile, setProfile] = useState<UserProfile | null>(null);
     const [projects, setProjects] = useState<Project[]>([]);
+    const [projectSearch, setProjectSearch] = useState('');
+    const [hideArchived, setHideArchived] = useState(true);
     const [files, setFiles] = useState<FileData[]>([]);
     const [pendingFiles, setPendingFiles] = useState<FileData[]>([]);
     const [stats, setStats] = useState<DashboardStats>({ totalUploads: 0, rejectedUploads: 0 });
@@ -65,6 +80,7 @@ export default function Dashboard() {
         try {
             setLoading(true);
 
+            console.log(api)
             const pendingInvite = localStorage.getItem('pendingInvite');
             if (pendingInvite) {
                 try {
@@ -80,13 +96,15 @@ export default function Dashboard() {
                 }
             }
 
-            const [projectsRes, filesRes, statsRes, pendingFilesRes] = await Promise.all([
+            const [projectsRes, filesRes, statsRes, pendingFilesRes, profileRes] = await Promise.all([
                 api.get('/api/projects', { headers: { Authorization: `Bearer ${token}` } }),
                 api.get('/api/files', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
                 api.get('/api/files/stats', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
-                api.get('/api/files/pending', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] }))
+                api.get('/api/files/pending', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
+                api.get('/api/users/me', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] }))
             ]);
 
+            setProfile(profileRes.data);
             setProjects(projectsRes.data.projects || []);
             setFiles(filesRes.data.files || []);
             setStats({
@@ -108,6 +126,7 @@ export default function Dashboard() {
         router.push('/');
     };
 
+
     const handleCreateProject = async () => {
         try {
             setCreating(true);
@@ -128,11 +147,52 @@ export default function Dashboard() {
         ? Math.min(100, Math.round(((files.length - activeProcessingFiles.length) / Math.max(1, files.length)) * 100))
         : 100;
 
-    const userName = session?.user?.name || 'User';
+    const userName = profile?.name || 'User';
     const userInitials = userName.substring(0, 2).toUpperCase();
 
     const isReviewTab = activeTab === 'review-docs';
     const displayedFiles = isReviewTab ? pendingFiles : files;
+    console.log(files);
+
+    const computeStats = () => {
+        let approvedCount = 0;
+        let rejectedCount = stats.rejectedUploads;
+
+        files.forEach(file => {
+            const clientDoc = file.clientDocuments?.[0];
+            const result = file.verificationResults?.[0];
+
+            if (clientDoc?.status === 'approved') {
+                approvedCount++;
+            } else if (clientDoc?.status === 'rejected') {
+                rejectedCount++;
+            } else {
+                if (result?.status === 'APPROVED') approvedCount++;
+                else if (result?.status === 'REJECTED') rejectedCount++;
+            }
+        });
+
+        return {
+            total: stats.totalUploads,
+            approved: approvedCount,
+            rejected: rejectedCount
+        };
+    };
+
+    const dashboardStats = computeStats();
+
+    let filteredProjects = projects.filter(p => p.name.toLowerCase().includes(projectSearch.toLowerCase()));
+
+    if (hideArchived) {
+        filteredProjects = filteredProjects.filter(p => p.status !== 'ARCHIVED');
+    }
+
+    // Ordena para que os arquivados sempre fiquem no fim, depois por data mais recente
+    filteredProjects.sort((a, b) => {
+        if (a.status === 'ARCHIVED' && b.status !== 'ARCHIVED') return 1;
+        if (a.status !== 'ARCHIVED' && b.status === 'ARCHIVED') return -1;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
     if (loading) {
         return (
@@ -162,6 +222,26 @@ export default function Dashboard() {
                                 <h2 className={styles.sectionTitle}>Projetos Recentes</h2>
                                 <p className={styles.sectionSubtitle}>Seus espaços de trabalho ativos no momento.</p>
                             </div>
+                            {projects.length > 0 && (
+                                <div className={styles.projectActionsWrapper}>
+                                    <div className={styles.projectSearchWrapper}>
+                                        <input
+                                            type="text"
+                                            placeholder="Pesquisar projetos..."
+                                            value={projectSearch}
+                                            onChange={(e) => setProjectSearch(e.target.value)}
+                                            className={styles.projectSearchInput}
+                                        />
+                                    </div>
+                                    <button
+                                        className={`${styles.filterArchivedBtn} ${hideArchived ? styles.active : ''}`}
+                                        onClick={() => setHideArchived(!hideArchived)}
+                                    >
+                                        <Archive size={14} />
+                                        {hideArchived ? 'Mostrar Arquivados' : 'Ocultar Arquivados'}
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {projects.length === 0 ? (
@@ -171,9 +251,13 @@ export default function Dashboard() {
                                     Criar o primeiro projeto
                                 </button>
                             </div>
+                        ) : filteredProjects.length === 0 ? (
+                            <div className={styles.emptyState}>
+                                <p className={styles.emptyText}>Nenhum projeto corresponde à pesquisa.</p>
+                            </div>
                         ) : (
                             <div className={styles.projectsRow}>
-                                {projects.slice(0, 5).map((project) => (
+                                {filteredProjects.map((project) => (
                                     <div
                                         key={project.id}
                                         onClick={() => router.push(`/projects/${project.id}`)}
@@ -190,9 +274,9 @@ export default function Dashboard() {
                                                 <p className={styles.projectDate}>
                                                     Última mod.: {new Date(project.createdAt).toLocaleDateString()}
                                                 </p>
-                                                <div style={{ display: 'flex', marginLeft: '-0.5rem' }}>
+                                                {/* <div style={{ display: 'flex', marginLeft: '-0.5rem' }}>
                                                     <div className={styles.projectAvatar}>{userInitials}</div>
-                                                </div>
+                                                </div> */}
                                             </div>
                                         </div>
                                     </div>
@@ -256,35 +340,39 @@ export default function Dashboard() {
                                     </span>
                                 </div>
                                 <p className={styles.statValue}>
-                                    {isReviewTab ? pendingFiles.length : stats.totalUploads}
+                                    {isReviewTab ? pendingFiles.length : files.length}
                                 </p>
                             </div>
-                            <div className={styles.statCard}>
-                                <div className={styles.statHeader}>
-                                    <div className={`${styles.statIcon} ${styles.positive}`}>
-                                        <CheckCircle2 size={16} />
+                            {!isReviewTab && (
+                                <>
+                                    <div className={styles.statCard}>
+                                        <div className={styles.statHeader}>
+                                            <div className={`${styles.statIcon} ${styles.positive}`}>
+                                                <CheckCircle2 size={16} />
+                                            </div>
+                                            <span className={styles.statLabel}>
+                                                Aprovados
+                                            </span>
+                                        </div>
+                                        <p className={styles.statValue}>
+                                            {dashboardStats.approved}
+                                        </p>
                                     </div>
-                                    <span className={styles.statLabel}>
-                                        {isReviewTab ? 'Avaliados Hoje' : 'Aprovados'}
-                                    </span>
-                                </div>
-                                <p className={styles.statValue}>
-                                    {isReviewTab ? '0' : files.length}
-                                </p>
-                            </div>
-                            <div className={styles.statCard}>
-                                <div className={styles.statHeader}>
-                                    <div className={`${styles.statIcon} ${styles.warning}`}>
-                                        <XCircle size={16} />
+                                    <div className={styles.statCard}>
+                                        <div className={styles.statHeader}>
+                                            <div className={`${styles.statIcon} ${styles.warning}`}>
+                                                <XCircle size={16} />
+                                            </div>
+                                            <span className={styles.statLabel}>
+                                                Reprovados
+                                            </span>
+                                        </div>
+                                        <p className={styles.statValue}>
+                                            {dashboardStats.rejected}
+                                        </p>
                                     </div>
-                                    <span className={styles.statLabel}>
-                                        {isReviewTab ? 'Urgentes' : 'Reprovados'}
-                                    </span>
-                                </div>
-                                <p className={styles.statValue}>
-                                    {isReviewTab ? '0' : stats.rejectedUploads}
-                                </p>
-                            </div>
+                                </>
+                            )}
                         </div>
 
                         {/* Files */}
@@ -298,8 +386,9 @@ export default function Dashboard() {
                             </div>
                         ) : (
                             <div className={styles.fileGrid}>
-                                {displayedFiles.slice(0, 8).map((file) => {
+                                {displayedFiles.map((file) => {
                                     const result = file.verificationResults?.[0];
+                                    const clientDoc = file.clientDocuments?.[0];
                                     let statusColor = 'bg-zinc-200';
                                     let statusTextColor = 'text-zinc-700';
                                     let statusDotColor = 'bg-zinc-400';
@@ -311,22 +400,43 @@ export default function Dashboard() {
                                         statusDotColor = 'bg-blue-500';
                                         statusText = 'PENDENTE';
                                     } else {
-                                        statusText = result?.status || 'PROCESSANDO';
-                                        if (result?.status === 'APPROVED') {
+                                        if (clientDoc?.status === 'approved') {
                                             statusColor = 'bg-tertiary-container';
                                             statusTextColor = 'text-on-tertiary-container';
                                             statusDotColor = 'bg-tertiary';
                                             statusText = 'APROVADO';
-                                        } else if (result?.status === 'CONDITIONAL') {
-                                            statusColor = 'bg-secondary-container';
-                                            statusTextColor = 'text-on-secondary-container';
-                                            statusDotColor = 'bg-amber-500';
-                                            statusText = 'REVISÃO';
-                                        } else if (result?.status === 'REJECTED') {
+                                        } else if (clientDoc?.status === 'rejected') {
                                             statusColor = 'bg-error-container';
                                             statusTextColor = 'text-on-error-container';
                                             statusDotColor = 'bg-error';
                                             statusText = 'REJEITADO';
+                                        } else {
+                                            statusText = result?.status || 'PROCESSANDO';
+                                            if (result?.status === 'APPROVED') {
+                                                statusColor = 'bg-tertiary-container';
+                                                statusTextColor = 'text-on-tertiary-container';
+                                                statusDotColor = 'bg-tertiary';
+                                                statusText = 'APROVADO';
+                                            } else if (result?.status === 'CONDITIONAL') {
+                                                statusColor = 'bg-secondary-container';
+                                                statusTextColor = 'text-on-secondary-container';
+                                                statusDotColor = 'bg-amber-500';
+                                                statusText = 'REVISÃO';
+                                            } else if (result?.status === 'REJECTED') {
+                                                statusColor = 'bg-error-container';
+                                                statusTextColor = 'text-on-error-container';
+                                                statusDotColor = 'bg-error';
+                                                statusText = 'REJEITADO';
+                                            }
+                                        }
+                                    }
+
+                                    let rejectionReason = null;
+                                    if (clientDoc?.status === 'rejected' && clientDoc.rejectionReason) {
+                                        rejectionReason = clientDoc.rejectionReason;
+                                    } else if (!clientDoc || clientDoc.status === 'pending') {
+                                        if ((result?.status === 'REJECTED' || result?.status === 'CONDITIONAL') && result.recommendation) {
+                                            rejectionReason = result.recommendation;
                                         }
                                     }
 
@@ -361,6 +471,11 @@ export default function Dashboard() {
                                                     <p className={styles.fileSize}>
                                                         {(file.size / 1024 / 1024).toFixed(2)} MB • {(file.originalName.split('.').pop() || 'FILE').toUpperCase()}
                                                     </p>
+                                                    {rejectionReason && (
+                                                        <p className={styles.fileRejection} title={rejectionReason}>
+                                                            Motivo: <span>{rejectionReason}</span>
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                             <div className={styles.fileFooter}>

@@ -70,10 +70,32 @@
 .mobileSearchWrapper {
   position: relative;
   width: 100%;
-  margin-top: $sp-4;
+  margin-top: $sp-1;
 }
 
+.mobileDivider {
+  height: 1px;
+  background: rgba($zinc-200, 0.6);
+  margin: $sp-2 $sp-4;
+}
 
+.mobileNavBtnDanger {
+  @extend .mobileNavBtn;
+  color: $red-600;
+
+  &:hover {
+    color: $red-600;
+    background: $red-50;
+  }
+}
+
+.mobileNotifDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  background: $amber-500;
+  border-radius: $radius-full;
+  margin-left: auto;
+}
 // ------------------------------------------------------------------
 // Inner wrapper (max-width container)
 // ------------------------------------------------------------------

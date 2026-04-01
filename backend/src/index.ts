@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-
+dotenv.config();
 import prisma from './prisma';
 
 import authRoutes from './routes/authRoutes';
@@ -9,11 +9,10 @@ import usersRoutes from './routes/usersRoutes';
 import fileRoutes from './routes/fileRoutes';
 import projectRoutes from './routes/projectRoutes';
 import documentRoutes from './routes/documentRoutes';
-
+import templateRoutes from './routes/templateRoutes';
 
 import helmet from 'helmet';
 
-dotenv.config();
 const app = express();
 const port = Number(process.env.PORT) || 4000;
 
@@ -34,6 +33,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/templates', templateRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'O backend do BentiFiles está rodando' });
