@@ -6,10 +6,9 @@
 
 - RLS SUPABASE
 - AUTENTICACAO TERCEIRIZADA (casdoor - clerk - authentik - keycloak)
+- Verificacoes de seguranca
+- JWT por Cookies
 
-
-VALIDACAO DE EMAIL
-RECAPYCHA CLOUDFARA
 BUSCAR FUNCIONANDO
 NOTIFICACAO
 
@@ -19,6 +18,8 @@ NOTIFICACAO
 
 
 - # DONE:
+VALIDACAO DE EMAIL
+RECAPYCHA CLOUDFARA
 - Arrumar página do projeto (Novo visual, novo layout, novas configurações (exemplo: Mudar nome do projeto, arquivar, deletar, etc))
 - Criacao de templates, ao criar o projeto que ele já venha com os tipos de documento pre definidos - V2
 - Aplicar a paleta no sistema inteiro

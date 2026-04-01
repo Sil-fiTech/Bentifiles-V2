@@ -60,12 +60,12 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                 const pythonResponse = await axios.post(`${url}/analyze`, formData, {
                     headers: {
                         ...formData.getHeaders(),
-                },
+                    },
                 });
-            analysisData = pythonResponse.data;
+                analysisData = pythonResponse.data;
                 console.log('[Upload] Analysis complete:', analysisData);
 
-                if (analysisData.status == "REJECTED" ) {      
+                if (analysisData.status == "REJECTED") {
                     console.log('[Upload] Image rejected by analysis service');
                     // @ts-ignore   
                     await prisma.rejectedUpload.create({
@@ -76,20 +76,27 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                     });
                     console.log('[Upload] Rejection event recorded in database');
 
+                    const reasonStr = analysisData.reasons?.length ? ` Motivos: ${analysisData.reasons.join(" | ")}` : "";
+
                     return res.status(400).json({
                         success: false,
-                        message: "A imagem não atende aos critérios mínimos de qualidade",
+                        message: `A imagem não atende aos critérios mínimos de qualidade.${reasonStr}`,
                         analysis: {
                             approved: analysisData.approved,
+                            status: analysisData.status,
                             score: analysisData.final_score ?? analysisData.score,
                             minScore: analysisData.minScore,
                             reasons: analysisData.reasons,
                             quality_label: analysisData.quality_label,
+                            textDetected: analysisData.textDetected,
+                            blurScore: analysisData.blurScore,
+                            brightness: analysisData.brightness,
+                            usefulAreaPct: analysisData.usefulAreaPct,
                             metrics: analysisData.metrics
                         }
                     });
                 }
-                console.log('[Upload] Image approved');
+                console.log(`[Upload] Image analysis status: ${analysisData.status}`);
             } catch (microserviceError) {
                 console.error('[Upload] Microservice error:', microserviceError);
                 return res.status(503).json({
@@ -147,9 +154,14 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
             message: 'Upload realizado com sucesso',
             analysis: analysisData ? {
                 approved: analysisData.approved,
+                status: analysisData.status,
                 score: analysisData.final_score ?? analysisData.score,
                 quality_label: analysisData.quality_label,
                 reasons: analysisData.reasons,
+                textDetected: analysisData.textDetected,
+                blurScore: analysisData.blurScore,
+                brightness: analysisData.brightness,
+                usefulAreaPct: analysisData.usefulAreaPct,
                 metrics: analysisData.metrics
             } : undefined,
             document: resultingFile,

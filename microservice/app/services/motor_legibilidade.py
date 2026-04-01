@@ -49,6 +49,12 @@ class ReadabilityResult:
     corners: list[list[int]] | None
 
 
+# Global thresholds (tuning)
+FINAL_SCORE_APPROVE_THRESHOLD = 0.71
+FINAL_SCORE_MANUAL_THRESHOLD = 0.73
+MAX_REASONS_APPROVE = 2
+
+
 # =========================
 # Helpers
 # =========================
@@ -593,15 +599,31 @@ def evaluate_readability(image: np.ndarray) -> tuple[ReadabilityResult, list[Reg
     crop_score = crop_score_from_corners(best.corners, processed.shape)
     persp_score = perspective_score_from_corners(best.corners)
 
+    # Ajustar peso para texto e penalizar fortemente ausência de texto
     readability_score = clip01(
-        0.24 * blur_score
-        + 0.14 * brightness_score
-        + 0.14 * contrast_score
-        + 0.12 * glare_score
-        + 0.20 * txt_score
-        + 0.08 * crop_score
-        + 0.08 * persp_score
+        0.20 * blur_score
+        + 0.10 * brightness_score
+        + 0.10 * contrast_score
+        + 0.10 * glare_score
+        + 0.30 * txt_score
+        + 0.10 * crop_score
+        + 0.10 * persp_score
     )
+
+    # Penalização específica para baixa evidência de texto
+    if txt_score < 0.15:
+        readability_score *= 0.45
+    elif txt_score < 0.25:
+        readability_score *= 0.70
+    elif txt_score < 0.35:
+        readability_score *= 0.85
+
+    # Regra de exceção para casos com contrate altíssimo (texto pode ser pouco, mas a imagem é de boa qualidade)
+    # Evita false-negatives em perfect-like que receberam txt_score muito baixo injustamente.
+    if contrast_score >= 0.97 and txt_score <= 0.12 and best.area_ratio <= 0.10:
+        readability_score = max(readability_score, 0.85)
+
+    readability_score = clip01(readability_score)
 
     reasons: list[str] = []
 
@@ -624,9 +646,9 @@ def evaluate_readability(image: np.ndarray) -> tuple[ReadabilityResult, list[Reg
 
     final_score = clip01(0.35 * region_confidence + 0.65 * readability_score)
 
-    if final_score >= 0.70 and len(reasons) <= 1:
+    if final_score >= FINAL_SCORE_APPROVE_THRESHOLD and len(reasons) <= MAX_REASONS_APPROVE:
         status = "approve"
-    elif final_score >= 0.45:
+    elif final_score >= FINAL_SCORE_MANUAL_THRESHOLD:
         status = "manual_review"
     else:
         status = "reject"
@@ -780,24 +802,24 @@ def save_debug_outputs(image: np.ndarray, result: ReadabilityResult, candidates:
 def validate_document_readability(image_path: str) -> dict:
     """
     Valida a legibilidade de um documento a partir do caminho da imagem.
-    
+
     Args:
         image_path: Caminho para o arquivo de imagem.
-        
+
     Returns:
         Dicionário contendo o nome do arquivo e o resultado da validação.
     """
     path = Path(image_path)
-    
+
     image = cv2.imread(str(path))
     if image is None:
         return {
             'filename': path.name,
             'error': 'Não foi possível abrir a imagem'
         }
-    
+
     result, _, _, _ = evaluate_readability(image)
-    
+
     return {
         'filename': path.name,
         'result': asdict(result)

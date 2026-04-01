@@ -61,6 +61,7 @@ function HomeContent() {
       const res = await api.post(endpoint, payload);
 
       if (isLogin) {
+
         localStorage.setItem('token', res.data.token);
         toast.success(res.data.message);
         router.push('/dashboard');
@@ -225,7 +226,7 @@ function HomeContent() {
             onClick={() => setIsLogin(!isLogin)}
             className={styles.footerToggle}
           >
-            {isLogin ? 'Solicitar Cadastro' : 'Entrar na Conta'}
+            {isLogin ? 'Criar Conta' : 'Entrar na Conta'}
           </button>
         </div>
 

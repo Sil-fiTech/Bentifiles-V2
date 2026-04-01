@@ -27,7 +27,7 @@ async def analyze_document(file: UploadFile = File(...)):
             
         # Run the sophisticated orchestrator image quality engine
         raw_result = validate_document_readability(file_path)
-        
+        print(raw_result)
 
         if "error" in raw_result:
             return AnalysisResult(
@@ -52,10 +52,10 @@ async def analyze_document(file: UploadFile = File(...)):
         # O motor retorna status com letras minúsculas: 'approve', 'manual_review', 'reject'
         status_raw = data.get("status", "reject")
         approved = status_raw == "approve"
-        reasons = data.get("reasons") or []
+        reasons = data.get("reasons", [])
         
         # Pega a nota de legibilidade que é o valor final unificado usado
-        readability = float(data.get("readability_score") or 0.0)
+        readability = float(data.get("readability_score", 0.0))
         
         result = AnalysisResult(
             approved=approved,
@@ -67,10 +67,12 @@ async def analyze_document(file: UploadFile = File(...)):
             score=readability,
             minScore=0.45,  # Valor padrão embutido já que "settings" foi removido
             status="APPROVED" if approved else ("CONDITIONAL" if status_raw == "manual_review" else "REJECTED"),
-            blurScore=float(data.get("blur_score") or 0.0),
-            brightness=float(data.get("brightness") or 0.0),
-            textDetected=bool(data.get("text_presence_score")), 
-            usefulAreaPct=float(data.get("area_ratio") or 0.0) * 100.0,
+            blurScore=float(data.get("blur_score", 0.0)),
+            # Pega o brightness_score para ter precisão de 0 a 1 em vez do valor bruto
+            brightness=float(data.get("brightness_score", data.get("brightness", 0.0))),
+            # Utiliza a flag explícita do novo backend
+            textDetected=bool(data.get("document_detected", False)), 
+            usefulAreaPct=float(data.get("area_ratio", 0.0)) * 100.0,
             recommendation=" | ".join(reasons) if reasons else "OK",
             thresholds={} # Vazio, pois não temos o settings.model_dump()
         )

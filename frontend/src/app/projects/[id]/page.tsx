@@ -205,10 +205,10 @@ export default function ProjectPage() {
 
     const getStatusStyle = (statusCode: string) => {
         switch (statusCode) {
-            case 'approved':  return { style: { background: '#ecfdf5', color: '#047857', boxShadow: '0 0 0 1px rgba(167,243,208,0.5) inset' }, label: 'Aprovado' };
-            case 'rejected':  return { style: { background: '#fef2f2', color: '#b91c1c', boxShadow: '0 0 0 1px rgba(254,202,202,0.5) inset' }, label: 'Rejeitado' };
-            case 'pending':   return { style: { background: '#fffbeb', color: '#d97706', boxShadow: '0 0 0 1px rgba(253,230,138,0.5) inset' }, label: 'Em Análise' };
-            default:          return { style: { background: '#f4f4f5', color: '#52525b', boxShadow: '0 0 0 1px rgba(228,228,231,0.5) inset' }, label: 'Pendente' };
+            case 'approved': return { style: { background: '#ecfdf5', color: '#047857', boxShadow: '0 0 0 1px rgba(167,243,208,0.5) inset' }, label: 'Aprovado' };
+            case 'rejected': return { style: { background: '#fef2f2', color: '#b91c1c', boxShadow: '0 0 0 1px rgba(254,202,202,0.5) inset' }, label: 'Rejeitado' };
+            case 'pending': return { style: { background: '#fffbeb', color: '#d97706', boxShadow: '0 0 0 1px rgba(253,230,138,0.5) inset' }, label: 'Em Análise' };
+            default: return { style: { background: '#f4f4f5', color: '#52525b', boxShadow: '0 0 0 1px rgba(228,228,231,0.5) inset' }, label: 'Pendente' };
         }
     };
 
@@ -314,7 +314,7 @@ export default function ProjectPage() {
                                 )}
                                 <button
                                     onClick={() => router.push(`/projects/${id}/documents`)}
-                                    className={styles.inviteBtn}    
+                                    className={styles.inviteBtn}
                                 >
                                     <Settings size={16} /> Configurações do projeto
                                 </button>
@@ -439,7 +439,7 @@ export default function ProjectPage() {
                                     </div>
 
                                     {isExpanded && (
-                                        
+
                                         <div className={styles.docSection}>
                                             {requiredDocs.length === 0 ? (
                                                 <p className={styles.docEmpty}>Nenhum documento obrigatório configurado para este projeto.</p>

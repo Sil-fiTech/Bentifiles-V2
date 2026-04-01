@@ -7,14 +7,14 @@ import { sendVerificationEmail } from '../services/emailService';
 
 const verifyTurnstile = async (token: string): Promise<boolean> => {
     if (!token) return false;
-    
+
     try {
         const secret = process.env.TURNSTILE_SECRET_KEY;
         if (!secret) {
             console.error('TURNSTILE_SECRET_KEY não configurado no servidor');
             return false;
         }
-        
+
         const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
             method: 'POST',
             headers: {
@@ -102,9 +102,9 @@ export const login = async (req: Request, res: Response) => {
         }
 
         if (!user.emailVerified) {
-            return res.status(403).json({ 
+            return res.status(403).json({
                 error: 'EMAIL_NOT_VERIFIED',
-                message: 'Por favor, confirme seu e-mail antes de fazer login.' 
+                message: 'Por favor, confirme seu e-mail antes de fazer login.'
             });
         }
 
@@ -209,7 +209,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
             expiresIn: '24h',
         });
 
-        res.status(200).json({ 
+        res.status(200).json({
             message: 'E-mail verificado com sucesso!',
             token: jwtToken,
             user: { id: user.id, name: user.name, email: user.email }
@@ -250,4 +250,13 @@ export const resendVerification = async (req: Request, res: Response) => {
         console.error('Resend verification error:', error);
         res.status(500).json({ message: 'Erro interno do servidor.' });
     }
+};
+
+export const logout = async (req: Request, res: Response) => {
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict'
+    });
+    res.status(200).json({ message: 'Logout realizado com sucesso' });
 };

@@ -18,7 +18,7 @@ export const sendVerificationEmail = async (email: string, token: string, name: 
         }
         const verifyUrl = `${frontendUrl}/verify-email?token=${token}`;
 
-        const html = `
+         const html = `
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>

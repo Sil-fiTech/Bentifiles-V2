@@ -74,19 +74,19 @@ export default function UploadZonePage() {
 
     const getStatusIcon = (status: string) => {
         switch (status) {
-            case 'APPROVED':    return <CheckCircle style={{ color: '#10b981' }} size={20} />;
+            case 'APPROVED': return <CheckCircle style={{ color: '#10b981' }} size={20} />;
             case 'CONDITIONAL': return <AlertTriangle style={{ color: '#f59e0b' }} size={20} />;
-            case 'REJECTED':    return <XCircle style={{ color: '#ef4444' }} size={20} />;
-            default:            return null;
+            case 'REJECTED': return <XCircle style={{ color: '#ef4444' }} size={20} />;
+            default: return null;
         }
     };
 
     const getResultPanelClass = (status: string) => {
         switch (status) {
-            case 'APPROVED':    return `${styles.resultPanel} ${styles.approved}`;
+            case 'APPROVED': return `${styles.resultPanel} ${styles.approved}`;
             case 'CONDITIONAL': return `${styles.resultPanel} ${styles.conditional}`;
-            case 'REJECTED':    return `${styles.resultPanel} ${styles.rejected}`;
-            default:            return `${styles.resultPanel} ${styles.default}`;
+            case 'REJECTED': return `${styles.resultPanel} ${styles.rejected}`;
+            default: return `${styles.resultPanel} ${styles.default}`;
         }
     };
 

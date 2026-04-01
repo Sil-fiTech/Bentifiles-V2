@@ -108,7 +108,7 @@ export function Nav({
                         >
                             <LayoutGrid size={16} /> Dashboard
                         </button>
-                          {context === 'dashboard' ? (
+                        {context === 'dashboard' ? (
                             <>
                                 <button
                                     onClick={onCreateProject}
@@ -128,7 +128,7 @@ export function Nav({
                             </>
                         ) : (
                             <>
-                              
+
                                 <span className={styles.projectName}>
                                     {projectName || 'Projeto Atual'}
                                 </span>
@@ -139,7 +139,7 @@ export function Nav({
                                 >
                                     <Folder size={16} /> Tipos & Templates
                                 </button>
-                               {/*  <button
+                                {/*  <button
                                     onClick={() => router.push('/dashboard/documents')}
                                     className={styles.navBtn}
                                 >
@@ -293,7 +293,7 @@ export function Nav({
 
                         <div className={styles.mobileDivider} />
 
-                        <button 
+                        <button
                             className={styles.mobileNavBtn}
                             onClick={() => setIsMobileMenuOpen(false)}
                         >
@@ -302,7 +302,7 @@ export function Nav({
                                 <span className={styles.mobileNotifDot} />
                             )}
                         </button>
-                        
+
                         <button
                             className={styles.mobileNavBtn}
                             onClick={() => {

@@ -6,9 +6,9 @@ import { useRouter, useParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Nav } from '@/components/Nav';
 import styles from './page.module.scss';
-import { 
-    ArrowLeft, Loader2, Check, FileText, Settings, 
-    Users, Info, ShieldAlert, Archive, Trash2, X, AlertTriangle 
+import {
+    ArrowLeft, Loader2, Check, FileText, Settings,
+    Users, Info, ShieldAlert, Archive, Trash2, X, AlertTriangle
 } from 'lucide-react';
 
 export default function ProjectSettingsPage() {
@@ -69,7 +69,7 @@ export default function ProjectSettingsPage() {
                 // API might return { members: [] } or just [] depending on your backend Implementation
                 const membersData = membersRes.data.members || membersRes.data || [];
                 setMembers(membersData);
-                
+
                 const me = membersData.find(
                     (m: any) => m.userId === payload?.userId
                 );
@@ -87,7 +87,7 @@ export default function ProjectSettingsPage() {
                         api.get(`/api/documents/types`, { headers }),
                         api.get(`/api/templates`, { headers })
                     ]);
-                    
+
                     setRequiredDocs(reqDocsRes.data);
                     pendingIdsRef.current = reqDocsRes.data.map((rd: any) => rd.documentTypeId);
                     setGlobalTypes(typesRes.data);
@@ -105,7 +105,7 @@ export default function ProjectSettingsPage() {
 
     const toggleRequiredDocument = async (docTypeId: string) => {
         if (project?.status === 'ARCHIVED') { toast.error('Projeto arquivado.'); return; }
-        
+
         // Garante que a gente leia os arrays de uma fila sincronizada que o React não atrasa
         let currentIds = pendingIdsRef.current;
         if (!currentIds) currentIds = requiredDocs.map(rd => rd.documentTypeId);
@@ -129,7 +129,7 @@ export default function ProjectSettingsPage() {
                 { documentTypeIds: newIds },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            
+
             // Re-sincroniza totalmente com o servidor para garantia 100%
             pendingIdsRef.current = res.data.map((rd: any) => rd.documentTypeId);
             setRequiredDocs(res.data);
@@ -150,7 +150,7 @@ export default function ProjectSettingsPage() {
                 { templateId: selectedTemplateId },
                 { headers: { Authorization: `Bearer ${token}` } }
             );
-            
+
             setRequiredDocs(res.data);
             toast.success('Template aplicado com sucesso!');
             setSelectedTemplateId('');
@@ -228,12 +228,12 @@ export default function ProjectSettingsPage() {
         router.push('/');
     };
 
-    const filteredDocs = globalTypes.filter(t => 
-        (t?.name || '').toLowerCase().includes(docSearchTerm.toLowerCase()) || 
+    const filteredDocs = globalTypes.filter(t =>
+        (t?.name || '').toLowerCase().includes(docSearchTerm.toLowerCase()) ||
         (t?.description || '').toLowerCase().includes(docSearchTerm.toLowerCase())
     );
 
-    const filteredTemplates = templates.filter(t => 
+    const filteredTemplates = templates.filter(t =>
         (t?.name || '').toLowerCase().includes(templateSearchTerm.toLowerCase())
     );
 
@@ -323,7 +323,7 @@ export default function ProjectSettingsPage() {
                                             <p className={styles.cardDesc}>Selecione os documentos exigidos e aplique templates para este projeto.</p>
                                         </div>
                                     </div>
-                                    
+
                                     <div className={styles.templateSection}>
                                         <div className={styles.templateSectionHeader}>
                                             <h3 className={styles.templateSectionTitle}>
@@ -336,9 +336,9 @@ export default function ProjectSettingsPage() {
                                         </div>
                                         <div className={styles.templateSectionForm}>
                                             <div className={styles.searchWrapper}>
-                                                <input 
-                                                    type="text" 
-                                                    placeholder="Buscar templates..." 
+                                                <input
+                                                    type="text"
+                                                    placeholder="Buscar templates..."
                                                     value={templateSearchTerm}
                                                     onChange={(e) => {
                                                         setTemplateSearchTerm(e.target.value);
@@ -351,8 +351,8 @@ export default function ProjectSettingsPage() {
                                                 {showTemplateSuggestions && templateSearchTerm && filteredTemplates.length > 0 && (
                                                     <ul className={styles.suggestionsList}>
                                                         {filteredTemplates.map(t => (
-                                                            <li 
-                                                                key={t.id} 
+                                                            <li
+                                                                key={t.id}
                                                                 className={styles.suggestionItem}
                                                                 onClick={() => {
                                                                     setSelectedTemplateId(t.id);
@@ -371,8 +371,8 @@ export default function ProjectSettingsPage() {
                                                     </div>
                                                 )}
                                             </div>
-                                            <select 
-                                                value={selectedTemplateId} 
+                                            <select
+                                                value={selectedTemplateId}
                                                 onChange={(e) => setSelectedTemplateId(e.target.value)}
                                                 className={styles.templateSelect}
                                                 disabled={actionLoading === 'template' || project?.status === 'ARCHIVED'}
@@ -382,12 +382,12 @@ export default function ProjectSettingsPage() {
                                                     <option key={t.id} value={t.id}>{t.name}</option>
                                                 ))}
                                             </select>
-                                            <button 
+                                            <button
                                                 onClick={handleApplyTemplate}
                                                 disabled={!selectedTemplateId || actionLoading === 'template' || project?.status === 'ARCHIVED'}
                                                 className={styles.templateApplyBtn}
                                             >
-                                                {actionLoading === 'template' ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />} 
+                                                {actionLoading === 'template' ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
                                                 Aplicar
                                             </button>
                                         </div>
@@ -396,15 +396,15 @@ export default function ProjectSettingsPage() {
                                     <div className={styles.configList}>
                                         <div className={styles.configListHeader}>
                                             <h3 className={styles.configListTitle}>Tipos de Documento Globais</h3>
-                                            <input 
-                                                type="text" 
-                                                placeholder="Buscar documentos..." 
+                                            <input
+                                                type="text"
+                                                placeholder="Buscar documentos..."
                                                 value={docSearchTerm}
                                                 onChange={(e) => setDocSearchTerm(e.target.value)}
                                                 className={styles.searchInput}
                                             />
                                         </div>
-                                        
+
                                         <div className={styles.tableWrapper}>
                                             <table className={styles.dataTable}>
                                                 <thead>
@@ -460,7 +460,7 @@ export default function ProjectSettingsPage() {
 
                         {/* RIGHT COLUMN: Secondary & Danger Configs */}
                         <div className={styles.sideCol}>
-                            
+
                             {/* MEMBERS CARD */}
                             <section className={styles.card}>
                                 <div className={styles.cardHeader}>
@@ -497,8 +497,8 @@ export default function ProjectSettingsPage() {
                                                             {uRole}
                                                         </span>
                                                         {isAdmin && !isMe && project?.status !== 'ARCHIVED' && (
-                                                            <button 
-                                                                onClick={() => handleRemoveMember(mId)} 
+                                                            <button
+                                                                onClick={() => handleRemoveMember(mId)}
                                                                 className={styles.removeMemberBtn}
                                                                 disabled={actionLoading === `remove_${mId}`}
                                                                 title="Remover membro do projeto"
@@ -530,8 +530,8 @@ export default function ProjectSettingsPage() {
                                                 <strong>{project?.status === 'ARCHIVED' ? 'Desarquivar Projeto' : 'Arquivar Projeto'}</strong>
                                                 <p>{project?.status === 'ARCHIVED' ? 'O projeto voltará a aceitar novos documentos e alterações.' : 'O projeto ficará como "somente leitura" para os usuários normais.'}</p>
                                             </div>
-                                            <button 
-                                                onClick={handleArchiveProject} 
+                                            <button
+                                                onClick={handleArchiveProject}
                                                 className={`${styles.dangerBtn} ${styles.btnArchive}`}
                                                 disabled={actionLoading === 'archive' || actionLoading === 'unarchive'}
                                             >
@@ -539,7 +539,7 @@ export default function ProjectSettingsPage() {
                                                 {project?.status === 'ARCHIVED' ? 'Desarquivar' : 'Arquivar'}
                                             </button>
                                         </div>
-                                        
+
                                         <div className={styles.dangerLine} />
 
                                         <div className={styles.dangerItem}>
@@ -547,8 +547,8 @@ export default function ProjectSettingsPage() {
                                                 <strong>Excluir Projeto</strong>
                                                 <p>Apaga permanentemente o projeto e todos os seus dados. Esta ação é irreversível.</p>
                                             </div>
-                                            <button 
-                                                onClick={handleDeleteProject} 
+                                            <button
+                                                onClick={handleDeleteProject}
                                                 className={`${styles.dangerBtn} ${styles.btnDelete}`}
                                                 disabled={actionLoading === 'delete'}
                                             >

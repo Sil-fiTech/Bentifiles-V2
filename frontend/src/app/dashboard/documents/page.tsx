@@ -171,7 +171,7 @@ export default function DocumentTypesDashboard() {
         try {
             setIsCreatingTemplate(true);
             const token = session?.user?.token || localStorage.getItem('token');
-            
+
             const payload = {
                 name: newTemplateName,
                 description: newTemplateDesc,
@@ -220,12 +220,12 @@ export default function DocumentTypesDashboard() {
             const res = await api.post(`/api/templates/${id}/duplicate`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            
+
             const newTpl: Template = {
                 ...res.data,
                 documentTypeCount: res.data.documentTypes?.length || 0
             };
-            
+
             setTemplates(prev => [...prev, newTpl]);
             toast.success('Template duplicado com sucesso');
         } catch (error: any) {
@@ -261,7 +261,7 @@ export default function DocumentTypesDashboard() {
                 />
 
                 <div className={styles.canvas}>
-                    
+
                     <header className={styles.sectionHeader}>
                         <div>
                             <h2 className={styles.sectionTitle}>Gestão de Documentos</h2>
@@ -270,13 +270,13 @@ export default function DocumentTypesDashboard() {
                     </header>
 
                     <div className={styles.tabsContainer}>
-                        <button 
+                        <button
                             className={`${styles.tabBtn} ${activeTab === 'types' ? styles.active : ''}`}
                             onClick={() => setActiveTab('types')}
                         >
                             Tipos de Documento
                         </button>
-                        <button 
+                        <button
                             className={`${styles.tabBtn} ${activeTab === 'templates' ? styles.active : ''}`}
                             onClick={() => setActiveTab('templates')}
                         >
@@ -352,7 +352,7 @@ export default function DocumentTypesDashboard() {
 
                                             return (
                                                 <div key={doc.id} className={styles.docCard}>
-                                                    
+
                                                     {isEditing ? (
                                                         <div className={styles.editMode}>
                                                             <div className={styles.editFieldGroup}>
@@ -417,7 +417,7 @@ export default function DocumentTypesDashboard() {
                                                             <span className={styles.readOnlyText}>Não editável</span>
                                                         )}
                                                     </div>
-                                                    
+
                                                 </div>
                                             );
                                         })}
@@ -465,7 +465,7 @@ export default function DocumentTypesDashboard() {
                                     <label className={styles.fieldLabel} style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>
                                         Selecione os Documentos para este Template
                                     </label>
-                                    
+
                                     <div className={styles.templateTableSearch}>
                                         <Search size={16} color="#71717a" />
                                         <input
@@ -479,39 +479,39 @@ export default function DocumentTypesDashboard() {
                                         {documentTypes
                                             .filter(doc => doc.name.toLowerCase().includes(templateDocSearch.toLowerCase()))
                                             .map((doc) => {
-                                            const selectedDocIndex = newTemplateDocs.findIndex(d => d.name === doc.name);
-                                            const isSelected = selectedDocIndex !== -1;
+                                                const selectedDocIndex = newTemplateDocs.findIndex(d => d.name === doc.name);
+                                                const isSelected = selectedDocIndex !== -1;
 
-                                            return (
-                                                <div key={doc.id} className={styles.templateDocRow} style={{ background: isSelected ? '#fffbeb' : 'transparent', padding: '0.5rem', borderRadius: '0.5rem', border: isSelected ? '1px solid #fde68a' : '1px solid transparent' }}>
-                                                    <label className={styles.reqToggle} style={{ flex: 1, fontSize: '0.875rem' }}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={isSelected}
-                                                            onChange={(e) => {
-                                                                if (e.target.checked) {
-                                                                    setNewTemplateDocs([...newTemplateDocs, { name: doc.name, isRequired: true, order: newTemplateDocs.length }]);
-                                                                } else {
-                                                                    setNewTemplateDocs(newTemplateDocs.filter(d => d.name !== doc.name));
-                                                                }
-                                                            }}
-                                                        />
-                                                        {doc.name} {doc.description ? <span style={{color: '#a1a1aa', fontWeight: 400}}>({doc.description})</span> : ''}
-                                                    </label>
-                                                    
-                                                    {isSelected && (
-                                                        <label className={styles.reqToggle}>
+                                                return (
+                                                    <div key={doc.id} className={styles.templateDocRow} style={{ background: isSelected ? '#fffbeb' : 'transparent', padding: '0.5rem', borderRadius: '0.5rem', border: isSelected ? '1px solid #fde68a' : '1px solid transparent' }}>
+                                                        <label className={styles.reqToggle} style={{ flex: 1, fontSize: '0.875rem' }}>
                                                             <input
                                                                 type="checkbox"
-                                                                checked={newTemplateDocs[selectedDocIndex]?.isRequired ?? true}
-                                                                onChange={(e) => updateTemplateDocRow(selectedDocIndex, 'isRequired', e.target.checked)}
+                                                                checked={isSelected}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setNewTemplateDocs([...newTemplateDocs, { name: doc.name, isRequired: true, order: newTemplateDocs.length }]);
+                                                                    } else {
+                                                                        setNewTemplateDocs(newTemplateDocs.filter(d => d.name !== doc.name));
+                                                                    }
+                                                                }}
                                                             />
-                                                            Obrigatório
+                                                            {doc.name} {doc.description ? <span style={{ color: '#a1a1aa', fontWeight: 400 }}>({doc.description})</span> : ''}
                                                         </label>
-                                                    )}
-                                                </div>
-                                            );
-                                        })}
+
+                                                        {isSelected && (
+                                                            <label className={styles.reqToggle}>
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={newTemplateDocs[selectedDocIndex]?.isRequired ?? true}
+                                                                    onChange={(e) => updateTemplateDocRow(selectedDocIndex, 'isRequired', e.target.checked)}
+                                                                />
+                                                                Obrigatório
+                                                            </label>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
                                         {documentTypes.filter(doc => doc.name.toLowerCase().includes(templateDocSearch.toLowerCase())).length === 0 && (
                                             <div style={{ padding: '1rem', textAlign: 'center', color: '#a1a1aa', fontSize: '0.875rem' }}>
                                                 Nenhum documento encontrado.
