@@ -64,9 +64,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             return session;
         },
     },
-    // pages: {
-    //     signIn: '/login', // Adicionar página customizada se não quiser a padrão
-    // },
+    pages: {
+        signIn: '/login',
+    },
     // A secret is required for JWT strategy
     secret: process.env.AUTH_SECRET,
     session: {
