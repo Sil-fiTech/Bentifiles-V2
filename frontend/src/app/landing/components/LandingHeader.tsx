@@ -10,8 +10,10 @@ const navLinks = [
   { label: 'Recursos', href: '#recursos' },
   { label: 'Como funciona', href: '#como-funciona' },
   { label: 'Benefícios', href: '#beneficios' },
+  { label: 'Planos', href: '#planos' },
   { label: 'FAQ', href: '#faq' },
 ];
+
 
 export default function LandingHeader() {
   const [scrolled, setScrolled] = useState(false);

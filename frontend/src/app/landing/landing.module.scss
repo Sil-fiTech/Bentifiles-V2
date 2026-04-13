@@ -1427,3 +1427,356 @@
   font-size: 0.8125rem;
   color: rgba(255, 255, 255, 0.25);
 }
+
+// ============================================================
+// PRICING SECTION
+// ============================================================
+
+// ── Hero ─────────────────────────────────────────────────────
+.pricingHero {
+  position: relative;
+  padding: 7rem 0 5rem;
+  background: $zinc-50;
+  overflow: hidden;
+  border-top: 1px solid rgba($zinc-100, 0.8);
+}
+
+.pricingHeroOrb1 {
+  position: absolute;
+  top: -20%;
+  left: -8%;
+  width: 45%;
+  height: 70%;
+  background: rgba($amber-400, 0.18);
+  border-radius: $radius-full;
+  filter: blur(130px);
+  pointer-events: none;
+  animation: orbFloat 11s ease-in-out infinite;
+}
+
+.pricingHeroOrb2 {
+  position: absolute;
+  bottom: -15%;
+  right: -8%;
+  width: 40%;
+  height: 60%;
+  background: rgba(165, 180, 252, 0.15);
+  border-radius: $radius-full;
+  filter: blur(130px);
+  pointer-events: none;
+  animation: orbFloat 13s ease-in-out 4s infinite;
+}
+
+// ── Plan cards grid ─────────────────────────────────────────
+.pricingGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $sp-6;
+  align-items: stretch;
+  position: relative;
+  z-index: 1;
+
+  @include md {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include lg {
+    grid-template-columns: repeat(3, 1fr);
+    align-items: start;
+  }
+}
+
+// ── Plan card base ──────────────────────────────────────────
+.pricingCard {
+  position: relative;
+  background: white;
+  border: 1px solid rgba($zinc-200, 0.7);
+  border-radius: $radius-2xl;
+  padding: $sp-8 $sp-8;
+  box-shadow: $shadow-md;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-6;
+  transition: $transition-slow;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 24px 64px -12px rgba(0, 0, 0, 0.1);
+    border-color: rgba($zinc-300, 0.9);
+  }
+}
+
+// ── Highlighted (Profissional) ───────────────────────────────
+.pricingCardHighlighted {
+  background: white;
+  border: 2px solid $amber-400;
+  box-shadow: 0 12px 48px -8px rgba($amber-500, 0.28), $shadow-lg;
+
+  @include lg {
+    transform: scale(1.04);
+    z-index: 2;
+  }
+
+  &:hover {
+    @include lg {
+      transform: scale(1.04) translateY(-4px);
+    }
+    box-shadow: 0 24px 72px -12px rgba($amber-500, 0.36);
+  }
+}
+
+// ── Popular badge ────────────────────────────────────────────
+.pricingBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: $sp-1_5;
+  align-self: flex-start;
+  padding: $sp-1 $sp-3_5;
+  background: linear-gradient(90deg, $amber-400, $amber-500);
+  color: $amber-950;
+  border-radius: $radius-full;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  box-shadow: 0 4px 14px rgba($amber-500, 0.35);
+}
+
+// ── Plan header ──────────────────────────────────────────────
+.pricingCardHeader {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-2;
+}
+
+.pricingPlanName {
+  font-family: $font-headline;
+  font-size: 1.25rem;
+  font-weight: 900;
+  color: $zinc-900;
+  letter-spacing: -0.03em;
+}
+
+.pricingPlanDesc {
+  font-size: 0.875rem;
+  color: $zinc-500;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+// ── Price block ──────────────────────────────────────────────
+.pricingPriceBlock {
+  display: flex;
+  align-items: flex-end;
+  gap: $sp-1;
+}
+
+.pricingPrice {
+  font-family: $font-headline;
+  font-size: clamp(1.875rem, 3.5vw, 2.5rem);
+  font-weight: 900;
+  color: $zinc-900;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.pricingPeriod {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: $zinc-400;
+  padding-bottom: 3px;
+}
+
+// ── CTA buttons ──────────────────────────────────────────────
+.pricingBtnPrimary {
+  @include btn-primary;
+  width: 100%;
+  justify-content: center;
+  font-size: 0.9375rem;
+  padding: $sp-4 $sp-6;
+  border-radius: $radius-xl;
+}
+
+.pricingBtnSecondary {
+  cursor: pointer;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $sp-4 $sp-6;
+  background: transparent;
+  border: 1.5px solid $zinc-200;
+  border-radius: $radius-xl;
+  font-family: $font-headline;
+  font-size: 0.9375rem;
+  font-weight: 800;
+  color: $zinc-700;
+  transition: $transition-base;
+
+  &:hover:not(:disabled) {
+    background: $zinc-50;
+    border-color: $zinc-300;
+    color: $zinc-900;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.pricingBtnSpinner {
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+// ── Divider ──────────────────────────────────────────────────
+.pricingDivider {
+  height: 1px;
+  background: $zinc-100;
+  margin: 0 calc(-1 * $sp-2);
+}
+
+// ── Feature list ─────────────────────────────────────────────
+.pricingFeatureList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+  flex: 1;
+}
+
+.pricingFeatureItem {
+  display: flex;
+  align-items: flex-start;
+  gap: $sp-3;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: $zinc-700;
+  line-height: 1.5;
+}
+
+.pricingFeatureExcluded {
+  color: $zinc-400;
+}
+
+.pricingFeatureIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: $radius-full;
+  background: rgba($emerald-500, 0.1);
+  color: $emerald-700;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.pricingFeatureIconNo {
+  background: rgba($zinc-400, 0.1);
+  color: $zinc-400;
+}
+
+// ── Disclaimer ───────────────────────────────────────────────
+.pricingDisclaimer {
+  text-align: center;
+  font-size: 0.8125rem;
+  color: $zinc-400;
+  font-weight: 500;
+  margin-top: $sp-8;
+}
+
+.pricingDisclaimerStripe {
+  font-weight: 700;
+  color: $zinc-600;
+}
+
+// ============================================================
+// VALUE PROPS SECTION
+// ============================================================
+.pricingValueProps {
+  padding: 5rem 0;
+  background: white;
+  border-top: 1px solid rgba($zinc-100, 0.8);
+}
+
+.pricingValueGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $sp-5;
+
+  @include md {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include lg {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.pricingValueCard {
+  background: $zinc-50;
+  border: 1px solid rgba($zinc-200, 0.5);
+  border-radius: $radius-xl;
+  padding: $sp-6;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+  transition: $transition-slow;
+
+  &:hover {
+    background: white;
+    border-color: $zinc-200;
+    box-shadow: $shadow-md;
+    transform: translateY(-2px);
+  }
+}
+
+.pricingValueIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: $radius-md;
+  background: rgba($amber-400, 0.12);
+  color: $amber-600;
+}
+
+.pricingValueTitle {
+  font-family: $font-headline;
+  font-size: 1rem;
+  font-weight: 800;
+  color: $zinc-900;
+  letter-spacing: -0.02em;
+}
+
+.pricingValueDesc {
+  font-size: 0.875rem;
+  color: $zinc-500;
+  line-height: 1.65;
+  font-weight: 500;
+}
+
+// ============================================================
+// BILLING FAQ SECTION
+// ============================================================
+.pricingFaq {
+  padding: 5rem 0 6rem;
+  background: $zinc-50;
+  border-top: 1px solid rgba($zinc-100, 0.8);
+}
+
+.pricingFaqList {
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+}
+

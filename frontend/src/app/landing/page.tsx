@@ -6,6 +6,7 @@ import HowItWorksSection from './components/HowItWorksSection';
 import FeaturesSection from './components/FeaturesSection';
 import ImpactSection from './components/ImpactSection';
 import FaqSection from './components/FaqSection';
+import PricingSection from './components/PricingSection';
 import CtaSection from './components/CtaSection';
 import LandingFooter from './components/LandingFooter';
 
@@ -25,6 +26,7 @@ export default function LandingPage() {
       <FeaturesSection />
       <ImpactSection />
       <FaqSection />
+      <PricingSection />
       <CtaSection />
       <LandingFooter />
     </>
