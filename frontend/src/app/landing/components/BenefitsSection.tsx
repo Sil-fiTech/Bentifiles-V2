@@ -4,9 +4,9 @@ import {
   FolderOpen,
   FileText,
   LayoutTemplate,
+  Search,
   Users,
   Zap,
-  Search,
 } from 'lucide-react';
 import styles from '../landing.module.scss';
 
@@ -25,8 +25,8 @@ const benefits = [
   },
   {
     icon: Users,
-    title: 'Colaboração eficiente',
-    desc: 'Adicione membros ao projeto, defina permissões e trabalhe em conjunto sem e-mails perdidos.',
+    title: 'Uploads sob controle',
+    desc: 'O Bentifiles gerencia o recebimento dos arquivos para sua equipe acompanhar tudo sem depender de processos manuais.',
     color: '#0ea5e9',
   },
   {
@@ -37,8 +37,8 @@ const benefits = [
   },
   {
     icon: Search,
-    title: 'Encontre qualquer arquivo',
-    desc: 'Busca inteligente e categorização por tipo, projeto e data para achar o documento certo rapidamente.',
+    title: 'Validação automática',
+    desc: 'As imagens recebidas passam por validação automática de legibilidade antes de seguirem no fluxo operacional.',
     color: '#ef4444',
   },
   {

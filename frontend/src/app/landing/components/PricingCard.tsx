@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check, X, Loader2, Zap } from 'lucide-react';
+import { Loader2, Zap } from 'lucide-react';
 import type { Plan } from '../data/plans';
 import styles from '../landing.module.scss';
 
@@ -42,10 +42,38 @@ export default function PricingCard({ plan, onSubscribe }: PricingCardProps) {
       </div>
 
       {/* Price */}
-      <div className={styles.pricingPriceBlock}>
-        <span className={styles.pricingPrice}>{plan.price}</span>
-        <span className={styles.pricingPeriod}>{plan.period}</span>
-      </div>
+      {plan.contactLabel ? (
+        <div className={styles.pricingContactBlock}>
+          <span className={styles.pricingContactLabel}>{plan.contactLabel}</span>
+          {plan.priceNote && <span className={styles.pricingContactNote}>{plan.priceNote}</span>}
+        </div>
+      ) : (
+        <div className={styles.pricingStack}>
+          <div className={styles.pricingPriceRow}>
+            <span className={styles.pricingPriceLabel}>Mensal</span>
+            <div className={styles.pricingPriceBlock}>
+              <span className={styles.pricingPrice}>{plan.monthlyPrice}</span>
+              <span className={styles.pricingPeriod}>/mês</span>
+            </div>
+          </div>
+
+          <div className={styles.pricingPriceRow}>
+            <span className={styles.pricingPriceLabel}>Anual</span>
+            <div className={styles.pricingAnnualBlock}>
+              <div className={styles.pricingAnnualLine}>
+                <span className={styles.pricingAnnualPrice}>{plan.annualPrice}</span>
+                <span className={styles.pricingAnnualPeriod}>/mês</span>
+              </div>
+              <span className={styles.pricingAnnualTotal}>{plan.annualTotal}</span>
+            </div>
+          </div>
+
+          <div className={styles.pricingMetaRow}>
+            <span className={styles.pricingDiscount}>Desconto de {plan.discount}</span>
+            {plan.priceNote && <span className={styles.pricingMetaNote}>{plan.priceNote}</span>}
+          </div>
+        </div>
+      )}
 
       {/* CTA Button */}
       <button
@@ -65,23 +93,25 @@ export default function PricingCard({ plan, onSubscribe }: PricingCardProps) {
         )}
       </button>
 
-      {/* Divider */}
-      <div className={styles.pricingDivider} />
+      {plan.features.length > 0 && (
+        <>
+          <div className={styles.pricingDivider} />
 
-      {/* Features */}
-      <ul className={styles.pricingFeatureList} role="list">
-        {plan.features.map((feature, i) => (
-          <li
-            key={i}
-            className={`${styles.pricingFeatureItem} ${!feature.included ? styles.pricingFeatureExcluded : ''}`}
-          >
-            <span className={`${styles.pricingFeatureIcon} ${!feature.included ? styles.pricingFeatureIconNo : ''}`}>
-              {feature.included ? <Check size={13} strokeWidth={2.5} /> : <X size={13} strokeWidth={2.5} />}
-            </span>
-            <span>{feature.text}</span>
-          </li>
-        ))}
-      </ul>
+          <ul className={styles.pricingFeatureList} role="list">
+            {plan.features.map((feature, i) => (
+              <li
+                key={i}
+                className={`${styles.pricingFeatureItem} ${!feature.included ? styles.pricingFeatureExcluded : ''}`}
+              >
+                <span className={`${styles.pricingFeatureIcon} ${!feature.included ? styles.pricingFeatureIconNo : ''}`}>
+                  {feature.included ? '✓' : '✕'}
+                </span>
+                <span>{feature.text}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </article>
   );
 }
