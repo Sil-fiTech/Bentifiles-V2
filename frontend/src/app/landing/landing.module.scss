@@ -1571,6 +1571,28 @@
   gap: $sp-1;
 }
 
+.pricingStack {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-4;
+}
+
+.pricingPriceRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $sp-4;
+}
+
+.pricingPriceLabel {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: $zinc-500;
+  padding-top: $sp-1;
+}
+
 .pricingPrice {
   font-family: $font-headline;
   font-size: clamp(1.875rem, 3.5vw, 2.5rem);
@@ -1585,6 +1607,92 @@
   font-weight: 600;
   color: $zinc-400;
   padding-bottom: 3px;
+}
+
+.pricingAnnualBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: $sp-1;
+}
+
+.pricingAnnualLine {
+  display: flex;
+  align-items: flex-end;
+  gap: $sp-1;
+}
+
+.pricingAnnualPrice {
+  font-family: $font-headline;
+  font-size: 1.55rem;
+  font-weight: 900;
+  color: $amber-700;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.pricingAnnualPeriod {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: $amber-600;
+  padding-bottom: 2px;
+}
+
+.pricingAnnualTotal {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: $zinc-500;
+}
+
+.pricingMetaRow {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-1_5;
+  padding: $sp-3 $sp-4;
+  background: linear-gradient(135deg, rgba($amber-100, 0.8), rgba($amber-50, 0.9));
+  border: 1px solid rgba($amber-300, 0.55);
+  border-radius: $radius-xl;
+}
+
+.pricingDiscount {
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $amber-800;
+}
+
+.pricingMetaNote {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: $zinc-600;
+  font-weight: 600;
+}
+
+.pricingContactBlock {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+  padding: $sp-5;
+  background: linear-gradient(135deg, rgba($zinc-50, 0.98), rgba($amber-50, 0.9));
+  border: 1px solid rgba($zinc-200, 0.9);
+  border-radius: $radius-xl;
+}
+
+.pricingContactLabel {
+  font-family: $font-headline;
+  font-size: clamp(1.65rem, 3vw, 2.2rem);
+  font-weight: 900;
+  color: $zinc-900;
+  letter-spacing: -0.04em;
+  line-height: 1.05;
+}
+
+.pricingContactNote {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: $zinc-600;
+  font-weight: 600;
 }
 
 // ── CTA buttons ──────────────────────────────────────────────

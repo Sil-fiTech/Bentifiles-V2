@@ -13,9 +13,8 @@ import type { Plan } from '../data/plans';
 import PricingCard from './PricingCard';
 import styles from '../landing.module.scss';
 
-// ─── Stripe integration hook-point ─────────────────────────────────────────
 /**
- * handleSubscribe — called when user clicks "Assinar plano" on any card.
+ * handleSubscribe - called when user clicks "Assinar plano" on any card.
  *
  * To integrate with real Stripe Checkout:
  * 1. Create a Next.js API route at /api/stripe/checkout
@@ -48,7 +47,6 @@ async function handleSubscribe(plan: Plan): Promise<void> {
   // window.location.href = url;
 }
 
-// ─── Value props ──────────────────────────────────────────────────────────
 const valueProps = [
   {
     icon: <LayoutDashboard size={22} />,
@@ -72,7 +70,6 @@ const valueProps = [
   },
 ];
 
-// ─── Component ─────────────────────────────────────────────────────────────
 export default function PricingSection() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -80,7 +77,6 @@ export default function PricingSection() {
 
   return (
     <>
-      {/* ── Pricing Hero ──────────────────────────────────────── */}
       <section className={styles.pricingHero} id="planos">
         <div className={styles.pricingHeroOrb1} aria-hidden="true" />
         <div className={styles.pricingHeroOrb2} aria-hidden="true" />
@@ -93,12 +89,11 @@ export default function PricingSection() {
               <span className={styles.sectionTitleAccent}>ideal para você</span>
             </h1>
             <p className={styles.sectionSubtitle}>
-              Do profissional autônomo à grande empresa — temos o plano certo para cada perfil.
+              Do profissional autônomo à grande empresa, temos o plano certo para cada perfil.
               Sem taxas ocultas. Cancele quando quiser.
             </p>
           </div>
 
-          {/* Plan cards grid */}
           <div className={styles.pricingGrid}>
             {plans.map((plan) => (
               <PricingCard key={plan.id} plan={plan} onSubscribe={handleSubscribe} />
@@ -113,7 +108,6 @@ export default function PricingSection() {
         </div>
       </section>
 
-      {/* ── Value Props ───────────────────────────────────────── */}
       <section className={styles.pricingValueProps}>
         <div className={styles.sectionInner}>
           <div className={styles.sectionHeader} style={{ marginBottom: '3rem' }}>
@@ -138,7 +132,6 @@ export default function PricingSection() {
         </div>
       </section>
 
-      {/* ── Billing FAQ ───────────────────────────────────────── */}
       <section className={styles.pricingFaq} id="faq-cobranca">
         <div className={styles.sectionInner}>
           <div className={styles.sectionHeader}>

@@ -29,14 +29,14 @@ export default function HeroSection() {
           </div>
 
           <h1 className={styles.heroTitle}>
-            Centralize, organize e{' '}
-            <span className={styles.heroTitleAccent}>padronize</span>
-            {' '}seus documentos e projetos
+            Garanta imagens{' '}
+            <span className={styles.heroTitleAccent}>legíveis</span>
+            {' '}antes que elas travem sua operação
           </h1>
 
           <p className={styles.heroSubtitle}>
-            O Bentifiles reúne documentos, templates e projetos em um único ambiente inteligente.
-            Reduza o retrabalho, mantenha sua equipe alinhada e encontre qualquer arquivo em segundos.
+            O Bentifiles valida automaticamente a legibilidade das imagens, gerencia os uploads e centraliza os arquivos em um só lugar.
+            Além disso, renomeia cada documento para manter o fluxo organizado e sem retrabalho.
           </p>
 
           <div className={styles.heroCtas}>
@@ -60,23 +60,23 @@ export default function HeroSection() {
 
           <div className={styles.heroStats}>
             <div className={styles.heroStat}>
-              <span className={styles.heroStatValue}>100%</span>
-              <span className={styles.heroStatLabel}>Organizado</span>
+              <span className={styles.heroStatValue}>24/7</span>
+              <span className={styles.heroStatLabel}>Validação</span>
             </div>
             <div className={styles.heroStatDivider} />
             <div className={styles.heroStat}>
-              <span className={styles.heroStatValue}>0</span>
-              <span className={styles.heroStatLabel}>Retrabalho</span>
+              <span className={styles.heroStatValue}>-</span>
+              <span className={styles.heroStatLabel}>Menos falhas</span>
             </div>
             <div className={styles.heroStatDivider} />
             <div className={styles.heroStat}>
-              <span className={styles.heroStatValue}>∞</span>
-              <span className={styles.heroStatLabel}>Escalável</span>
+              <span className={styles.heroStatValue}>+</span>
+              <span className={styles.heroStatLabel}>Fluxo contínuo</span>
             </div>
           </div>
         </div>
 
-        {/* Right column — Dashboard mockup */}
+        {/* Right column - Dashboard mockup */}
         <div className={styles.heroVisual}>
           <div className={styles.dashboardMockup}>
             {/* Mockup header */}
@@ -86,7 +86,7 @@ export default function HeroSection() {
                 <span className={styles.mockupDot} style={{ background: '#f59e0b' }} />
                 <span className={styles.mockupDot} style={{ background: '#10b981' }} />
               </div>
-              <div className={styles.mockupTitle}>Dashboard — Bentifiles</div>
+              <div className={styles.mockupTitle}>Dashboard - Bentifiles</div>
             </div>
 
             {/* Mockup body */}
@@ -154,15 +154,15 @@ export default function HeroSection() {
           </div>
 
           <div className={styles.floatingCard2}>
-            <div className={styles.floatingCardCheckIcon}>✓</div>
+            <div className={styles.floatingCardCheckIcon}>OK</div>
             <div>
-              <div className={styles.floatingCardTitle}>Documento validado</div>
-              <div className={styles.floatingCardSub}>Contrato_Final.pdf</div>
+              <div className={styles.floatingCardTitle}>Imagem legível</div>
+              <div className={styles.floatingCardSub}>samfersill_RG.jpg</div>
             </div>
           </div>
 
           <div className={styles.floatingCard3}>
-            <div className={styles.floatingCardStarIcon}>★</div>
+            <div className={styles.floatingCardStarIcon}>*</div>
             <div>
               <div className={styles.floatingCardTitle}>Template criado</div>
               <div className={styles.floatingCardSub}>NDA Padrão</div>
