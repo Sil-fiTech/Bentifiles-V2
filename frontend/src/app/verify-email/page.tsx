@@ -22,7 +22,7 @@ function VerifyEmailContent() {
 
         const verifyToken = async () => {
             try {
-                const res = await api.get(`/api/auth/verify-email?token=${token}`);
+                const res = await api.get(`/api/users/verify-email?token=${token}`);
                 setStatus('success');
                 
                 if (res.data.token) {
