@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { register, login } from '../controllers/authController';
-import { getProfile, updateProfile } from '../controllers/userController';
+import { getProfile, updateProfile, verifyEmail, resendVerification } from '../controllers/userController';
 import rateLimit from 'express-rate-limit';
 import { authenticateToken } from '../middleware/auth';
 
@@ -15,6 +15,8 @@ const authLimiter = rateLimit({
 router.post('/register', authLimiter, register);
 router.post('/login', authLimiter, login);
 
+router.get('/verify-email', verifyEmail);
+router.post('/resend-verification', authLimiter, resendVerification);
 // Profile routes
 router.get('/me', authenticateToken as any, getProfile as any);
 router.put('/me', authenticateToken as any, updateProfile as any);
