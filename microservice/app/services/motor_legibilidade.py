@@ -549,8 +549,72 @@ def text_presence_score(roi: np.ndarray) -> float:
 # Main validation
 # =========================
 
-def evaluate_readability(image: np.ndarray) -> tuple[ReadabilityResult, list[RegionCandidate], dict[str, np.ndarray], np.ndarray | None]:
-    processed, _ = resize_for_processing(image, max_dim=1400)
+def final_score_from_result(result: ReadabilityResult) -> float:
+    if not result.document_detected:
+        return 0.0
+    return clip01(0.35 * result.region_confidence + 0.65 * result.readability_score)
+
+
+def rotate_image_quadrants(image: np.ndarray, quadrants: int) -> np.ndarray:
+    quadrants = quadrants % 4
+    if quadrants == 0:
+        return image.copy()
+    return np.ascontiguousarray(np.rot90(image, quadrants))
+
+
+def rotate_points_back(points: np.ndarray, quadrants: int, original_shape: tuple[int, int, int]) -> np.ndarray:
+    quadrants = quadrants % 4
+    if quadrants == 0:
+        return points.astype(np.float32)
+
+    h, w = original_shape[:2]
+    pts = points.astype(np.float32).copy()
+
+    if quadrants == 1:
+        x = (w - 1) - pts[:, 1]
+        y = pts[:, 0]
+    elif quadrants == 2:
+        x = (w - 1) - pts[:, 0]
+        y = (h - 1) - pts[:, 1]
+    else:  # quadrants == 3
+        x = pts[:, 1]
+        y = (h - 1) - pts[:, 0]
+
+    return np.column_stack((x, y)).astype(np.float32)
+
+
+def restore_result_orientation(result: ReadabilityResult, quadrants: int, original_shape: tuple[int, int, int]) -> ReadabilityResult:
+    if quadrants % 4 == 0 or not result.corners:
+        return result
+
+    restored_corners = rotate_points_back(np.array(result.corners, dtype=np.float32), quadrants, original_shape)
+    result.corners = restored_corners.astype(int).tolist()
+    return result
+
+
+def restore_candidates_orientation(candidates: list[RegionCandidate], quadrants: int, original_shape: tuple[int, int, int]) -> list[RegionCandidate]:
+    if quadrants % 4 == 0:
+        return candidates
+
+    restored: list[RegionCandidate] = []
+    for cand in candidates:
+        restored.append(
+            RegionCandidate(
+                source=cand.source,
+                corners=rotate_points_back(cand.corners, quadrants, original_shape),
+                score=cand.score,
+                area_ratio=cand.area_ratio,
+                aspect_ratio=cand.aspect_ratio,
+                border_penalty=cand.border_penalty,
+                edge_support=cand.edge_support,
+                text_structure_score=cand.text_structure_score,
+            )
+        )
+
+    return restored
+
+
+def _evaluate_readability_on_processed(processed: np.ndarray) -> tuple[ReadabilityResult, list[RegionCandidate], dict[str, np.ndarray], np.ndarray | None]:
     maps = preprocess_maps(processed)
 
     candidates = detect_document_candidates(processed, maps)
@@ -674,6 +738,30 @@ def evaluate_readability(image: np.ndarray) -> tuple[ReadabilityResult, list[Reg
         reasons=reasons,
         corners=best.corners.astype(int).tolist(),
     )
+
+    return result, candidates, maps, roi
+
+
+def evaluate_readability(image: np.ndarray) -> tuple[ReadabilityResult, list[RegionCandidate], dict[str, np.ndarray], np.ndarray | None]:
+    processed, _ = resize_for_processing(image, max_dim=1400)
+
+    best_payload: tuple[ReadabilityResult, list[RegionCandidate], dict[str, np.ndarray], np.ndarray | None, int] | None = None
+    best_score = -1.0
+
+    for quadrants in range(4):
+        rotated = rotate_image_quadrants(processed, quadrants)
+        result, candidates, maps, roi = _evaluate_readability_on_processed(rotated)
+        score = final_score_from_result(result)
+
+        if score > best_score:
+            best_score = score
+            best_payload = (result, candidates, maps, roi, quadrants)
+
+    assert best_payload is not None
+    result, candidates, maps, roi, quadrants = best_payload
+
+    result = restore_result_orientation(result, quadrants, processed.shape)
+    candidates = restore_candidates_orientation(candidates, quadrants, processed.shape)
 
     return result, candidates, maps, roi
 
