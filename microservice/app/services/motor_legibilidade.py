@@ -2,12 +2,18 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 from dataclasses import asdict, dataclass
+from copy import deepcopy
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
 import cv2
 import numpy as np
+try:
+    import yaml
+except ImportError:  # pragma: no cover - fallback for environments without PyYAML
+    yaml = None
 
 
 # =========================
@@ -49,10 +55,180 @@ class ReadabilityResult:
     corners: list[list[int]] | None
 
 
-# Global thresholds (tuning)
-FINAL_SCORE_APPROVE_THRESHOLD = 0.71
-FINAL_SCORE_MANUAL_THRESHOLD = 0.73
-MAX_REASONS_APPROVE = 2
+logger = logging.getLogger(__name__)
+
+
+DEFAULT_THRESHOLDS: dict[str, Any] = {
+    "final_score": {
+        "approve_threshold": 0.71,
+        "manual_threshold": 0.73,
+        "max_reasons_approve": 2,
+    },
+    "processing": {
+        "max_dim": 1400,
+    },
+    "preprocess": {
+        "clahe_clip_limit": 2.0,
+        "clahe_tile_grid_size": [8, 8],
+        "gaussian_blur_kernel": [5, 5],
+        "canny_threshold1": 60,
+        "canny_threshold2": 160,
+        "edge_kernel_size": [3, 3],
+        "edge_dilate_iterations": 1,
+        "edge_erode_iterations": 1,
+        "adaptive_block_size": 31,
+        "adaptive_c": 7,
+        "close_kernel_size": [5, 5],
+        "close_iterations": 2,
+    },
+    "edge_support": {
+        "samples_per_edge": 80,
+        "support_window_radius": 2,
+    },
+    "text_structure": {
+        "gaussian_blur_kernel": [3, 3],
+        "sobel_ksize": 3,
+        "close_kernel_size": [25, 3],
+        "close_iterations": 1,
+        "min_width": 20,
+        "min_height": 5,
+        "min_area": 60,
+        "min_fill_ratio": 0.08,
+        "min_aspect_ratio": 2.0,
+        "max_area_ratio": 0.25,
+        "score_normalizer": 12.0,
+    },
+    "candidate_detection": {
+        "min_contour_area_ratio": 0.008,
+        "approx_poly_epsilon_ratio": 0.02,
+        "min_area_ratio": 0.015,
+        "max_area_ratio": 0.75,
+        "max_aspect_ratio": 2.4,
+        "min_dimension": 80,
+        "border_margin_ratio": 0.05,
+        "ideal_area_min_ratio": 0.03,
+        "ideal_area_max_ratio": 0.45,
+        "area_falloff_range": 0.30,
+        "preferred_aspect_ratio_min": 1.2,
+        "preferred_aspect_ratio_max": 1.95,
+        "acceptable_aspect_ratio_min": 1.0,
+        "acceptable_aspect_ratio_max": 2.2,
+        "aspect_score_good": 1.0,
+        "aspect_score_ok": 0.7,
+        "aspect_score_bad": 0.2,
+        "weight_area": 0.24,
+        "weight_edge_support": 0.20,
+        "weight_text_structure": 0.24,
+        "weight_aspect": 0.14,
+        "weight_border_penalty": 0.28,
+        "dedup_distance_threshold": 20,
+        "max_candidates": 20,
+    },
+    "blur_score": {
+        "min_metric": 20.0,
+        "max_metric": 180.0,
+    },
+    "brightness_score": {
+        "ideal_min": 0.35,
+        "ideal_max": 0.80,
+        "hard_min": 0.20,
+        "hard_max": 0.92,
+    },
+    "contrast_score": {
+        "min_std": 0.06,
+        "max_std": 0.22,
+    },
+    "glare_score": {
+        "ideal_max_ratio": 0.005,
+        "hard_max_ratio": 0.12,
+    },
+    "perspective_score": {
+        "max_angle_error": 35.0,
+        "weight_side_balance": 0.6,
+        "weight_angle": 0.4,
+    },
+    "crop_score": {
+        "border_margin_ratio": 0.03,
+    },
+    "text_presence": {
+        "gaussian_blur_kernel": [3, 3],
+        "sobel_ksize": 3,
+        "close_kernel_size": [25, 3],
+        "close_iterations": 1,
+        "min_width": 25,
+        "min_height": 6,
+        "min_area": 80,
+        "max_area_ratio": 0.20,
+        "min_aspect_ratio": 2.0,
+        "score_normalizer": 12.0,
+    },
+    "readability_score": {
+        "weight_blur": 0.20,
+        "weight_brightness": 0.10,
+        "weight_contrast": 0.10,
+        "weight_glare": 0.10,
+        "weight_text": 0.30,
+        "weight_crop": 0.10,
+        "weight_perspective": 0.10,
+        "low_text_penalties": [
+            {"max_text_score": 0.15, "multiplier": 0.45},
+            {"max_text_score": 0.25, "multiplier": 0.70},
+            {"max_text_score": 0.35, "multiplier": 0.85},
+        ],
+        "high_contrast_exception": {
+            "min_contrast_score": 0.97,
+            "max_text_score": 0.12,
+            "max_area_ratio": 0.10,
+            "min_readability_score": 0.85,
+        },
+    },
+    "reasons": {
+        "blur_score_min": 0.35,
+        "brightness_score_min": 0.35,
+        "contrast_score_min": 0.35,
+        "glare_score_min": 0.40,
+        "text_score_min": 0.30,
+        "crop_score_min": 0.50,
+        "perspective_score_min": 0.45,
+    },
+}
+
+
+def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    merged = deepcopy(base)
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = _deep_merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def load_thresholds() -> dict[str, Any]:
+    config_path = Path(__file__).resolve().parents[1] / "config" / "motor_legibilidade_thresholds.yaml"
+    if yaml is None:
+        logger.warning("PyYAML is not installed. Using default readability thresholds.")
+        return deepcopy(DEFAULT_THRESHOLDS)
+
+    if not config_path.exists():
+        logger.warning("Threshold YAML not found at %s. Using defaults.", config_path)
+        return deepcopy(DEFAULT_THRESHOLDS)
+
+    try:
+        with config_path.open("r", encoding="utf-8") as f:
+            loaded = yaml.safe_load(f) or {}
+    except Exception as exc:
+        logger.warning("Failed to load threshold YAML at %s: %s. Using defaults.", config_path, exc)
+        return deepcopy(DEFAULT_THRESHOLDS)
+
+    if not isinstance(loaded, dict):
+        logger.warning("Threshold YAML at %s must contain a mapping. Using defaults.", config_path)
+        return deepcopy(DEFAULT_THRESHOLDS)
+
+    return _deep_merge(DEFAULT_THRESHOLDS, loaded)
+
+
+THRESHOLDS = load_thresholds()
 
 
 # =========================
@@ -146,32 +322,37 @@ def perspective_crop(image: np.ndarray, corners: np.ndarray) -> np.ndarray:
 # =========================
 
 def preprocess_maps(image: np.ndarray) -> dict[str, np.ndarray]:
+    cfg = THRESHOLDS["preprocess"]
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-    clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    clahe = cv2.createCLAHE(
+        clipLimit=cfg["clahe_clip_limit"],
+        tileGridSize=tuple(cfg["clahe_tile_grid_size"]),
+    )
     gray_clahe = clahe.apply(gray)
 
-    blur = cv2.GaussianBlur(gray_clahe, (5, 5), 0)
+    blur = cv2.GaussianBlur(gray_clahe, tuple(cfg["gaussian_blur_kernel"]), 0)
 
-    edges = cv2.Canny(blur, 60, 160)
-    edges = cv2.dilate(edges, np.ones((3, 3), np.uint8), iterations=1)
-    edges = cv2.erode(edges, np.ones((3, 3), np.uint8), iterations=1)
+    edges = cv2.Canny(blur, cfg["canny_threshold1"], cfg["canny_threshold2"])
+    edge_kernel = np.ones(tuple(cfg["edge_kernel_size"]), np.uint8)
+    edges = cv2.dilate(edges, edge_kernel, iterations=cfg["edge_dilate_iterations"])
+    edges = cv2.erode(edges, edge_kernel, iterations=cfg["edge_erode_iterations"])
 
     th = cv2.adaptiveThreshold(
         blur,
         255,
         cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
         cv2.THRESH_BINARY,
-        31,
-        7,
+        cfg["adaptive_block_size"],
+        cfg["adaptive_c"],
     )
     th_inv = 255 - th
 
     close = cv2.morphologyEx(
         th_inv,
         cv2.MORPH_CLOSE,
-        np.ones((5, 5), np.uint8),
-        iterations=2,
+        np.ones(tuple(cfg["close_kernel_size"]), np.uint8),
+        iterations=cfg["close_iterations"],
     )
 
     return {
@@ -190,6 +371,9 @@ def preprocess_maps(image: np.ndarray) -> dict[str, np.ndarray]:
 # =========================
 
 def quad_edge_support(corners: np.ndarray, edges: np.ndarray, samples_per_edge: int = 80) -> float:
+    cfg = THRESHOLDS["edge_support"]
+    samples_per_edge = cfg["samples_per_edge"]
+    radius = cfg["support_window_radius"]
     total = 0
     supported = 0
     pts = corners.astype(np.float32)
@@ -209,8 +393,8 @@ def quad_edge_support(corners: np.ndarray, edges: np.ndarray, samples_per_edge: 
             y = int(round((1 - t) * p1[1] + t * p2[1]))
             if 0 <= x < w and 0 <= y < h:
                 total += 1
-                x1, x2 = max(0, x - 2), min(w, x + 3)
-                y1, y2 = max(0, y - 2), min(h, y + 3)
+                x1, x2 = max(0, x - radius), min(w, x + radius + 1)
+                y1, y2 = max(0, y - radius), min(h, y + radius + 1)
                 if np.max(edges[y1:y2, x1:x2]) > 0:
                     supported += 1
 
@@ -220,6 +404,7 @@ def quad_edge_support(corners: np.ndarray, edges: np.ndarray, samples_per_edge: 
 
 
 def score_text_structure(image: np.ndarray, corners: np.ndarray) -> float:
+    cfg = THRESHOLDS["text_structure"]
     try:
         roi = perspective_crop(image, corners)
     except Exception:
@@ -229,15 +414,15 @@ def score_text_structure(image: np.ndarray, corners: np.ndarray) -> float:
         return 0.0
 
     gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-    gray = cv2.GaussianBlur(gray, (3, 3), 0)
+    gray = cv2.GaussianBlur(gray, tuple(cfg["gaussian_blur_kernel"]), 0)
 
-    grad = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+    grad = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=cfg["sobel_ksize"])
     grad = cv2.convertScaleAbs(grad)
 
     _, bw = cv2.threshold(grad, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 3))
-    connected = cv2.morphologyEx(bw, cv2.MORPH_CLOSE, kernel, iterations=1)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, tuple(cfg["close_kernel_size"]))
+    connected = cv2.morphologyEx(bw, cv2.MORPH_CLOSE, kernel, iterations=cfg["close_iterations"])
 
     n_labels, labels, stats, _ = cv2.connectedComponentsWithStats(connected, connectivity=8)
 
@@ -247,23 +432,24 @@ def score_text_structure(image: np.ndarray, corners: np.ndarray) -> float:
 
     for i in range(1, n_labels):
         x, y, ww, hh, area = stats[i]
-        if ww < 20 or hh < 5:
+        if ww < cfg["min_width"] or hh < cfg["min_height"]:
             continue
-        if area < 60:
+        if area < cfg["min_area"]:
             continue
         fill = area / max(1, ww * hh)
-        if fill < 0.08:
+        if fill < cfg["min_fill_ratio"]:
             continue
-        if ww / max(1, hh) < 2.0:
+        if ww / max(1, hh) < cfg["min_aspect_ratio"]:
             continue
-        if area > roi_area * 0.25:
+        if area > roi_area * cfg["max_area_ratio"]:
             continue
         good += 1
 
-    return clip01(good / 12.0)
+    return clip01(good / cfg["score_normalizer"])
 
 
 def score_candidate(corners: np.ndarray, image: np.ndarray, maps: dict[str, np.ndarray], source: str) -> RegionCandidate | None:
+    cfg = THRESHOLDS["candidate_detection"]
     corners = order_points(corners)
     h, w = image.shape[:2]
     image_area = float(h * w)
@@ -285,20 +471,20 @@ def score_candidate(corners: np.ndarray, image: np.ndarray, maps: dict[str, np.n
 
     aspect_ratio = max(width_mean, height_mean) / min(width_mean, height_mean)
 
-    if area_ratio < 0.015:
+    if area_ratio < cfg["min_area_ratio"]:
         return None
 
-    if area_ratio > 0.75:
+    if area_ratio > cfg["max_area_ratio"]:
         return None
 
-    if aspect_ratio > 2.4:
+    if aspect_ratio > cfg["max_aspect_ratio"]:
         return None
 
-    if min(width_mean, height_mean) < 80:
+    if min(width_mean, height_mean) < cfg["min_dimension"]:
         return None
 
-    margin_x = int(w * 0.05)
-    margin_y = int(h * 0.05)
+    margin_x = int(w * cfg["border_margin_ratio"])
+    margin_y = int(h * cfg["border_margin_ratio"])
 
     min_x = float(np.min(corners[:, 0]))
     max_x = float(np.max(corners[:, 0]))
@@ -320,27 +506,29 @@ def score_candidate(corners: np.ndarray, image: np.ndarray, maps: dict[str, np.n
     text_structure_score = score_text_structure(image, corners)
 
     # melhor área entre 3% e 45%
-    if area_ratio < 0.03:
-        area_score = clip01(area_ratio / 0.03)
-    elif area_ratio <= 0.45:
+    if area_ratio < cfg["ideal_area_min_ratio"]:
+        area_score = clip01(area_ratio / cfg["ideal_area_min_ratio"])
+    elif area_ratio <= cfg["ideal_area_max_ratio"]:
         area_score = 1.0
     else:
-        area_score = clip01(1.0 - (area_ratio - 0.45) / 0.30)
+        area_score = clip01(
+            1.0 - (area_ratio - cfg["ideal_area_max_ratio"]) / cfg["area_falloff_range"]
+        )
 
     # documentos variados: tolerância ampla
-    if 1.2 <= aspect_ratio <= 1.95:
-        aspect_score = 1.0
-    elif 1.0 <= aspect_ratio <= 2.2:
-        aspect_score = 0.7
+    if cfg["preferred_aspect_ratio_min"] <= aspect_ratio <= cfg["preferred_aspect_ratio_max"]:
+        aspect_score = cfg["aspect_score_good"]
+    elif cfg["acceptable_aspect_ratio_min"] <= aspect_ratio <= cfg["acceptable_aspect_ratio_max"]:
+        aspect_score = cfg["aspect_score_ok"]
     else:
-        aspect_score = 0.2
+        aspect_score = cfg["aspect_score_bad"]
 
     score = (
-        0.24 * area_score
-        + 0.20 * edge_support
-        + 0.24 * text_structure_score
-        + 0.14 * aspect_score
-        - 0.28 * border_penalty
+        cfg["weight_area"] * area_score
+        + cfg["weight_edge_support"] * edge_support
+        + cfg["weight_text_structure"] * text_structure_score
+        + cfg["weight_aspect"] * aspect_score
+        - cfg["weight_border_penalty"] * border_penalty
     )
     score = clip01(score)
 
@@ -357,6 +545,7 @@ def score_candidate(corners: np.ndarray, image: np.ndarray, maps: dict[str, np.n
 
 
 def detect_document_candidates(image: np.ndarray, maps: dict[str, np.ndarray]) -> list[RegionCandidate]:
+    cfg = THRESHOLDS["candidate_detection"]
     binaries = [
         ("contour_edges", maps["edges"]),
         ("contour_close", maps["close"]),
@@ -370,11 +559,11 @@ def detect_document_candidates(image: np.ndarray, maps: dict[str, np.ndarray]) -
 
         for cnt in contours:
             area = cv2.contourArea(cnt)
-            if area < image.shape[0] * image.shape[1] * 0.008:
+            if area < image.shape[0] * image.shape[1] * cfg["min_contour_area_ratio"]:
                 continue
 
             peri = cv2.arcLength(cnt, True)
-            approx = cv2.approxPolyDP(cnt, 0.02 * peri, True)
+            approx = cv2.approxPolyDP(cnt, cfg["approx_poly_epsilon_ratio"] * peri, True)
 
             if len(approx) >= 4:
                 hull = cv2.convexHull(approx)
@@ -394,19 +583,20 @@ def detect_document_candidates(image: np.ndarray, maps: dict[str, np.ndarray]) -
 
 
 def deduplicate_candidates(candidates: list[RegionCandidate]) -> list[RegionCandidate]:
+    cfg = THRESHOLDS["candidate_detection"]
     unique: list[RegionCandidate] = []
 
     for cand in sorted(candidates, key=lambda c: c.score, reverse=True):
         keep = True
         for other in unique:
             d = np.mean(np.linalg.norm(cand.corners - other.corners, axis=1))
-            if d < 20:
+            if d < cfg["dedup_distance_threshold"]:
                 keep = False
                 break
         if keep:
             unique.append(cand)
 
-    return unique[:20]
+    return unique[:cfg["max_candidates"]]
 
 
 # =========================
@@ -418,43 +608,54 @@ def blur_metric(gray: np.ndarray) -> float:
 
 
 def blur_score_from_metric(val: float) -> float:
+    cfg = THRESHOLDS["blur_score"]
+    min_metric = cfg["min_metric"]
+    max_metric = cfg["max_metric"]
     # ajuste empírico simples
-    if val <= 20:
+    if val <= min_metric:
         return 0.0
-    if val >= 180:
+    if val >= max_metric:
         return 1.0
-    return clip01((val - 20) / 160.0)
+    return clip01((val - min_metric) / (max_metric - min_metric))
 
 
 def brightness_score_from_mean(mean_val_0_1: float) -> float:
-    # faixa ideal aproximadamente entre 0.35 e 0.80
-    if 0.35 <= mean_val_0_1 <= 0.80:
+    cfg = THRESHOLDS["brightness_score"]
+    # faixa ideal aproximadamente entre o ideal_min e ideal_max
+    if cfg["ideal_min"] <= mean_val_0_1 <= cfg["ideal_max"]:
         return 1.0
-    if mean_val_0_1 < 0.20 or mean_val_0_1 > 0.92:
+    if mean_val_0_1 < cfg["hard_min"] or mean_val_0_1 > cfg["hard_max"]:
         return 0.0
-    if mean_val_0_1 < 0.35:
-        return clip01((mean_val_0_1 - 0.20) / 0.15)
-    return clip01((0.92 - mean_val_0_1) / 0.12)
+    if mean_val_0_1 < cfg["ideal_min"]:
+        return clip01((mean_val_0_1 - cfg["hard_min"]) / (cfg["ideal_min"] - cfg["hard_min"]))
+    return clip01((cfg["hard_max"] - mean_val_0_1) / (cfg["hard_max"] - cfg["ideal_max"]))
 
 
 def contrast_score_from_std(std_val_0_1: float) -> float:
-    if std_val_0_1 <= 0.06:
+    cfg = THRESHOLDS["contrast_score"]
+    if std_val_0_1 <= cfg["min_std"]:
         return 0.0
-    if std_val_0_1 >= 0.22:
+    if std_val_0_1 >= cfg["max_std"]:
         return 1.0
-    return clip01((std_val_0_1 - 0.06) / 0.16)
+    return clip01((std_val_0_1 - cfg["min_std"]) / (cfg["max_std"] - cfg["min_std"]))
 
 
 def glare_ratio_score(glare_ratio: float) -> float:
+    cfg = THRESHOLDS["glare_score"]
     # ideal é pouco reflexo
-    if glare_ratio <= 0.005:
+    if glare_ratio <= cfg["ideal_max_ratio"]:
         return 1.0
-    if glare_ratio >= 0.12:
+    if glare_ratio >= cfg["hard_max_ratio"]:
         return 0.0
-    return clip01(1.0 - (glare_ratio - 0.005) / 0.115)
+    return clip01(
+        1.0
+        - (glare_ratio - cfg["ideal_max_ratio"])
+        / (cfg["hard_max_ratio"] - cfg["ideal_max_ratio"])
+    )
 
 
 def perspective_score_from_corners(corners: np.ndarray) -> float:
+    cfg = THRESHOLDS["perspective_score"]
     tl, tr, br, bl = corners
 
     top_width = euclidean(tl, tr)
@@ -484,15 +685,18 @@ def perspective_score_from_corners(corners: np.ndarray) -> float:
     ) / 4.0
 
     side_balance = (top_bottom_ratio + left_right_ratio) / 2.0
-    angle_score = clip01(1.0 - angle_error / 35.0)
+    angle_score = clip01(1.0 - angle_error / cfg["max_angle_error"])
 
-    return clip01(0.6 * side_balance + 0.4 * angle_score)
+    return clip01(
+        cfg["weight_side_balance"] * side_balance + cfg["weight_angle"] * angle_score
+    )
 
 
 def crop_score_from_corners(corners: np.ndarray, image_shape: tuple[int, int, int]) -> float:
+    cfg = THRESHOLDS["crop_score"]
     h, w = image_shape[:2]
-    margin_x = int(w * 0.03)
-    margin_y = int(h * 0.03)
+    margin_x = int(w * cfg["border_margin_ratio"])
+    margin_y = int(h * cfg["border_margin_ratio"])
 
     min_x = float(np.min(corners[:, 0]))
     max_x = float(np.max(corners[:, 0]))
@@ -513,16 +717,17 @@ def crop_score_from_corners(corners: np.ndarray, image_shape: tuple[int, int, in
 
 
 def text_presence_score(roi: np.ndarray) -> float:
+    cfg = THRESHOLDS["text_presence"]
     gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-    gray = cv2.GaussianBlur(gray, (3, 3), 0)
+    gray = cv2.GaussianBlur(gray, tuple(cfg["gaussian_blur_kernel"]), 0)
 
-    gradx = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=3)
+    gradx = cv2.Sobel(gray, cv2.CV_32F, 1, 0, ksize=cfg["sobel_ksize"])
     gradx = cv2.convertScaleAbs(gradx)
 
     _, bw = cv2.threshold(gradx, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
-    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (25, 3))
-    morph = cv2.morphologyEx(bw, cv2.MORPH_CLOSE, kernel, iterations=1)
+    kernel = cv2.getStructuringElement(cv2.MORPH_RECT, tuple(cfg["close_kernel_size"]))
+    morph = cv2.morphologyEx(bw, cv2.MORPH_CLOSE, kernel, iterations=cfg["close_iterations"])
 
     n_labels, labels, stats, _ = cv2.connectedComponentsWithStats(morph, connectivity=8)
 
@@ -532,17 +737,17 @@ def text_presence_score(roi: np.ndarray) -> float:
 
     for i in range(1, n_labels):
         x, y, ww, hh, area = stats[i]
-        if ww < 25 or hh < 6:
+        if ww < cfg["min_width"] or hh < cfg["min_height"]:
             continue
-        if area < 80:
+        if area < cfg["min_area"]:
             continue
-        if area > roi_area * 0.20:
+        if area > roi_area * cfg["max_area_ratio"]:
             continue
-        if ww / max(1, hh) < 2.0:
+        if ww / max(1, hh) < cfg["min_aspect_ratio"]:
             continue
         candidates += 1
 
-    return clip01(candidates / 12.0)
+    return clip01(candidates / cfg["score_normalizer"])
 
 
 # =========================
@@ -615,6 +820,9 @@ def restore_candidates_orientation(candidates: list[RegionCandidate], quadrants:
 
 
 def _evaluate_readability_on_processed(processed: np.ndarray) -> tuple[ReadabilityResult, list[RegionCandidate], dict[str, np.ndarray], np.ndarray | None]:
+    read_cfg = THRESHOLDS["readability_score"]
+    reason_cfg = THRESHOLDS["reasons"]
+    final_cfg = THRESHOLDS["final_score"]
     maps = preprocess_maps(processed)
 
     candidates = detect_document_candidates(processed, maps)
@@ -665,54 +873,57 @@ def _evaluate_readability_on_processed(processed: np.ndarray) -> tuple[Readabili
 
     # Ajustar peso para texto e penalizar fortemente ausência de texto
     readability_score = clip01(
-        0.20 * blur_score
-        + 0.10 * brightness_score
-        + 0.10 * contrast_score
-        + 0.10 * glare_score
-        + 0.30 * txt_score
-        + 0.10 * crop_score
-        + 0.10 * persp_score
+        read_cfg["weight_blur"] * blur_score
+        + read_cfg["weight_brightness"] * brightness_score
+        + read_cfg["weight_contrast"] * contrast_score
+        + read_cfg["weight_glare"] * glare_score
+        + read_cfg["weight_text"] * txt_score
+        + read_cfg["weight_crop"] * crop_score
+        + read_cfg["weight_perspective"] * persp_score
     )
 
     # Penalização específica para baixa evidência de texto
-    if txt_score < 0.15:
-        readability_score *= 0.45
-    elif txt_score < 0.25:
-        readability_score *= 0.70
-    elif txt_score < 0.35:
-        readability_score *= 0.85
+    for rule in read_cfg["low_text_penalties"]:
+        if txt_score < rule["max_text_score"]:
+            readability_score *= rule["multiplier"]
+            break
 
     # Regra de exceção para casos com contrate altíssimo (texto pode ser pouco, mas a imagem é de boa qualidade)
     # Evita false-negatives em perfect-like que receberam txt_score muito baixo injustamente.
-    if contrast_score >= 0.97 and txt_score <= 0.12 and best.area_ratio <= 0.10:
-        readability_score = max(readability_score, 0.85)
+    high_contrast_exception = read_cfg["high_contrast_exception"]
+    if (
+        contrast_score >= high_contrast_exception["min_contrast_score"]
+        and txt_score <= high_contrast_exception["max_text_score"]
+        and best.area_ratio <= high_contrast_exception["max_area_ratio"]
+    ):
+        readability_score = max(readability_score, high_contrast_exception["min_readability_score"])
 
     readability_score = clip01(readability_score)
 
     reasons: list[str] = []
 
-    if blur_score < 0.35:
+    if blur_score < reason_cfg["blur_score_min"]:
         reasons.append("imagem desfocada")
-    if brightness_score < 0.35:
+    if brightness_score < reason_cfg["brightness_score_min"]:
         reasons.append("brilho inadequado")
-    if contrast_score < 0.35:
+    if contrast_score < reason_cfg["contrast_score_min"]:
         reasons.append("baixo contraste")
-    if glare_score < 0.40:
+    if glare_score < reason_cfg["glare_score_min"]:
         reasons.append("reflexo excessivo")
-    if txt_score < 0.30:
+    if txt_score < reason_cfg["text_score_min"]:
         reasons.append("baixa evidência de texto legível")
-    if crop_score < 0.50:
+    if crop_score < reason_cfg["crop_score_min"]:
         reasons.append("documento possivelmente cortado")
-    if persp_score < 0.45:
+    if persp_score < reason_cfg["perspective_score_min"]:
         reasons.append("perspectiva excessiva")
 
     region_confidence = best.score
 
     final_score = clip01(0.35 * region_confidence + 0.65 * readability_score)
 
-    if final_score >= FINAL_SCORE_APPROVE_THRESHOLD and len(reasons) <= MAX_REASONS_APPROVE:
+    if final_score >= final_cfg["approve_threshold"] and len(reasons) <= final_cfg["max_reasons_approve"]:
         status = "approve"
-    elif final_score >= FINAL_SCORE_MANUAL_THRESHOLD:
+    elif final_score >= final_cfg["manual_threshold"]:
         status = "manual_review"
     else:
         status = "reject"
@@ -743,7 +954,7 @@ def _evaluate_readability_on_processed(processed: np.ndarray) -> tuple[Readabili
 
 
 def evaluate_readability(image: np.ndarray) -> tuple[ReadabilityResult, list[RegionCandidate], dict[str, np.ndarray], np.ndarray | None]:
-    processed, _ = resize_for_processing(image, max_dim=1400)
+    processed, _ = resize_for_processing(image, max_dim=THRESHOLDS["processing"]["max_dim"])
 
     best_payload: tuple[ReadabilityResult, list[RegionCandidate], dict[str, np.ndarray], np.ndarray | None, int] | None = None
     best_score = -1.0
