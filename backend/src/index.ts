@@ -52,6 +52,7 @@ const server = app.listen(port, "0.0.0.0", () => {
 
 prisma.$connect().then(() => {
     console.log('Connected to database');
+    console.log('Database URL:', process.env.DATABASE_URL);
 }).catch((error) => {
     console.error('Failed to connect to database:', error);
     process.exit(1);
