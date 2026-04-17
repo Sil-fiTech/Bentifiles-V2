@@ -10,6 +10,8 @@ import fileRoutes from './routes/fileRoutes';
 import projectRoutes from './routes/projectRoutes';
 import documentRoutes from './routes/documentRoutes';
 import templateRoutes from './routes/templateRoutes';
+import billingRoutes from './routes/billingRoutes';
+import stripeWebhookRoutes from './routes/stripeWebhookRoutes';
 
 import helmet from 'helmet';
 
@@ -25,8 +27,12 @@ app.use(cors({
 }));
 console.log('CORS loaded with PATCH string format');
 
-app.use(express.json());
 app.set('trust proxy', 1);
+
+// Register Stripe Webhooks BEFORE express.json() to maintain raw body for signature verification
+app.use('/webhooks', stripeWebhookRoutes);
+
+app.use(express.json());
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', usersRoutes);
@@ -34,6 +40,7 @@ app.use('/api/files', fileRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/templates', templateRoutes);
+app.use('/api/billing', billingRoutes);
 
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', message: 'O backend do BentiFiles está rodando' });

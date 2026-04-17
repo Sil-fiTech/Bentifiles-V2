@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { Nav } from '@/components/Nav';
+import { useAccessGate } from '@/lib/hooks/useAccessGate';
 import {
     Folder, Zap, CheckCircle2, XCircle, FileIcon, Loader2, Archive
 } from 'lucide-react';
@@ -66,21 +67,22 @@ export default function Dashboard() {
     const [activeTab, setActiveTab] = useState<'my-docs' | 'review-docs'>('my-docs');
 
     const router = useRouter();
-    const { data: session, status } = useSession();
-
+    const { access, loading: accessLoading } = useAccessGate();
+    const { data: session } = useSession();
     useEffect(() => {
-        if (status === 'loading') return;
-        const localToken = localStorage.getItem('token');
-        const activeToken = session?.user?.token || localToken;
-        if (!activeToken) { router.push('/'); return; }
-        fetchData(activeToken);
-    }, [status, session]);
+        // Only fetch data if we are authenticated
+        if (accessLoading || !access?.authenticated) return;
+
+        const token = access.token;
+        if (token) {
+            fetchData(token);
+        }
+    }, [accessLoading, access?.authenticated, access?.token]);
 
     const fetchData = async (token: string) => {
         try {
             setLoading(true);
 
-            console.log(api)
             const pendingInvite = localStorage.getItem('pendingInvite');
             if (pendingInvite) {
                 try {
@@ -128,6 +130,12 @@ export default function Dashboard() {
 
 
     const handleCreateProject = async () => {
+        if (!access?.canCreateProject) {
+            toast.error('Você precisa de um plano ativo ou trial para criar projetos.');
+            router.push('/plans');
+            return;
+        }
+
         try {
             setCreating(true);
             const token = session?.user?.token || localStorage.getItem('token');
@@ -137,7 +145,14 @@ export default function Dashboard() {
             setProjects(prev => [...prev, res.data.project]);
             toast.success('Projeto criado');
             router.push(`/projects/${res.data.project.id}`);
-        } catch { toast.error('Falha ao criar projeto'); }
+        } catch (error: any) {
+            if (error.response?.status === 403) {
+                toast.error('Assinatura necessária para criar projetos.');
+                router.push('/plans');
+            } else {
+                toast.error('Falha ao criar projeto');
+            }
+        }
         finally { setCreating(false); }
     };
 
@@ -152,7 +167,6 @@ export default function Dashboard() {
 
     const isReviewTab = activeTab === 'review-docs';
     const displayedFiles = isReviewTab ? pendingFiles : files;
-    console.log(files);
 
     const computeStats = () => {
         let approvedCount = 0;

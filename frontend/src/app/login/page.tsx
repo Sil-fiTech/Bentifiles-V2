@@ -30,6 +30,7 @@ function LoginContent() {
 
   useEffect(() => {
     if (status === 'authenticated') {
+      console.log('Session:', session);
       router.push('/dashboard');
       return;
     }

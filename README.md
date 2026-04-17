@@ -1,115 +1,182 @@
-# BentiFiles
+# 🦅 BentiFiles V2
 
-**Validação Inteligente & Armazenamento de Documentos**
+**Plataforma SaaS de Gestão, Validação Inteligente e Armazenamento de Documentos.**
 
-O BentiFiles é um sistema completo para gestão de projetos, solicitação de documentos, armazenamento seguro e validação automática de imagens através de inteligência artificial/visão computacional.
-
-## 🚀 Funcionalidades
-
-- **Autenticação:** Login nativo (E-mail/Senha) e Integração com Google (NextAuth).
-- **Gestão de Projetos:** Criação de projetos e geração de links de convite para colaborar.
-- **Controle de Acesso:** Níveis de permissão (ADMIN e USER) dentro de cada projeto.
-- **Tipos de Documento:** Gestão de tipos de documentos exigidos por projeto (ex: Contrato Social, CNH) vinculados ao criador.
-- **Upload e Fluxo de Revisão:** Usuários podem fazer upload dos arquivos solicitados. Administradores podem visualizar, aprovar ou rejeitar (com motivo).
-- **Análise Automática:** Microserviço em Python que avalia o brilho, nitidez (desfoque) e a presença de texto legível nas imagens enviadas.
+O **BentiFiles** é uma solução completa para empresas e profissionais que precisam coletar, organizar e validar documentos de terceiros. O sistema automatiza o processo de "verificação de qualidade" usando Inteligência Artificial (Visão Computacional) para garantir que os documentos enviados estejam legíveis, bem iluminados e contenham as informações necessárias, reduzindo drasticamente o esforço manual de revisão.
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 🏗️ Arquitetura do Sistema
 
-O projeto é dividido em três camadas principais:
+O sistema é dividido em três camadas desacopladas que se comunicam via APIs REST:
 
-### 1. Frontend (`/frontend`)
-- **Framework:** Next.js (App Router)
-- **Linguagem:** TypeScript / React
-- **Autenticação:** NextAuth.js
-- **Estilização:** CSS / Lucide React (Ícones)
-- **Requisições HTTP:** Axios
+```mermaid
+graph TD
+    A[Frontend - Next.js] -- "HTTPS/JSON" --> B[Backend - Express API]
+    B -- "Internal API" --> C[Microserviço AI - FastAPI]
+    B -- "Queries" --> D[(PostgreSQL)]
+    B -- "Uploads" --> E[Cloudflare R2 Storage]
+    A -- "Auth" --> F[NextAuth / Google OAuth]
+    B -- "Payments" --> G[Stripe API]
+```
 
-### 2. Backend API (`/backend`)
-- **Ambiente:** Node.js com Express
-- **Linguagem:** TypeScript
-- **ORM / Banco de Dados:** Prisma (SQLite no desenvolvimento)
-- **Autenticação:** JWT (JSON Web Tokens)
-- **Uploads:** Multer (Armazenamento local em `/uploads`)
-
-### 3. Microserviço de Visão Computacional (`/microservice`)
-- **Framework:** FastAPI
-- **Linguagem:** Python
-- **Processamento de Imagens:** OpenCV (`cv2`), NumPy, EasyOCR / Tesseract
+1.  **Frontend (`/frontend`)**: Interface web moderna construída com Next.js 16, focada em UX premium e performance.
+2.  **Backend (`/backend`)**: API robusta em Node.js que gerencia a lógica de negócio, permissões, pagamentos e integração com storage.
+3.  **AI Microservice (`/microservice`)**: Motor de processamento de imagem em Python que realiza análise técnica de documentos em tempo real.
 
 ---
 
-## ⚙️ Como Executar Localmente
+## ✨ Funcionalidades Principais
 
-Você precisará do **Node.js** e do **Python 3** instalados na sua máquina.
+### 1. Gestão de Projetos e Colaboração
+- **Criação de Projetos**: Organize coletas de documentos por clientes ou departamentos.
+- **Sistema de Invites**: Gere links de convite para que usuários externos entrem em projetos específicos.
+- **RBAC (Role-Based Access Control)**:
+    - **ADMIN**: Pode gerenciar o projeto, solicitar documentos e aprovar/rejeitar envios.
+    - **USER**: Pode visualizar as solicitações e realizar o upload dos documentos.
 
-### 1. Configurando o Backend (Node.js)
-Abra uma janela do terminal na raiz do projeto e acesse a pasta do backend:
+### 2. Validação Inteligente (IA)
+Cada imagem enviada passa por um fluxo de processamento de alto nível:
+1.  **Detecção de ROI**: Localiza o documento na imagem e aplica correção de perspectiva (**Warp Perspective**).
+2.  **Métricas de Qualidade**:
+    -   **Blur (Nitidez)**: Cálculo de variância do Laplaciano para detectar desfoque.
+    -   **Brightness & Contrast**: Análise de média e desvio padrão da intensidade de pixels.
+    -   **Glare Detection**: Identifica reflexos excessivos que podem ocultar informações.
+    -   **Text Presence Score**: Uso de filtros de Sobel e análise Morfológica para detectar blocos de texto.
+    -   **Perspective & Crop**: Avalia se o documento está cortado ou com inclinação excessiva.
+3.  **Feedback Instantâneo**: Se o documento não atingir o score mínimo (0.71), o upload é bloqueado com o motivo técnico (ex: "imagem desfocada").
 
+### 3. Fluxo de Revisão Humana
+- **Dashboard de Pendências**: Administradores visualizam todos os documentos enviados.
+- **Aprovação/Rejeição**: Fluxo formal de aprovação. Em caso de rejeição, o sistema solicita um novo envio automaticamente notificando o usuário.
+- **Histórico Completo**: Log de quem enviou, quando foi analisado pela IA e quem foi o revisor humano.
+
+### 4. Gestão Financeira (Stripe)
+- **Assinaturas Recorrentes**: Mensal e Anual.
+- **Entitlements**: Controle de acesso baseado no status da assinatura (`ACTIVE`, `TRIALING`, etc).
+- **Checkout Dinâmico**: Seleção de quantidade customizada para planos corporativos.
+
+---
+
+## 📊 Estrutura de Dados (Prisma)
+
+As principais entidades e seus relacionamentos:
+-   **User**: Armazena dados de perfil, credenciais e metadados de assinatura do Stripe.
+-   **Project**: O container principal onde a colaboração ocorre.
+-   **ProjectMembership**: Tabela de junção que define o papel (`ADMIN`/`USER`) de um usuário em um projeto.
+-   **File**: Registro de cada arquivo carregado, vinculado ao Cloudflare R2.
+-   **ClientDocument**: Representa o documento solicitado. Vincula um usuário dono, o arquivo enviado e o status de revisão.
+-   **VerificationResult**: Logs detalhados de cada análise feita pela IA para cada arquivo.
+-   **DocumentType**: Define quais documentos podem ser solicitados (RG, CNH, Contrato, etc).
+
+---
+
+## 🛠️ Stack Tecnológica Detalhada
+
+### 💻 Frontend
+- **Framework**: Next.js 16 (App Router)
+- **Linguagem**: TypeScript
+- **Estilização**: SCSS Modules + Design System Baseado em Tokens
+- **Autenticação**: NextAuth.js v5 (Google & Credentials)
+- **UI Components**: Lucide React, Sonner (Toasts), Radix UI.
+
+### ⚙️ Backend
+- **Ambiente**: Node.js + Express
+- **Linguagem**: TypeScript
+- **ORM**: Prisma
+- **Banco de Dados**: PostgreSQL (Supabase)
+- **Segurança**: JWT, Bcrypt, Helmet, Cloudflare Turnstile.
+- **Comunicação**: Axios, Nodemailer (SMTP Hostinger).
+
+### 🤖 IA & Visão Computacional
+- **Framework**: FastAPI (Python 3.10+)
+- **Processamento**: OpenCV, NumPy, Pillow.
+- **OCR**: Pytesseract & EasyOCR.
+- **Modelagem**: Pydantic para validação de esquemas de dados.
+
+---
+
+## 📂 Estrutura do Projeto
+
+```text
+Bentifiles-V2/
+├── backend/             # API Node.js (Express + Prisma)
+│   ├── prisma/          # Modelagem do banco e Migrations
+│   └── src/             # Código fonte da API
+├── frontend/            # Aplicação Next.js
+│   ├── public/          # Assets estáticos
+│   └── src/app          # App Router (Páginas e Components)
+├── microservice/        # Motor de IA em Python
+│   ├── app/             # Lógica de análise de imagem
+│   └── main.py          # Entrypoint FastAPI
+└── docker-compose.yml   # Orquestração completa do sistema
+```
+
+---
+
+## 🚀 Como Executar o Projeto
+
+> [!IMPORTANT]
+> Certifique-se de ter o **Node.js 20+**, **Python 3.10+** e **Docker** instalados.
+
+### 1. Configuração de Variáveis de Ambiente
+Você deve configurar os arquivos `.env` em cada diretório baseando-se nos exemplos:
+
+**Backend (`/backend/.env`):**
+```env
+DATABASE_URL="postgresql://..."
+JWT_SECRET="sua_chave"
+STRIPE_SECRET_KEY="sk_test_..."
+R2_ACCESS_KEY_ID="..."
+R2_SECRET_ACCESS_KEY="..."
+```
+
+**Frontend (`/frontend/.env.local`):**
+```env
+NEXT_PUBLIC_API_URL="http://localhost:4000"
+AUTH_GOOGLE_ID="..."
+AUTH_GOOGLE_SECRET="..."
+```
+
+### 2. Execução via Docker (Recomendado)
+Para rodar todo o ecossistema (Frontend, Backend e IA) de uma vez:
 ```bash
-cd backend
-# Instale as dependências
-npm install
+docker-compose up --build
+```
 
-# Gere o client do Prisma e atualize o banco de dados
+### 3. Execução Manual (Desenvolvimento)
+
+**Backend:**
+```bash
+cd backend && npm install
 npx prisma generate
-npx prisma migrate dev
-
-# Inicie o servidor de desenvolvimento (rodará na porta 3001)
 npm run dev
 ```
 
-### 2. Configurando o Frontend (Next.js)
-Abra outra janela do terminal na raiz do projeto e acesse a pasta do frontend:
-
+**Frontend:**
 ```bash
-cd frontend
-# Instale as dependências
-npm install
-
-# Inicie a aplicação web (rodará na porta 3000)
+cd frontend && npm install
 npm run dev
 ```
-*Acesse `http://localhost:3000` no seu navegador.*
 
-### 3. Configurando o Microserviço (Python)
-Abra uma terceira janela do terminal (PowerShell) na raiz do projeto e acesse a pasta do microserviço. Siga os passos abaixo, especialmente se estiver no Windows:
-
-```powershell
+**Microserviço AI:**
+```bash
 cd microservice
-
-# Se você ainda não criou o ambiente virtual (venv), crie-o:
 python -m venv venv
-
-# ATIVE o ambiente virtual (Passo obrigatório no Windows)
-.\venv\Scripts\activate
-
-# Com o ambiente ativado (aparecerá um (venv) no seu terminal), instale as dependências:
+source venv/bin/activate # Ou .\venv\Scripts\activate no Windows
 pip install -r requirements.txt
-
-# Inicie a API de IA com uvicorn (rodará na porta 8000):
 uvicorn main:app --reload
 ```
 
 ---
 
-## 🔒 Variáveis de Ambiente (`.env`)
+## 🔒 Segurança e Infraestrutura
+- **Storage**: Cloudflare R2 para armazenamento persistente de documentos.
+- **Database**: PostgreSQL hospedado via Supabase para alta disponibilidade.
+- **Proteção**: Rate limiting em rotas críticas e integração com Cloudflare Turnstile para prevenção de bots.
 
-Você precisará configurar os arquivos `.env` nas pastas correspondentes (baseie-se nos arquivos `.env.example` caso existam):
+---
 
-**No Frontend (`frontend/.env.local`):**
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3001
-AUTH_SECRET=sua_chave_secreta_aqui
-AUTH_GOOGLE_ID=seu_client_id_do_google
-AUTH_GOOGLE_SECRET=seu_client_secret_do_google
-```
+## 📝 Licença
 
-**No Backend (`backend/.env`):**
-```env
-PORT=3001
-DATABASE_URL="file:./dev.db"
-JWT_SECRET=sua_chave_jwt_super_segura
-MICROSERVICE_URL=http://localhost:8000
-```
+Propriedade de **Sil-fiTech/Bentifiles**. Todos os direitos reservados.

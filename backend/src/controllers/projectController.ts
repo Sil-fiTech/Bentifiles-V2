@@ -6,6 +6,7 @@ import { generateSlug } from '../utils/slugify';
 export const getProjects = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.userId;
+        console.log("userId ==> ", userId);
         if (!userId) return res.status(401).json({ message: 'Não autorizado' });
 
         const memberships = await prisma.projectMembership.findMany({
@@ -198,7 +199,7 @@ export const getProjectDetails = async (req: AuthRequest, res: Response) => {
 
         const me = project.members.find(m => m.userId === userId);
         const currentUserPermissions = me ? getPermissions(me.role) : ['DOCUMENT_VIEW', 'DOCUMENT_UPLOAD'];
-
+      
         res.status(200).json({
             project: {
                 id: project.id,

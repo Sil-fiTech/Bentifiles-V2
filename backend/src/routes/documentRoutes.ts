@@ -7,12 +7,14 @@ import {
     deleteDocumentType,
     updateClientDocumentStatus
 } from '../controllers/documentController';
+import { requireProductAccess } from '../middleware/requireProductAccess';
 import { checkRole } from '../middleware/roleMiddleware';
 
 const router = Router();
 
 // Require auth for all
 router.use(authenticateToken as any);
+router.use(requireProductAccess as any);
 
 // Global Document Types
 router.get('/types', getDocumentTypes as any);
