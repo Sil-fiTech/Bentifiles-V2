@@ -1,5 +1,8 @@
 import { Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 import prisma from '../prisma';
+import { generateVerificationToken } from '../utils/cryptoUtil';
+import { sendVerificationEmail } from '../services/emailService';
 
 export const getProfile = async (req: Request, res: Response) => {
     try {
