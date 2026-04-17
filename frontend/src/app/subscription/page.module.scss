@@ -1,0 +1,580 @@
+@use '../../styles/mixins' as *;
+@use '../../styles/tokens' as *;
+
+.root {
+  min-height: 100vh;
+  background: $zinc-50;
+  color: $zinc-900;
+  position: relative;
+  overflow-x: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -10%;
+    right: -5%;
+    width: 40rem;
+    height: 40rem;
+    background: radial-gradient(circle, rgba($amber-400, 0.08) 0%, transparent 70%);
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  @include below-md {
+    padding: $sp-6 0;
+  }
+}
+
+.container {
+  max-width: $bp-xl;
+  margin: 0 auto;
+  padding: $sp-12 $sp-6;
+  position: relative;
+  z-index: 1;
+
+  @include below-md {
+    padding: $sp-6 $sp-6;
+  }
+}
+
+.header {
+  margin-bottom: $sp-12;
+  text-align: left;
+
+  h1 {
+    font-family: $font-headline;
+    font-size: clamp(2rem, 4vw, 2.75rem);
+    font-weight: 900;
+    line-height: 1.1;
+    letter-spacing: -0.04em;
+    color: $zinc-900;
+    margin-bottom: $sp-3;
+  }
+
+  p {
+    color: $zinc-500;
+    font-size: 1.125rem;
+    max-width: 36rem;
+    line-height: 1.6;
+  }
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: $sp-4;
+  padding: $sp-5 $sp-6;
+  border-radius: $radius-2xl;
+  margin-bottom: $sp-8;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.5;
+  box-shadow: $shadow-sm;
+  animation: slideDown 0.4s ease-out;
+
+  svg {
+    flex-shrink: 0;
+  }
+
+  &.warning {
+    background: rgba($amber-50, 0.8);
+    border: 1px solid rgba($amber-200, 0.5);
+    color: $amber-700;
+    backdrop-filter: blur(8px);
+  }
+
+  &.error {
+    background: rgba($red-50, 0.8);
+    border: 1px solid rgba($red-200, 0.5);
+    color: $red-700;
+    backdrop-filter: blur(8px);
+  }
+
+  &.info {
+    background: rgba($blue-50, 0.8);
+    border: 1px solid rgba($blue-500, 0.5);
+    color: $blue-700;
+    backdrop-filter: blur(8px);
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: $sp-8;
+  margin-bottom: $sp-16;
+
+  @include below-md {
+    grid-template-columns: 1fr;
+    gap: $sp-6;
+  }
+}
+
+.card {
+  @include glass-card-light;
+  padding: $sp-8;
+  display: flex;
+  flex-direction: column;
+  transition: $transition-base;
+
+  &:hover {
+    box-shadow: $shadow-2xl;
+    transform: translateY(-2px);
+  }
+
+  @include below-md {
+    padding: $sp-6;
+  }
+}
+
+.cardTitle {
+  font-family: $font-headline;
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-bottom: $sp-8;
+  color: $zinc-900;
+  display: flex;
+  align-items: center;
+  gap: $sp-3;
+  letter-spacing: -0.02em;
+
+  svg {
+    color: $amber-500;
+  }
+}
+
+.planHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: $sp-8;
+  padding-bottom: $sp-8;
+  border-bottom: 1px solid $zinc-100;
+
+  @include below-md {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $sp-4;
+  }
+}
+
+.planNameBlock {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-2;
+}
+
+.planName {
+  font-family: $font-headline;
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: $zinc-900;
+  display: flex;
+  align-items: center;
+  gap: $sp-3;
+  letter-spacing: -0.04em;
+}
+
+.badge {
+  @include text-label-caps;
+  font-size: 0.625rem;
+  padding: $sp-1 $sp-2_5;
+  border-radius: $radius-lg;
+  background: $zinc-100;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+
+  &.active {
+    background: rgba($emerald-100, 0.6);
+    color: $emerald-700;
+  }
+
+  &.trialing {
+    background: rgba($amber-100, 0.6);
+    color: $amber-700;
+  }
+
+  &.past_due {
+    background: rgba($red-100, 0.6);
+    color: $red-700;
+  }
+
+  &.canceled {
+    background: $zinc-200;
+    color: $zinc-600;
+  }
+}
+
+.planPriceBlock {
+  text-align: right;
+
+  @include below-md {
+    text-align: left;
+  }
+
+  .price {
+    font-family: $font-headline;
+    font-size: 2.25rem;
+    font-weight: 950;
+    color: $zinc-900;
+    line-height: 1;
+    letter-spacing: -0.05em;
+  }
+
+  .interval {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: $zinc-400;
+    text-transform: lowercase;
+  }
+}
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $sp-4;
+  margin-bottom: $sp-8;
+
+  @include below-md {
+    grid-template-columns: 1fr;
+  }
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  padding: $sp-4;
+  background: $zinc-50;
+  border-radius: $radius-xl;
+  border: 1px solid rgba($zinc-200, 0.4);
+
+  span {
+    @include text-label-caps;
+    margin-bottom: $sp-1;
+    display: flex;
+    align-items: center;
+    gap: 1.5;
+  }
+
+  strong {
+    font-size: 1rem;
+    color: $zinc-800;
+    font-weight: 700;
+  }
+}
+
+.cardActions {
+  display: flex;
+  gap: $sp-4;
+  margin-top: auto;
+
+  @include below-md {
+    flex-direction: column;
+  }
+}
+
+.btnPrimary {
+  @include btn-primary;
+  justify-content: center;
+  flex: 1;
+}
+
+.btnDanger {
+  @include btn-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $sp-2;
+  padding: $sp-3 $sp-6;
+  background: white;
+  color: $red-600;
+  border: 1px solid rgba($red-200, 0.6);
+  border-radius: $radius-xl;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  transition: $transition-base;
+  flex: 1;
+
+  &:hover:not(:disabled) {
+    background: $red-50;
+    border-color: $red-200;
+  }
+}
+
+.btnSecondary {
+  @include btn-secondary;
+  width: 100%;
+  justify-content: center;
+  padding: $sp-3 $sp-6;
+  border-radius: $radius-xl;
+}
+
+.btnGhost {
+  @include btn-ghost;
+  padding: $sp-1_5 $sp-3;
+}
+
+.billingInfo {
+  margin-bottom: $sp-8;
+
+  .paymentMethod {
+    display: flex;
+    align-items: center;
+    gap: $sp-4;
+    padding: $sp-5;
+    background: $zinc-900;
+    border-radius: $radius-2xl;
+    box-shadow: $shadow-lg;
+    color: white;
+
+    .iconWrapper {
+      width: $sp-10;
+      height: $sp-10;
+      @include flex-center;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: $radius-lg;
+    }
+
+    .info {
+      display: flex;
+      flex-direction: column;
+
+      span {
+        @include text-label-caps;
+        color: $zinc-400;
+      }
+
+      strong {
+        font-size: 1.125rem;
+        font-weight: 700;
+      }
+    }
+  }
+}
+
+.invoiceList {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+
+  .invoiceItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: $sp-4 $sp-5;
+    border-radius: $radius-xl;
+    background: white;
+    border: 1px solid $zinc-100;
+    transition: $transition-base;
+
+    &:hover {
+      border-color: $amber-200;
+      background: rgba($amber-50, 0.3);
+    }
+    
+    .invoiceDetails {
+      display: flex;
+      align-items: center;
+      gap: $sp-6;
+
+      .date {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: $zinc-500;
+        min-width: 6rem;
+      }
+
+      .amount {
+        font-family: $font-headline;
+        font-weight: 800;
+        color: $zinc-900;
+        min-width: 6rem;
+      }
+    }
+  }
+}
+
+.statusPaid {
+  background: rgba($emerald-100, 0.4);
+  color: $emerald-700;
+  padding: 2px 8px;
+  border-radius: $radius-full;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.noData {
+  @include flex-center;
+  flex-direction: column;
+  padding: $sp-8;
+  color: $zinc-400;
+  text-align: center;
+  background: $zinc-50;
+  border-radius: $radius-2xl;
+  border: 2px dashed $zinc-200;
+}
+
+// Plan Comparison
+.comparisonSection {
+  margin-top: $sp-16;
+
+  .comparisonHeader {
+    text-align: center;
+    margin-bottom: $sp-12;
+
+    h3 {
+      font-family: $font-headline;
+      font-size: 2.25rem;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin-bottom: $sp-3;
+    }
+
+    p {
+      color: $zinc-500;
+      font-size: 1.125rem;
+      max-width: 40rem;
+      margin: 0 auto;
+    }
+  }
+}
+
+.plansGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $sp-6;
+
+  @include below-md {
+    grid-template-columns: 1fr;
+  }
+}
+
+.planOption {
+  @include glass-card-light;
+  padding: $sp-8;
+  display: flex;
+  flex-direction: column;
+  transition: $transition-base;
+  position: relative;
+  overflow: hidden;
+
+  &:hover {
+    transform: translateY(-8px);
+    box-shadow: $shadow-2xl;
+  }
+
+  &.current {
+    border: 2px solid $amber-400;
+    background: white;
+
+    .currentBadge {
+      position: absolute;
+      top: 0;
+      right: 0;
+      background: $amber-400;
+      color: $amber-950;
+      padding: $sp-1 $sp-4;
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom-left-radius: $radius-xl;
+    }
+  }
+
+  .planIcon {
+    width: 3rem;
+    height: 3rem;
+    @include flex-center;
+    background: $zinc-100;
+    color: $zinc-900;
+    border-radius: $radius-xl;
+    margin-bottom: $sp-6;
+    transition: $transition-base;
+  }
+
+  &:hover .planIcon {
+    background: $amber-100;
+    color: $amber-600;
+    transform: scale(1.1) rotate(5deg);
+  }
+
+  .planOptionName {
+    font-family: $font-headline;
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: $zinc-900;
+    margin-bottom: $sp-2;
+    letter-spacing: -0.02em;
+  }
+
+  .planOptionDesc {
+    font-size: 0.9375rem;
+    color: $zinc-500;
+    margin-bottom: $sp-6;
+    min-height: 2.5rem;
+    line-height: 1.5;
+  }
+
+  .planOptionPrice {
+    margin-bottom: $sp-8;
+
+    .amount {
+      font-family: $font-headline;
+      font-size: 2rem;
+      font-weight: 900;
+      color: $zinc-900;
+      letter-spacing: -0.04em;
+    }
+
+    .period {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: $zinc-400;
+    }
+  }
+
+  .featuresList {
+    list-style: none;
+    margin-bottom: $sp-10;
+    flex-grow: 1;
+
+    li {
+      display: flex;
+      align-items: flex-start;
+      gap: $sp-3;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: $zinc-600;
+      margin-bottom: $sp-4;
+
+      svg {
+        color: $amber-500;
+        flex-shrink: 0;
+        margin-top: 2px;
+      }
+    }
+  }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, $zinc-100 25%, $zinc-200 50%, $zinc-100 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: $radius-xl;
+
+  &.title { height: 3rem; width: 40%; margin-bottom: 2rem; }
+  &.text { height: 1.5rem; width: 60%; margin-bottom: 3rem; }
+  &.card { height: 25rem; }
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

@@ -1,0 +1,149 @@
+@use '../../../styles/mixins' as *;
+@use '../../../styles/tokens' as *;
+
+.root {
+  min-height: 100vh;
+  background: $zinc-50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $sp-4;
+  font-family: $font-body;
+}
+
+.card {
+  @include card-base;
+  max-width: 28rem;
+  width: 100%;
+  padding: $sp-10;
+  text-align: center;
+  background: white;
+  box-shadow: $shadow-xl;
+}
+
+.iconWrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: $sp-6;
+}
+
+.iconCircle {
+  padding: $sp-4;
+  background: $emerald-50;
+  border-radius: $radius-full;
+  color: $emerald-500;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.title {
+  font-family: $font-headline;
+  font-size: 1.875rem;
+  font-weight: 900;
+  color: $zinc-900;
+  margin-bottom: $sp-4;
+  letter-spacing: -0.03em;
+}
+
+.description {
+  color: $zinc-600;
+  margin-bottom: $sp-8;
+  line-height: 1.6;
+}
+
+.statusPanel {
+  padding: $sp-6;
+  background: $zinc-50;
+  border-radius: $radius-2xl;
+  border: 1px solid $zinc-100;
+  margin-bottom: $sp-8;
+}
+
+.loadingState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $sp-3;
+}
+
+.loader {
+  color: $amber-500;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.statusText {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: $zinc-500;
+}
+
+.successState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $sp-2;
+}
+
+.successBadge {
+  padding: $sp-2;
+  background: $emerald-100;
+  border-radius: $radius-full;
+  color: $emerald-700;
+}
+
+.successLabel {
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: $emerald-700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.dashboardBtn {
+  @include btn-reset;
+  width: 100%;
+  padding: $sp-4;
+  background: $zinc-900;
+  color: white;
+  border-radius: $radius-xl;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $sp-2;
+  transition: $transition-base;
+
+  &:hover {
+    background: $zinc-800;
+    transform: translateY(-2px);
+  }
+
+  svg {
+    transition: transform 0.2s;
+  }
+
+  &:hover svg {
+    transform: translateX(4px);
+  }
+}
+
+.tip {
+  margin-top: $sp-4;
+  font-size: 0.625rem;
+  color: $zinc-400;
+}
+
+.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
+}

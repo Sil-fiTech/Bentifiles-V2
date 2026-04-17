@@ -311,9 +311,21 @@ export const updateClientDocumentStatus = async (req: AuthRequest, res: Response
 
         const reviewerId = req.user?.userId || null;
         const role = req.projectRole;
+        const projectIdContext = req.projectId;
 
         if (role !== 'ADMIN') {
             return res.status(403).json({ message: 'Apenas administradores podem avaliar documentos' });
+        }
+
+        // Bloqueio de Segurança para Cross-Project IDOR:
+        // Garante que o docId passado pertence de fato ao projectId para o qual a role ('ADMIN') foi qualificada.
+        const clientDoc = await prisma.clientDocument.findUnique({
+            where: { id: docId },
+            select: { projectId: true }
+        });
+
+        if (!clientDoc || clientDoc.projectId !== projectIdContext) {
+            return res.status(403).json({ message: 'Ação não permitida. O documento informado não pertence ao projeto autorizado.' });
         }
 
         if (!['pending', 'approved', 'rejected'].includes(status)) {

@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import fs from 'fs';
 import prisma from '../prisma';
 import { AuthRequest } from '../middleware/auth';
 import axios from 'axios';
@@ -37,11 +38,11 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
         }
 
         if (!userId) {
+            if (file && file.path) fs.promises.unlink(file.path).catch(e=>console.error(e));
             console.error('[Upload] Unauthorized: user context missing');
             return res.status(401).json({ message: 'Não autorizado' });
         }
 
-        const fileBuffer = file.buffer;
         let analysisData: any = null;
 
         // If it's an image, send to Python microservice for validation
@@ -51,11 +52,11 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
 
                 const url = process.env.AMBIENTE == 'DEV' ? 'http://localhost:8000' : process.env.PYTHON_MICROSERVICE_URL;
                 const formData = new FormData();
-                const stream = Readable.from(fileBuffer);
+                const stream = fs.createReadStream(file.path);
                 formData.append('file', stream, {
                     filename: file.originalname,
                     contentType: file.mimetype,
-                    knownLength: fileBuffer.length,
+                    knownLength: file.size,
                 });
                 const pythonResponse = await axios.post(`${url}/analyze`, formData, {
                     headers: {
@@ -77,6 +78,8 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                     console.log('[Upload] Rejection event recorded in database');
 
                     const reasonStr = analysisData.reasons?.length ? ` Motivos: ${analysisData.reasons.join(" | ")}` : "";
+                    
+                    if (file && file.path) fs.promises.unlink(file.path).catch(e=>console.error(e));
 
                     return res.status(400).json({
                         success: false,
@@ -99,6 +102,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                 console.log(`[Upload] Image analysis status: ${analysisData.status}`);
             } catch (microserviceError) {
                 console.error('[Upload] Microservice error:', microserviceError);
+                if (file && file.path) fs.promises.unlink(file.path).catch(e=>console.error(e));
                 return res.status(503).json({
                     success: false,
                     message: "Falha ao validar a imagem. O serviço de análise pode estar indisponível."
@@ -111,7 +115,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
         const savedFilename = `${crypto.randomUUID()}${ext}`;
 
         console.log('[Upload] Saving file to R2...');
-        await uploadToR2(fileBuffer, file.mimetype, savedFilename);
+        await uploadToR2(fs.createReadStream(file.path), file.mimetype, savedFilename);
         console.log(`[Upload] File saved to R2 as: ${savedFilename}`);
 
         console.log('[Upload] Creating database record...');
@@ -172,6 +176,10 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error('[Upload] Unexpected internal error:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
+    } finally {
+        if (req.file && req.file.path) {
+            fs.promises.unlink(req.file.path).catch(e => console.error("Erro ao apagar arquivo teporário:", e));
+        }
     }
 };
 
@@ -224,6 +232,26 @@ export const getFileBase64 = async (req: AuthRequest, res: Response) => {
 
         if (!filename) {
             return res.status(400).json({ message: 'Nome do arquivo não encontrado na URL' });
+        }
+
+        const userId = req.user?.userId;
+        if (!userId) return res.status(401).json({ message: 'Não autorizado' });
+
+        // Security check (IDOR fix)
+        const fileRecord = await prisma.file.findFirst({
+            where: { filename },
+            include: { project: { include: { members: true } } }
+        });
+
+        if (!fileRecord) {
+            return res.status(404).json({ message: 'Arquivo não encontrado' });
+        }
+
+        const isOwner = fileRecord.userId === userId;
+        const isMember = fileRecord.project?.members.some(m => m.userId === userId);
+        
+        if (!isOwner && !isMember) {
+            return res.status(403).json({ message: 'Acesso negado. Você não pertence a este projeto.' });
         }
 
         let fileBuffer: Buffer;
@@ -314,5 +342,92 @@ export const getPendingFiles = async (req: AuthRequest, res: Response) => {
     } catch (error) {
         console.error('[Pending Files] Error:', error);
         res.status(500).json({ message: 'Erro ao buscar arquivos pendentes' });
+    }
+};
+
+export const getProjectFilesBase64 = async (req: AuthRequest, res: Response) => {
+    try {
+        const projectId = req.params.projectId as string;
+        const userId = req.user?.userId;
+
+        if (!projectId) {
+            return res.status(400).json({ message: 'ID do projeto não fornecido' });
+        }
+
+        if (!userId) {
+            return res.status(401).json({ message: 'Não autorizado' });
+        }
+
+        // Verify if user is part of the project
+        const membership = await prisma.projectMembership.findUnique({
+            where: {
+                projectId_userId: {
+                    projectId,
+                    userId
+                }
+            }
+        });
+
+        if (!membership) {
+            return res.status(403).json({ message: 'Você não tem acesso a este projeto' });
+        }
+
+        // Fetch all client documents for this project
+        let whereClause: any = { projectId };
+        if (membership.role === 'USER') {
+            whereClause = { projectId, ownerUserId: userId };
+        }
+
+        const clientDocuments = await prisma.clientDocument.findMany({
+            where: whereClause,
+            include: {
+                file: true,
+                documentType: true,
+                ownerUser: {
+                    select: {
+                        name: true,
+                        email: true
+                    }
+                }
+            }
+        });
+
+        if (clientDocuments.length === 0) {
+            return res.json({ files: [] });
+        }
+
+        // Fetch all files from R2 in parallel
+        const filesData = await Promise.all(
+            clientDocuments.map(async (doc: any) => {
+                try {
+                    const r2Data = await getFileFromR2(doc.file.filename);
+                    const base64 = r2Data.buffer.toString('base64');
+                    
+                    return {
+                        id: doc.id,
+                        originalName: doc.file.originalName,
+                        filename: doc.file.filename,
+                        mimeType: r2Data.contentType,
+                        base64,
+                        metadata: {
+                            userName: doc.ownerUser.name,
+                            userEmail: doc.ownerUser.email,
+                            documentType: doc.documentType.name
+                        }
+                    };
+                } catch (error) {
+                    console.error(`Failed to fetch file ${doc.file?.filename} from R2:`, error);
+                    return null;
+                }
+            })
+        );
+
+        // Filter out any failed R2 fetches
+        const successfulFiles = filesData.filter(f => f !== null);
+
+        res.json({ files: successfulFiles });
+    } catch (error) {
+        console.error('Get project files base64 error:', error);
+        res.status(500).json({ message: 'Erro interno ao buscar arquivos do projeto' });
     }
 };

@@ -4,6 +4,7 @@ import { createInvite, getMembers, updateMemberRole, removeMember, joinProject }
 import { authenticateToken } from '../middleware/auth';
 import { checkRole } from '../middleware/roleMiddleware';
 import { checkProjectNotArchived } from '../middleware/projectStatusMiddleware';
+import { requireActiveSubscription } from '../middleware/requireActiveSubscription';
 
 const router = Router();
 
@@ -13,7 +14,7 @@ router.use(authenticateToken as any);
 // Project Rules
 router.post('/join', joinProject as any);
 router.get('/', getProjects as any);
-router.post('/', createProject as any);
+router.post('/', requireActiveSubscription as any, createProject as any);
 router.patch('/:id', checkRole(['ADMIN']) as any, checkProjectNotArchived as any, updateProjectName as any);
 router.delete('/:id', checkRole(['ADMIN']) as any, deleteProject as any);
 router.patch('/:id/archive', checkRole(['ADMIN']) as any, archiveProject as any);

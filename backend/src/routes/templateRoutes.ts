@@ -9,9 +9,12 @@ import {
     duplicateTemplate
 } from '../controllers/templateController';
 
+import { requireProductAccess } from '../middleware/requireProductAccess';
+
 const router = Router();
 
 router.use(authenticateToken as any);
+router.use(requireProductAccess as any);
 
 router.get('/', getTemplates);
 router.post('/', createTemplate);

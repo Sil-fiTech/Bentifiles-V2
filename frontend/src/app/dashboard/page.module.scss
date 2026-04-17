@@ -1,6 +1,6 @@
 // page.module.scss — Dashboard
-@use '../../styles/tokens' as *;
 @use '../../styles/mixins' as *;
+@use '../../styles/tokens' as *;
 // ------------------------------------------------------------------
 // Root
 // ------------------------------------------------------------------
@@ -221,7 +221,9 @@
   overflow: hidden;
   transition: background-color 0.15s;
 
-  &:hover { background: var(--color-primary-fixed); }
+  @media (hover: hover) and (pointer: fine) {
+    &:hover { background: var(--color-primary-fixed); }
+  }
 }
 
 .projectThumb {
@@ -294,7 +296,11 @@
   margin-bottom: $sp-1;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
 }
 
 .projectDate {
@@ -445,7 +451,7 @@
 // ------------------------------------------------------------------
 .fileGrid {
   display: grid;
-  grid-template-columns: 2fr;
+  grid-template-columns: 1fr;
   gap: $sp-6;
   max-height: 520px;
   overflow-y: auto;
@@ -463,7 +469,9 @@
   transition: background-color 0.15s;
   position: relative;
 
-  &:hover { background: var(--color-primary-fixed); }
+  @media (hover: hover) and (pointer: fine) {
+    &:hover { background: var(--color-primary-fixed); }
+  }
 }
 
 .fileThumb {
@@ -510,7 +518,11 @@
   color: var(--color-on-surface);
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  word-break: break-word;
   width: 100%;
   padding-right: $sp-2;
 }
@@ -524,6 +536,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   width: 100%;
+  max-width: 100%;
 }
 
 .fileProject {
@@ -585,8 +598,9 @@
 // ------------------------------------------------------------------
 .processingBar {
   position: fixed;
-  bottom: $sp-8;
-  right: $sp-8;
+  bottom: $sp-4;
+  left: $sp-4;
+  right: $sp-4;
   background: $zinc-900;
   color: white;
   padding: $sp-4;
@@ -597,6 +611,12 @@
   gap: $sp-4;
   z-index: 50;
   border-left: 4px solid $amber-400;
+
+  @include md {
+    bottom: $sp-8;
+    right: $sp-8;
+    left: auto;
+  }
 }
 
 .processingIconWrapper {

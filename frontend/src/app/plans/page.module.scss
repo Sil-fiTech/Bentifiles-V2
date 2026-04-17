@@ -1,0 +1,137 @@
+@use '../../styles/mixins' as *;
+@use '../../styles/tokens' as *;
+
+.root {
+  min-height: 100vh;
+  background: $zinc-50;
+  padding: $sp-16 0;
+  font-family: $font-body;
+  color: $zinc-900;
+  position: relative;
+  overflow-x: hidden;
+}
+
+.container {
+  max-width: $bp-xl;
+  margin: 0 auto;
+  padding: 0 $sp-4;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: $sp-16;
+}
+
+.backLink {
+  @include btn-reset;
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  color: $zinc-500;
+  font-weight: 700;
+  margin-bottom: $sp-8;
+  transition: $transition-base;
+  font-size: 0.875rem;
+
+  &:hover {
+    color: $zinc-900;
+    transform: translateX(-4px);
+  }
+}
+
+.title {
+  font-family: $font-headline;
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+  color: $zinc-900;
+  margin-bottom: $sp-6;
+}
+
+.accent {
+  color: $amber-500;
+  font-style: italic;
+}
+
+.subtitle {
+  font-size: 1.125rem;
+  color: $zinc-600;
+  max-width: 40rem;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.highlight {
+  font-weight: 800;
+  color: $zinc-900;
+  text-decoration: underline;
+  text-decoration-color: $amber-400;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 6px;
+}
+
+.features {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $sp-6;
+  margin-top: $sp-8;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: $zinc-400;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  @include sm {
+    gap: $sp-10;
+  }
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+}
+
+.dot {
+  width: $sp-1_5;
+  height: $sp-1_5;
+  background: $zinc-300;
+  border-radius: $radius-full;
+}
+
+.faqSection {
+  margin-top: $sp-16;
+  max-width: 48rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.faqCard {
+  @include glass-card-light;
+  padding: $sp-8;
+  text-align: center;
+}
+
+.faqTitle {
+  font-family: $font-headline;
+  font-weight: 800;
+  font-size: 1.25rem;
+  color: $zinc-900;
+  margin-bottom: $sp-2;
+}
+
+.faqText {
+  color: $zinc-600;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+.email {
+  color: $amber-600;
+  font-weight: 700;
+}

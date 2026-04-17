@@ -11,7 +11,7 @@ const r2 = new S3Client({
     },
 });
 
-export const uploadToR2 = async (fileBuffer: Buffer, mimetype: string, savedFilename: string): Promise<string> => {
+export const uploadToR2 = async (fileBody: any, mimetype: string, savedFilename: string): Promise<string> => {
     const bucketName = process.env.R2_BUCKET_NAME;
     if (!bucketName) throw new Error("R2_BUCKET_NAME not defined in environment");
 
@@ -26,7 +26,7 @@ export const uploadToR2 = async (fileBuffer: Buffer, mimetype: string, savedFile
     const command = new PutObjectCommand({
         Bucket: bucketName,
         Key: savedFilename,
-        Body: fileBuffer,
+        Body: fileBody,
         ContentType: mimetype,
     });
 

@@ -1,0 +1,83 @@
+@use '../../styles/mixins' as *;
+@use '../../styles/tokens' as *;
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $sp-10;
+  max-width: $bp-xl;
+  margin: 0 auto;
+  padding: 0 $sp-4;
+
+  @include md {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.toggleContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: $sp-12;
+  gap: $sp-4;
+}
+
+.toggleWrapper {
+  display: flex;
+  align-items: center;
+  background: white;
+  padding: $sp-1;
+  border-radius: $radius-full;
+  border: 1px solid rgba($zinc-200, 0.8);
+  box-shadow: $shadow-sm;
+  position: relative;
+}
+
+.toggleOption {
+  @include btn-reset;
+  padding: $sp-2_5 $sp-8;
+  border-radius: $radius-full;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: $zinc-500;
+  transition: $transition-base;
+  z-index: 10;
+  position: relative;
+
+  &.active {
+    color: white;
+  }
+}
+
+.toggleSlider {
+  position: absolute;
+  top: $sp-1;
+  bottom: $sp-1;
+  left: $sp-1;
+  width: calc(50% - #{$sp-1});
+  background: $zinc-900;
+  border-radius: $radius-full;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.yearly {
+    transform: translateX(100%);
+  }
+}
+
+.savingsIndicator {
+  background: $amber-100;
+  color: $amber-800;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: $sp-1 $sp-3;
+  border-radius: $radius-lg;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  animation: pulse-subtle 2s infinite ease-in-out;
+}
+
+@keyframes pulse-subtle {
+  0% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+  100% { opacity: 0.8; transform: scale(1); }
+}
