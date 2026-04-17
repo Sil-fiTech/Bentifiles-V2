@@ -14,7 +14,7 @@ export const sendVerificationEmail = async (email: string, token: string, name: 
 
         let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
         if (!frontendUrl.startsWith('http')) {
-            frontendUrl = `http://${frontendUrl}`;
+            frontendUrl = `https://${frontendUrl}`;
         }
         const verifyUrl = `${frontendUrl}/verify-email?token=${token}`;
 
