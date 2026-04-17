@@ -92,7 +92,7 @@ export default function ProjectPage() {
             const res = await api.post(`/api/projects/${id}/invites`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            const link = `${window.location.origin}/?invite=${res.data.invite.token}`;
+            const link = `${window.location.origin}/login?invite=${res.data.invite.token}`;
             navigator.clipboard.writeText(link);
             toast.success('Link de convite copiado!');
         } catch { toast.error('Falha ao gerar convite'); }
