@@ -17,12 +17,14 @@ import {
     Settings
 } from 'lucide-react';
 import { Nav } from '@/components/Nav';
+import { useAccessGate } from '@/lib/hooks/useAccessGate';
+import JSZip from 'jszip';
 import styles from './page.module.scss';
 
 export default function ProjectPage() {
     const { id } = useParams();
     const router = useRouter();
-
+    const { access, loading: accessLoading } = useAccessGate();
     const [project, setProject] = useState<any>(null);
     const [files, setFiles] = useState<any[]>([]);
     const [members, setMembers] = useState<any[]>([]);
@@ -40,16 +42,18 @@ export default function ProjectPage() {
     const [newName, setNewName] = useState('');
 
     const { data: session, status } = useSession();
+    console.log(session);
+    
 
     useEffect(() => {
-        if (status === 'loading') return;
-        const localToken = localStorage.getItem('token');
-        const activeToken = session?.user?.token || localToken;
-        if (!activeToken) { router.push('/'); return; }
-        if (status === 'authenticated' || (status === 'unauthenticated' && localToken)) {
-            fetchData(activeToken as string);
+        // Only fetch data if we are authenticated
+        if (accessLoading || !access?.authenticated) return;
+
+        const token = access.token;
+        if (token && id) {
+            fetchData(token);
         }
-    }, [id, status]);
+    }, [id, accessLoading, access]);
 
     const fetchData = async (token: string) => {
         try {
@@ -69,6 +73,7 @@ export default function ProjectPage() {
                 setCurrentUser(payload);
             } catch (e) { }
         } catch (error) {
+            console.log(error);
             toast.error('Falha ao carregar projeto');
             router.push('/dashboard');
         } finally {
@@ -183,8 +188,9 @@ export default function ProjectPage() {
 
     const handleDownloadFile = async (doc: any) => {
         try {
-            const email = doc.ownerUser.email.trim('@', '_').replace('.', '_');
-            const filename = `${project?.name}_${doc.documentType.name}_${email}`;
+            const userSlug = doc.ownerUser.name.trim().replace(/\s+/g, '_');
+            const typeSlug = doc.documentType.name.trim().replace(/\s+/g, '_');
+            const filename = `${userSlug}_${typeSlug}`;
             const token = session?.user?.token || localStorage.getItem('token');
             const response = await api.get(`/api/files/base64`, { params: { url: doc.file.url }, headers: { Authorization: `Bearer ${token}` } });
             const { base64, mimeType } = response.data;
@@ -201,6 +207,67 @@ export default function ProjectPage() {
             link.remove();
             window.URL.revokeObjectURL(urlObject);
         } catch { toast.error('Falha ao baixar arquivo'); }
+    };
+
+    const handleDownloadAll = async () => {
+        if (!clientDocs || clientDocs.length === 0) {
+            toast.error('Nenhum arquivo disponível para download');
+            return;
+        }
+
+        const toastId = toast.loading('Preparando arquivos para download...');
+        try {
+            const token = session?.user?.token || localStorage.getItem('token');
+            const headers = { Authorization: `Bearer ${token}` };
+
+            // Fetch all project files in a single request
+            const response = await api.get(`/api/files/project/${id}/base64`, { headers });
+            const { files: projectFiles } = response.data;
+
+            if (!projectFiles || projectFiles.length === 0) {
+                toast.error('Nenhum arquivo encontrado no servidor', { id: toastId });
+                return;
+            }
+
+            const zip = new JSZip();
+            toast.loading(`Compactando ${projectFiles.length} arquivos...`, { id: toastId });
+
+            for (const fileData of projectFiles) {
+                const { base64, originalName, metadata } = fileData;
+                
+                const byteCharacters = atob(base64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let j = 0; j < byteCharacters.length; j++) {
+                    byteNumbers[j] = byteCharacters.charCodeAt(j);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+
+                // Organizar nome do arquivo no ZIP
+                const userSlug = metadata.userName.trim().replace(/\s+/g, '_');
+                const typeSlug = metadata.documentType.trim().replace(/\s+/g, '_');
+                const fileName = `${typeSlug}_${userSlug}_${originalName}`;
+
+                zip.file(fileName, byteArray);
+            }
+
+            toast.loading('Gerando arquivo final...', { id: toastId });
+            const content = await zip.generateAsync({ type: 'blob' });
+
+            const zipName = `${project?.name || 'Projeto'}_Arquivos.zip`.replace(/\s+/g, '_');
+            const urlObject = window.URL.createObjectURL(content);
+            const link = document.createElement('a');
+            link.href = urlObject;
+            link.download = zipName;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(urlObject);
+
+            toast.success('Download concluído!', { id: toastId });
+        } catch (error) {
+            console.error('Erro no download bulk:', error);
+            toast.error('Falha ao baixar arquivos do projeto', { id: toastId });
+        }
     };
 
     const getStatusStyle = (statusCode: string) => {
@@ -225,7 +292,6 @@ export default function ProjectPage() {
     const approvedDocs = clientDocs.filter(d => d.status === 'approved' && nonAdminMembers.some(m => m.userId === d.ownerUserId)).length;
     const completionRate = targetDocs > 0 ? Math.round((approvedDocs / targetDocs) * 100) : 100;
     const timeAgo = project?.updatedAt ? new Date(project.updatedAt).toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Recentemente';
-    console.log(project)
     const membersToDisplay = isAdmin
         ? members.filter(m => !m.permissions?.includes('PROJECT_EDIT'))
         : members.filter(m => m.userId === currentUser?.userId);
@@ -246,6 +312,7 @@ export default function ProjectPage() {
                     userInitials={userInitials}
                     onLogout={async () => {
                         localStorage.removeItem('token');
+                        router.push('/');
                         if (session) {
                             const { signOut } = await import('next-auth/react');
                             await signOut({ redirect: false });
@@ -317,6 +384,12 @@ export default function ProjectPage() {
                                     className={styles.inviteBtn}
                                 >
                                     <Settings size={16} /> Configurações do projeto
+                                </button>
+                                <button
+                                    onClick={() => handleDownloadAll()}
+                                    className={styles.inviteBtn}
+                                >
+                                    <Download size={16} /> Download ZIP
                                 </button>
                             </div>
                         )}

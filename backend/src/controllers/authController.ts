@@ -115,7 +115,12 @@ export const login = async (req: Request, res: Response) => {
         res.status(200).json({
             message: 'Login realizado com sucesso',
             token,
-            user: { id: user.id, name: user.name, email: user.email },
+            user: { 
+                id: user.id, 
+                name: user.name, 
+                email: user.email,
+                hasSystemAccess: user.hasSystemAccess 
+            },
         });
     } catch (error) {
         console.error('Login error:', error);
@@ -167,7 +172,13 @@ export const googleLogin = async (req: Request, res: Response) => {
         res.status(200).json({
             message: 'Login com Google realizado com sucesso',
             token,
-            user: { id: user.id, name: user.name, email: user.email, image: user.image },
+            user: { 
+                id: user.id, 
+                name: user.name, 
+                email: user.email, 
+                image: user.image,
+                hasSystemAccess: user.hasSystemAccess 
+            },
         });
     } catch (error) {
         console.error('Google login error:', error);

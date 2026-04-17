@@ -4,8 +4,9 @@ import { Toaster } from 'sonner';
 import Providers from '../components/Providers';
 
 export const metadata: Metadata = {
-  title: 'BentiFiles | Validação Inteligente de Documentos',
-  description: 'Envie, valide e compartilhe seus documentos de forma simples e segura.',
+  title: 'Bentifiles — Centralize, Organize e Padronize seus Documentos',
+  description:
+    'O Bentifiles é uma plataforma de gestão de documentos, projetos e templates. Reduza o retrabalho e mantenha sua equipe alinhada com organização inteligente.',
 };
 
 export default function RootLayout({
@@ -17,7 +18,7 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body>
         <Providers>
-          <main>{children}</main>
+          {children}
           <Toaster theme="dark" position="bottom-right" />
         </Providers>
       </body>

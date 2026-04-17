@@ -1,0 +1,329 @@
+@use '../../styles/tokens' as *;
+@use '../../styles/mixins' as *;
+
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: $sp-8;
+  border-radius: $radius-3xl;
+  transition: $transition-slow;
+  background: white;
+  color: $zinc-900;
+  border: 1px solid rgba($zinc-200, 0.8);
+  height: 100%;
+
+  &:hover {
+    box-shadow: $shadow-xl;
+    transform: translateY(-4px);
+  }
+
+  &.recommended {
+    background: $zinc-900;
+    color: white;
+    border: 2px solid $amber-400;
+    box-shadow: $shadow-2xl;
+    transform: scale(1.05);
+    z-index: 10;
+
+    &:hover {
+      box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.45);
+    }
+  }
+}
+
+.badge {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: $amber-400;
+  color: $zinc-900;
+  padding: $sp-1_5 $sp-4;
+  border-radius: $radius-full;
+  font-size: 0.75rem;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $sp-6;
+}
+
+.iconBox {
+  padding: $sp-3;
+  border-radius: $radius-xl;
+  background: $zinc-100;
+  color: $zinc-600;
+
+  .recommended & {
+    background: $zinc-800;
+    color: $amber-400;
+  }
+}
+
+.trial {
+  text-align: right;
+}
+
+.trialText {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: $zinc-500;
+
+  .recommended & {
+    color: $zinc-400;
+  }
+}
+
+.name {
+  font-family: $font-headline;
+  font-size: 1.5rem;
+  font-weight: 900;
+  margin-bottom: $sp-2;
+  letter-spacing: -0.02em;
+}
+
+.description {
+  font-size: 0.875rem;
+  color: $zinc-500;
+  margin-bottom: $sp-6;
+  line-height: 1.5;
+
+  .recommended & {
+    color: $zinc-400;
+  }
+}
+
+.priceWrapper {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: $sp-8;
+}
+
+.priceValue {
+  font-family: $font-headline;
+  font-size: 2.25rem;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.pricePeriod {
+  font-size: 0.875rem;
+  margin-left: $sp-2;
+  color: $zinc-500;
+
+  .recommended & {
+    color: $zinc-400;
+  }
+}
+
+.pricingMetaRow {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-1_5;
+  margin-bottom: $sp-6;
+  padding: $sp-3 $sp-4;
+  background: linear-gradient(135deg, rgba($amber-100, 0.8), rgba($amber-50, 0.9));
+  border: 1px solid rgba($amber-300, 0.55);
+  border-radius: $radius-xl;
+
+  .recommended & {
+    background: rgba($amber-400, 0.12);
+    border-color: rgba($amber-400, 0.35);
+  }
+}
+
+.pricingDiscount {
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: $amber-800;
+
+  .recommended & {
+    color: $amber-300;
+  }
+}
+
+.pricingMetaNote {
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: $zinc-600;
+  font-weight: 600;
+
+  .recommended & {
+    color: $zinc-300;
+  }
+}
+
+.features {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-4;
+  margin-bottom: $sp-8;
+  list-style: none;
+  padding: 0;
+}
+
+.featureItem {
+  display: flex;
+  align-items: flex-start;
+  gap: $sp-3;
+}
+
+.checkIcon {
+  margin-top: $sp-0_5;
+  padding: $sp-0_5;
+  border-radius: $radius-full;
+  background: $emerald-100;
+  color: $emerald-500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .recommended & {
+    background: rgba($amber-400, 0.2);
+    color: $amber-400;
+  }
+}
+
+.featureText {
+  font-size: 0.875rem;
+  color: $zinc-600;
+  line-height: 1.4;
+
+  .recommended & {
+    color: $zinc-300;
+  }
+}
+
+.subscribeBtn {
+  @include btn-reset;
+  width: 100%;
+  padding: $sp-4;
+  border-radius: $radius-2xl;
+  font-weight: 800;
+  font-size: 0.9375rem;
+  transition: $transition-base;
+  background: $zinc-900;
+  color: white;
+
+  &:hover:not(:disabled) {
+    background: $zinc-800;
+    transform: translateY(-2px);
+  }
+
+  .recommended & {
+    background: white;
+    color: $zinc-900;
+
+    &:hover:not(:disabled) {
+      background: $zinc-100;
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.footer {
+  text-align: center;
+  margin-top: $sp-4;
+  font-size: 0.625rem;
+  color: $zinc-400;
+
+  .recommended & {
+    color: $zinc-500;
+  }
+}
+
+.quantitySelector {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-2;
+  margin-bottom: $sp-6;
+  padding: $sp-3;
+  background: $zinc-50;
+  border-radius: $radius-xl;
+  border: 1px solid $zinc-200;
+
+  .recommended & {
+    background: $zinc-800;
+    border-color: $zinc-700;
+  }
+}
+
+.quantityLabel {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: $zinc-500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  .recommended & {
+    color: $zinc-400;
+  }
+}
+
+.quantityControls {
+  display: flex;
+  align-items: center;
+  gap: $sp-4;
+}
+
+.quantityBtn {
+  @include btn-reset;
+  width: $sp-8;
+  height: $sp-8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-lg;
+  background: white;
+  border: 1px solid $zinc-200;
+  color: $zinc-600;
+  transition: $transition-base;
+
+  &:hover:not(:disabled) {
+    background: $zinc-50;
+    border-color: $zinc-400;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .recommended & {
+    background: $zinc-700;
+    border-color: $zinc-600;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background: $zinc-600;
+      border-color: $zinc-500;
+    }
+  }
+}
+
+.quantityValue {
+  font-family: $font-headline;
+  font-size: 1.125rem;
+  font-weight: 800;
+  color: $zinc-900;
+  min-width: $sp-6;
+  text-align: center;
+
+  .recommended & {
+    color: white;
+  }
+}

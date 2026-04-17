@@ -42,6 +42,18 @@ model User {
   emailVerified      Boolean   @default(false)
   emailVerifyToken   String?
   emailVerifyExpires DateTime?
+
+  // ── Stripe / Billing ──────────────────────────────────────
+  stripeCustomerId              String?          @unique
+  stripeSubscriptionId          String?          @unique
+  subscriptionStatus            SubscriptionStatus @default(NONE)
+  subscriptionPlan              SubscriptionPlan   @default(NONE)
+  subscriptionTrialEndsAt       DateTime?
+  subscriptionCurrentPeriodEnd  DateTime?
+  subscriptionCancelAtPeriodEnd Boolean          @default(false)
+  hasSelectedPlan               Boolean          @default(false)
+  hasSystemAccess               Boolean          @default(false)
+
   files      File[]
   projects   ProjectMembership[]
 
@@ -55,6 +67,24 @@ model User {
   updatedAt DateTime   @updatedAt
   templates Template[]
 }
+
+enum SubscriptionStatus {
+  NONE
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  UNPAID
+}
+
+enum SubscriptionPlan {
+  NONE
+  INDIVIDUAL
+  OFFICE
+  ENTERPRISE
+}
+
 
 model Project {
   id              String              @id @default(uuid())
