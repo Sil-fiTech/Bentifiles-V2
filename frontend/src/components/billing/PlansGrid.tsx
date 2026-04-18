@@ -4,6 +4,7 @@ import React from 'react';
 import PlanCard from './PlanCard';
 import { Zap, Shield, Rocket } from 'lucide-react';
 import styles from './PlansGrid.module.scss';
+/* import {plans} from '../../app/landing/data/plans'; */
 
 const PlansGrid: React.FC = () => {
   const [interval, setInterval] = React.useState<'monthly' | 'yearly'>('monthly');
