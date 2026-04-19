@@ -1411,6 +1411,37 @@
   }
 }
 
+.footerLegal {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $sp-1;
+  justify-content: center;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  padding-left: $sp-4;
+
+  @include md {
+    justify-content: flex-end;
+    margin-left: auto;
+  }
+}
+
+.footerLegalLink {
+  display: block;
+  padding: $sp-2 $sp-3;
+  border-radius: $radius-md;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.35);
+  text-decoration: none;
+  transition: $transition-base;
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
 .footerBottom {
   max-width: 1200px;
   margin: 0 auto;

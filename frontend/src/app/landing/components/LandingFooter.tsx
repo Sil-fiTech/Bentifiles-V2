@@ -9,6 +9,11 @@ const footerLinks = [
   { label: 'FAQ', href: '#faq' },
 ];
 
+const legalLinks = [
+  { label: 'Termos de Serviço', href: '/terms-of-service' },
+  { label: 'Política de Privacidade', href: '/privacy-policy' },
+];
+
 export default function LandingFooter() {
   const year = new Date().getFullYear();
 
@@ -40,6 +45,18 @@ export default function LandingFooter() {
               href={link.href}
               className={styles.footerNavLink}
               onClick={(e) => handleNavClick(e, link.href)}
+            >
+              {link.label}
+            </a>
+          ))}
+        </nav>
+
+        <nav className={styles.footerLegal} aria-label="Links legais">
+          {legalLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              className={styles.footerLegalLink}
             >
               {link.label}
             </a>
