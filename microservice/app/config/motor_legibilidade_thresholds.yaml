@@ -1,0 +1,132 @@
+final_score:
+  approve_threshold: 0.71
+  manual_threshold: 0.73
+  max_reasons_approve: 2
+
+processing:
+  max_dim: 1400
+
+preprocess:
+  clahe_clip_limit: 2.0
+  clahe_tile_grid_size: [8, 8]
+  gaussian_blur_kernel: [5, 5]
+  canny_threshold1: 60
+  canny_threshold2: 160
+  edge_kernel_size: [3, 3]
+  edge_dilate_iterations: 1
+  edge_erode_iterations: 1
+  adaptive_block_size: 31
+  adaptive_c: 7
+  close_kernel_size: [5, 5]
+  close_iterations: 2
+
+edge_support:
+  samples_per_edge: 80
+  support_window_radius: 2
+
+text_structure:
+  gaussian_blur_kernel: [3, 3]
+  sobel_ksize: 3
+  close_kernel_size: [25, 3]
+  close_iterations: 1
+  min_width: 20
+  min_height: 5
+  min_area: 60
+  min_fill_ratio: 0.08
+  min_aspect_ratio: 2.0
+  max_area_ratio: 0.25
+  score_normalizer: 12.0
+
+candidate_detection:
+  min_contour_area_ratio: 0.008
+  approx_poly_epsilon_ratio: 0.02
+  min_area_ratio: 0.015
+  max_area_ratio: 0.75
+  max_aspect_ratio: 2.4
+  min_dimension: 80
+  border_margin_ratio: 0.05
+  ideal_area_min_ratio: 0.03
+  ideal_area_max_ratio: 0.45
+  area_falloff_range: 0.30
+  preferred_aspect_ratio_min: 1.2
+  preferred_aspect_ratio_max: 1.95
+  acceptable_aspect_ratio_min: 1.0
+  acceptable_aspect_ratio_max: 2.2
+  aspect_score_good: 1.0
+  aspect_score_ok: 0.7
+  aspect_score_bad: 0.2
+  weight_area: 0.24
+  weight_edge_support: 0.20
+  weight_text_structure: 0.24
+  weight_aspect: 0.14
+  weight_border_penalty: 0.28
+  dedup_distance_threshold: 20
+  max_candidates: 20
+
+blur_score:
+  min_metric: 20.0
+  max_metric: 180.0
+
+brightness_score:
+  ideal_min: 0.35
+  ideal_max: 0.80
+  hard_min: 0.20
+  hard_max: 0.92
+
+contrast_score:
+  min_std: 0.06
+  max_std: 0.22
+
+glare_score:
+  ideal_max_ratio: 0.005
+  hard_max_ratio: 0.12
+
+perspective_score:
+  max_angle_error: 35.0
+  weight_side_balance: 0.6
+  weight_angle: 0.4
+
+crop_score:
+  border_margin_ratio: 0.03
+
+text_presence:
+  gaussian_blur_kernel: [3, 3]
+  sobel_ksize: 3
+  close_kernel_size: [25, 3]
+  close_iterations: 1
+  min_width: 25
+  min_height: 6
+  min_area: 80
+  max_area_ratio: 0.20
+  min_aspect_ratio: 2.0
+  score_normalizer: 12.0
+
+readability_score:
+  weight_blur: 0.20
+  weight_brightness: 0.10
+  weight_contrast: 0.10
+  weight_glare: 0.10
+  weight_text: 0.30
+  weight_crop: 0.10
+  weight_perspective: 0.10
+  low_text_penalties:
+    - max_text_score: 0.15
+      multiplier: 0.45
+    - max_text_score: 0.25
+      multiplier: 0.70
+    - max_text_score: 0.35
+      multiplier: 0.85
+  high_contrast_exception:
+    min_contrast_score: 0.97
+    max_text_score: 0.12
+    max_area_ratio: 0.10
+    min_readability_score: 0.85
+
+reasons:
+  blur_score_min: 0.35
+  brightness_score_min: 0.35
+  contrast_score_min: 0.35
+  glare_score_min: 0.40
+  text_score_min: 0.30
+  crop_score_min: 0.50
+  perspective_score_min: 0.45
