@@ -120,6 +120,25 @@ button {
 }
 
 // ------------------------------------------------------------------
+// Global motion utilities
+// ------------------------------------------------------------------
+.animate-spin {
+  animation: spin 0.9s linear infinite;
+  transform-origin: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin {
+    animation-duration: 1.8s;
+  }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+// ------------------------------------------------------------------
 // Global Utilities (kept for components that ref these directly)
 // ------------------------------------------------------------------
 

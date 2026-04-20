@@ -7,6 +7,8 @@
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
     "build": "tsc",
+    "worker:subscription-reminders": "node dist/workers/subscriptionReminderWorker.js",
+    "worker:subscription-reminders:dev": "ts-node src/workers/subscriptionReminderWorker.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

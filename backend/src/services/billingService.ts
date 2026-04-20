@@ -4,6 +4,7 @@ import Stripe from 'stripe';
 import { computeSystemAccess, getAccessRedirect } from './accessService';
 import { SubscriptionPlan } from '@prisma/client';
 import { getBillingEntitlements } from './billingAccessService';
+import { syncReminderDispatchesForUser } from './subscriptionReminderService';
 
 /**
  * createCheckoutSession(userId, plan)
@@ -169,6 +170,8 @@ export const syncUserSubscriptionFromStripe = async (params: {
     data: { hasSystemAccess: hasAccess },
   });
 
+  await syncReminderDispatchesForUser(user.id);
+
   console.log(`[Billing Sync] systemAccess updated to: ${hasAccess}`);
 };
 
@@ -183,6 +186,8 @@ export const markUserSubscriptionCanceled = async (userId: string) => {
       hasSystemAccess: false,
     },
   });
+
+  await syncReminderDispatchesForUser(userId);
 };
 
 /**
@@ -356,6 +361,8 @@ export const cancelUserSubscription = async (userId: string) => {
     data: { subscriptionCancelAtPeriodEnd: true }
   });
 
+  await syncReminderDispatchesForUser(userId);
+
   return sub;
 };
 
@@ -374,6 +381,8 @@ export const reactivateUserSubscription = async (userId: string) => {
     where: { id: userId },
     data: { subscriptionCancelAtPeriodEnd: false }
   });
+
+  await syncReminderDispatchesForUser(userId);
 
   return sub;
 };
