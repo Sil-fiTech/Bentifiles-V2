@@ -46,5 +46,4 @@ package-lock.json
 /src/generated/prisma
 
 /dev.db*
-
-TODO.md
+*.md

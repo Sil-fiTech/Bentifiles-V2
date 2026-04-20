@@ -53,6 +53,7 @@ model User {
   subscriptionCancelAtPeriodEnd Boolean          @default(false)
   hasSelectedPlan               Boolean          @default(false)
   hasSystemAccess               Boolean          @default(false)
+  subscriptionReminderDispatches SubscriptionReminderDispatch[]
 
   files      File[]
   projects   ProjectMembership[]
@@ -83,6 +84,42 @@ enum SubscriptionPlan {
   INDIVIDUAL
   OFFICE
   ENTERPRISE
+}
+
+enum SubscriptionReminderType {
+  TRIAL_ENDING
+  SUBSCRIPTION_ENDING
+}
+
+enum SubscriptionReminderStatus {
+  PENDING
+  PROCESSING
+  SENT
+  CANCELED
+  FAILED
+}
+
+model SubscriptionReminderDispatch {
+  id             String                     @id @default(uuid())
+  userId         String
+  user           User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reminderType   SubscriptionReminderType
+  reminderWindow Int
+  targetDate     DateTime
+  scheduledFor   DateTime
+  status         SubscriptionReminderStatus @default(PENDING)
+  attempts       Int                        @default(0)
+  leasedAt       DateTime?
+  leaseExpiresAt DateTime?
+  leasedBy       String?
+  sentAt         DateTime?
+  lastError      String?
+  createdAt      DateTime                   @default(now())
+  updatedAt      DateTime                   @updatedAt
+
+  @@unique([userId, reminderType, reminderWindow, targetDate])
+  @@index([status, scheduledFor])
+  @@index([userId, reminderType, status])
 }
 
 
