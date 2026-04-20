@@ -14,6 +14,7 @@ import billingRoutes from './routes/billingRoutes';
 import stripeWebhookRoutes from './routes/stripeWebhookRoutes';
 
 import helmet from 'helmet';
+import { error } from 'console';
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
@@ -53,7 +54,7 @@ const server = app.listen(port, "0.0.0.0", () => {
 prisma.$connect().then(() => {
     console.log('Connected to database');
     console.log('Database URL:', process.env.DATABASE_URL);
-}).catch((error) => {
+}).catch((error:any) => {
     console.error('Failed to connect to database:', error);
     process.exit(1);
 });

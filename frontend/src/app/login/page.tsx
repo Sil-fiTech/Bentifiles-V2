@@ -41,13 +41,13 @@ function LoginContent() {
         router.push('/dashboard');
       }
     }
-  }, [status, router]);
+  }, [status, router, session]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!turnstileToken) {
-      toast.error('Por favor, complete a verificação de segurança');
+      toast.error('Por favor, complete a verificacao de seguranca');
       return;
     }
 
@@ -55,9 +55,10 @@ function LoginContent() {
 
     try {
       const endpoint = isLogin ? '/api/users/login' : '/api/users/register';
+      const pendingInvite = inviteToken || localStorage.getItem('pendingInvite');
       const payload = isLogin
         ? { email, password, turnstileToken }
-        : { name, email, password, turnstileToken };
+        : { name, email, password, turnstileToken, inviteToken: pendingInvite };
 
       const res = await api.post(endpoint, payload);
 
@@ -72,22 +73,25 @@ function LoginContent() {
       }
     } catch (error: any) {
       if (error.response?.data?.error === 'EMAIL_NOT_VERIFIED') {
-        toast.error(error.response?.data?.message || 'E-mail não verificado.', {
+        toast.error(error.response?.data?.message || 'E-mail nao verificado.', {
           action: {
             label: 'Reenviar E-mail',
             onClick: async () => {
               try {
-                await api.post('/api/users/resend-verification', { email });
-                toast.success('Novo e-mail de verificação enviado! Verifique sua caixa de entrada.');
+                await api.post('/api/users/resend-verification', {
+                  email,
+                  inviteToken: inviteToken || localStorage.getItem('pendingInvite')
+                });
+                toast.success('Novo e-mail de verificacao enviado! Verifique sua caixa de entrada.');
               } catch (resendError) {
-                toast.error('Erro ao reenviar e-mail de verificação.');
+                toast.error('Erro ao reenviar e-mail de verificacao.');
               }
             }
           },
           duration: 10000
         });
       } else {
-        toast.error(error.response?.data?.message || 'Falha na autenticação');
+        toast.error(error.response?.data?.message || 'Falha na autenticacao');
       }
     } finally {
       setLoading(false);
@@ -119,7 +123,7 @@ function LoginContent() {
           <h1 className={styles.headline}>
             Benti<span className={styles.headlineAccent}>Files</span>
           </h1>
-          <p className={styles.tagline}>Validação Inteligente &amp; Gestão de Documentos</p>
+          <p className={styles.tagline}>Validacao Inteligente &amp; Gestao de Documentos</p>
         </div>
 
         <div className={styles.card}>
@@ -128,7 +132,7 @@ function LoginContent() {
               {isLogin ? 'Bem-vindo(a) de volta' : 'Crie sua conta'}
             </h2>
             <p className={styles.cardSubtitle}>
-              {isLogin ? 'Faça o login para acessar o workspace.' : 'Junte-se a nós para gerenciar seus arquivos.'}
+              {isLogin ? 'Faca o login para acessar o workspace.' : 'Junte-se a nos para gerenciar seus arquivos.'}
             </p>
           </div>
 
@@ -167,7 +171,7 @@ function LoginContent() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                placeholder="••••••••"
+                placeholder="********"
               />
             </div>
 
@@ -214,7 +218,7 @@ function LoginContent() {
 
         <div className={styles.footer}>
           <span className={styles.footerText}>
-            {isLogin ? 'Ainda não tem acesso? ' : 'Já possui um cadastro? '}
+            {isLogin ? 'Ainda nao tem acesso? ' : 'Ja possui um cadastro? '}
           </span>
           <button
             onClick={() => setIsLogin(!isLogin)}

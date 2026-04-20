@@ -1,6 +1,22 @@
 import nodemailer from 'nodemailer';
 
-export const sendVerificationEmail = async (email: string, token: string, name: string) => {
+export const buildVerificationUrl = (token: string, inviteToken?: string | null) => {
+    let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    if (!frontendUrl.startsWith('http')) {
+        frontendUrl = `https://${frontendUrl}`;
+    }
+
+    const verifyUrl = new URL('/verify-email', frontendUrl);
+    verifyUrl.searchParams.set('token', token);
+
+    if (inviteToken) {
+        verifyUrl.searchParams.set('invite', inviteToken);
+    }
+
+    return verifyUrl.toString();
+};
+
+export const sendVerificationEmail = async (email: string, token: string, name: string, inviteToken?: string | null) => {
     try {
         const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST || 'smtp.ethereal.email',
@@ -16,7 +32,7 @@ export const sendVerificationEmail = async (email: string, token: string, name: 
         if (!frontendUrl.startsWith('http')) {
             frontendUrl = `https://${frontendUrl}`;
         }
-        const verifyUrl = `${frontendUrl}/verify-email?token=${token}`;
+        const verifyUrl = buildVerificationUrl(token, inviteToken);
 
          const html = `
 <!DOCTYPE html>
