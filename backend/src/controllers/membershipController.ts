@@ -9,14 +9,83 @@ const getPermissions = (role: string) => {
     return ['DOCUMENT_VIEW', 'DOCUMENT_UPLOAD'];
 };
 
+export const acceptProjectInviteForUser = async (inviteToken: string, userId: string) => {
+    const validInvite = await prisma.projectInvite.findUnique({
+        where: { token: inviteToken },
+        include: {
+            project: {
+                select: {
+                    id: true,
+                    status: true
+                }
+            }
+        }
+    });
+
+    if (!validInvite) {
+        return { ok: false as const, status: 404, message: 'Convite nao encontrado ou invalido' };
+    }
+
+    if (validInvite.expiresAt < new Date()) {
+        return { ok: false as const, status: 400, message: 'Convite expirado' };
+    }
+
+    if (validInvite.project.status === 'DELETED') {
+        return { ok: false as const, status: 404, message: 'Projeto nao encontrado.' };
+    }
+
+    if (validInvite.project.status === 'ARCHIVED') {
+        return { ok: false as const, status: 403, message: 'Este projeto esta arquivado (somente leitura). Nenhuma alteracao pode ser feita.' };
+    }
+
+    if (validInvite.usedCount >= validInvite.maxUses) {
+        return { ok: false as const, status: 400, message: 'Convite ja atingiu o limite de uso' };
+    }
+
+    const existingMembership = await prisma.projectMembership.findUnique({
+        where: {
+            projectId_userId: {
+                projectId: validInvite.projectId,
+                userId,
+            }
+        }
+    });
+
+    if (existingMembership) {
+        return {
+            ok: true as const,
+            projectId: validInvite.projectId,
+            message: 'Usuario ja e membro deste projeto'
+        };
+    }
+
+    await prisma.projectMembership.create({
+        data: {
+            projectId: validInvite.projectId,
+            userId,
+            role: validInvite.role,
+        }
+    });
+
+    await prisma.projectInvite.update({
+        where: { id: validInvite.id },
+        data: { usedCount: { increment: 1 } }
+    });
+
+    return {
+        ok: true as const,
+        projectId: validInvite.projectId,
+        message: 'Entrou no projeto com sucesso'
+    };
+};
+
 export const createInvite = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.userId;
         const projectId = req.params.id as string;
 
-        if (!userId) return res.status(401).json({ message: 'Não autorizado' });
+        if (!userId) return res.status(401).json({ message: 'Nao autorizado' });
 
-        // Set expiration for 1 day
         const expiresAt = new Date();
         expiresAt.setDate(expiresAt.getDate() + 1);
 
@@ -48,7 +117,7 @@ export const getMembers = async (req: AuthRequest, res: Response) => {
         const userId = req.user?.userId;
         const projectId = req.params.id as string;
 
-        if (!userId) return res.status(401).json({ message: 'Não autorizado' });
+        if (!userId) return res.status(401).json({ message: 'Nao autorizado' });
 
         const members = await prisma.projectMembership.findMany({
             where: { projectId },
@@ -77,11 +146,10 @@ export const updateMemberRole = async (req: AuthRequest, res: Response) => {
         const currentUserId = req.user?.userId;
         const projectId = req.params.id as string;
         const targetUserId = req.params.userId as string;
-        const { role } = req.body; // Expecting { role: 'ADMIN' | 'USER' }
+        const { role } = req.body;
 
-        if (!currentUserId) return res.status(401).json({ message: 'Não autorizado' });
+        if (!currentUserId) return res.status(401).json({ message: 'Nao autorizado' });
 
-        // Cannot demote the last ADMIN
         if (role === 'USER') {
             const adminCount = await prisma.projectMembership.count({
                 where: { projectId, role: 'ADMIN' }
@@ -92,7 +160,7 @@ export const updateMemberRole = async (req: AuthRequest, res: Response) => {
             });
 
             if (adminCount <= 1 && targetIsAdmin?.role === 'ADMIN') {
-                return res.status(400).json({ message: 'Não é possível rebaixar o último ADMIN' });
+                return res.status(400).json({ message: 'Nao e possivel rebaixar o ultimo ADMIN' });
             }
         }
 
@@ -120,18 +188,16 @@ export const removeMember = async (req: AuthRequest, res: Response) => {
         const projectId = req.params.id as string;
         const targetUserId = req.params.userId as string;
 
-        if (!currentUserId) return res.status(401).json({ message: 'Não autorizado' });
+        if (!currentUserId) return res.status(401).json({ message: 'Nao autorizado' });
 
-        // Cannot remove the last member
         const memberCount = await prisma.projectMembership.count({
             where: { projectId }
         });
 
         if (memberCount <= 1) {
-            return res.status(400).json({ message: 'Não é possível remover o último membro do projeto' });
+            return res.status(400).json({ message: 'Nao e possivel remover o ultimo membro do projeto' });
         }
 
-        // Cannot remove the last ADMIN if the target is an ADMIN
         const targetUserMembership = await prisma.projectMembership.findUnique({
             where: { projectId_userId: { projectId, userId: targetUserId } }
         });
@@ -141,7 +207,7 @@ export const removeMember = async (req: AuthRequest, res: Response) => {
                 where: { projectId, role: 'ADMIN' }
             });
             if (adminCount <= 1) {
-                return res.status(400).json({ message: 'Não é possível remover o último ADMIN' });
+                return res.status(400).json({ message: 'Nao e possivel remover o ultimo ADMIN' });
             }
         }
 
@@ -162,62 +228,23 @@ export const joinProject = async (req: AuthRequest, res: Response) => {
         const userId = req.user?.userId;
 
         if (!userId) {
-            return res.status(401).json({ message: 'Usuário não autenticado' });
+            return res.status(401).json({ message: 'Usuario nao autenticado' });
         }
 
         if (!inviteToken) {
             return res.status(400).json({ message: 'Token de convite ausente' });
         }
 
-        const validInvite = await prisma.projectInvite.findUnique({
-            where: { token: inviteToken },
-        });
+        const inviteResult = await acceptProjectInviteForUser(inviteToken, userId);
 
-        if (!validInvite) {
-            return res.status(404).json({ message: 'Convite não encontrado ou inválido' });
+        if (!inviteResult.ok) {
+            return res.status(inviteResult.status).json({ message: inviteResult.message });
         }
-        if (validInvite.expiresAt < new Date()) {
-            return res.status(400).json({ message: 'Convite expirado' });
-        }
-
-        // Check if user is already a member
-        const existingMembership = await prisma.projectMembership.findUnique({
-            where: {
-                projectId_userId: {
-                    projectId: validInvite.projectId,
-                    userId: userId,
-                }
-            }
-        });
-
-        if (existingMembership) {
-            // Already a member, just return success (idempotent)
-            return res.status(200).json({
-                message: 'Usuário já é membro deste projeto',
-                projectId: validInvite.projectId
-            });
-        }
-
-        // Create membership
-        await prisma.projectMembership.create({
-            data: {
-                projectId: validInvite.projectId,
-                userId: userId,
-                role: validInvite.role,
-            }
-        });
-
-        // Increment invite usage count
-        await prisma.projectInvite.update({
-            where: { id: validInvite.id },
-            data: { usedCount: validInvite.usedCount + 1 }
-        });
 
         res.status(200).json({
-            message: 'Entrou no projeto com sucesso',
-            projectId: validInvite.projectId
+            message: inviteResult.message,
+            projectId: inviteResult.projectId
         });
-
     } catch (error) {
         console.error('Error joining project via invite:', error);
         res.status(500).json({ message: 'Erro interno ao processar convite' });
