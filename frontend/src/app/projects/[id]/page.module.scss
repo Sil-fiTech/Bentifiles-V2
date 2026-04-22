@@ -393,6 +393,7 @@
   &.expanded {
     border: 1px solid rgba($zinc-200, 0.6);
     box-shadow: $shadow-md;
+    overflow: visible;
   }
 
   &:not(.expanded) {
@@ -719,6 +720,179 @@
   }
 
   &:active { transform: scale(0.98); }
+}
+
+.downloadSplit,
+.downloadSplitHeader {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  border-radius: $radius-md;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  &[data-open="true"] {
+    z-index: 60;
+  }
+}
+
+.downloadSplitHeader {
+  border-radius: $radius-xl;
+  box-shadow: $shadow-sm;
+}
+
+.downloadPrimaryBtn,
+.downloadToggleBtn {
+  @include btn-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $font-headline;
+  font-weight: 700;
+  transition: $transition-base;
+}
+
+.downloadPrimaryBtn {
+  gap: $sp-1_5;
+  font-size: 0.6875rem;
+  color: $zinc-700;
+  background: white;
+  border: 1px solid $zinc-200;
+  border-right: 0;
+  padding: $sp-3 $sp-3;
+  min-height: 44px;
+  border-radius: $radius-md 0 0 $radius-md;
+
+  @include md {
+    padding: $sp-2 $sp-3;
+    min-height: auto;
+  }
+
+  .downloadSplitHeader & {
+    gap: $sp-2;
+    padding: $sp-2_5 $sp-4;
+    min-height: auto;
+    font-size: 0.875rem;
+    color: $zinc-900;
+    background: $zinc-200;
+    border-color: transparent;
+    border-radius: $radius-xl 0 0 $radius-xl;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: $amber-600;
+      border-color: $amber-400;
+    }
+
+    .downloadSplitHeader &:hover {
+      color: $zinc-900;
+      background: $zinc-300;
+      border-color: transparent;
+    }
+  }
+}
+
+.downloadToggleBtn {
+  width: 2.25rem;
+  color: $zinc-500;
+  background: white;
+  border: 1px solid $zinc-200;
+  border-radius: 0 $radius-md $radius-md 0;
+
+  svg {
+    transition: transform 0.18s ease;
+  }
+
+  &.active {
+    color: $amber-700;
+    border-color: $amber-400;
+    background: $amber-50;
+
+    svg { transform: rotate(180deg); }
+  }
+
+  .downloadSplitHeader & {
+    color: $zinc-700;
+    background: $zinc-200;
+    border-color: transparent;
+    box-shadow: inset 1px 0 0 rgba($zinc-900, 0.08);
+    border-radius: 0 $radius-xl $radius-xl 0;
+  }
+
+  .downloadSplitHeader &.active {
+    color: $amber-950;
+    background: $amber-300;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: $amber-700;
+      background: $amber-50;
+      border-color: $amber-400;
+    }
+
+    .downloadSplitHeader &:hover {
+      color: $zinc-900;
+      background: $zinc-300;
+      border-color: transparent;
+    }
+  }
+}
+
+.downloadMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + $sp-2);
+  z-index: 40;
+  min-width: 13rem;
+  padding: $sp-2;
+  background: white;
+  border: 1px solid rgba($zinc-200, 0.9);
+  border-radius: $radius-xl;
+  box-shadow: 0 18px 45px rgba($zinc-900, 0.16);
+  animation: downloadMenuIn 0.16s ease-out;
+}
+
+.downloadMenuItem {
+  @include btn-reset;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $sp-0_5;
+  padding: $sp-3;
+  border-radius: $radius-lg;
+  text-align: left;
+  transition: $transition-fast;
+
+  &:hover {
+    background: $amber-50;
+  }
+}
+
+.downloadMenuTitle {
+  font-family: $font-headline;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: $zinc-900;
+}
+
+.downloadMenuHint {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: $zinc-400;
+}
+
+@keyframes downloadMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .docApproveBtn {

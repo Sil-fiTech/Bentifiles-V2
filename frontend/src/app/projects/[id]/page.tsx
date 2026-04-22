@@ -1,7 +1,7 @@
 'use client';
 
 import api from '@/lib/api';
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
 import { useRouter, useParams } from 'next/navigation';
@@ -20,6 +20,8 @@ import { Nav } from '@/components/Nav';
 import { useAccessGate } from '@/lib/hooks/useAccessGate';
 import JSZip from 'jszip';
 import styles from './page.module.scss';
+
+type DownloadFormat = 'pdf' | 'original';
 
 export default function ProjectPage() {
     const { id } = useParams();
@@ -40,6 +42,7 @@ export default function ProjectPage() {
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [isEditingName, setIsEditingName] = useState(false);
     const [newName, setNewName] = useState('');
+    const [openDownloadMenu, setOpenDownloadMenu] = useState<string | null>(null);
 
     const { data: session, status } = useSession();
     console.log(session);
@@ -54,6 +57,20 @@ export default function ProjectPage() {
             fetchData(token);
         }
     }, [id, accessLoading, access]);
+
+    useEffect(() => {
+        if (!openDownloadMenu) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as HTMLElement | null;
+            if (!target?.closest('[data-download-menu-root="true"]')) {
+                setOpenDownloadMenu(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [openDownloadMenu]);
 
     const fetchData = async (token: string) => {
         try {
@@ -186,14 +203,17 @@ export default function ProjectPage() {
         } catch { toast.error('Falha ao atualizar'); }
     };
 
-    const handleDownloadFile = async (doc: any) => {
+    const handleDownloadFile = async (doc: any, format: DownloadFormat = 'pdf') => {
         try {
             const userSlug = doc.ownerUser.name.trim().replace(/\s+/g, '_');
             const typeSlug = doc.documentType.name.trim().replace(/\s+/g, '_');
-            const filename = `${userSlug}_${typeSlug}`;
+            const fallbackFilename = `${userSlug}_${typeSlug}`;
             const token = session?.user?.token || localStorage.getItem('token');
-            const response = await api.get(`/api/files/base64`, { params: { url: doc.file.url }, headers: { Authorization: `Bearer ${token}` } });
-            const { base64, mimeType } = response.data;
+            const response = await api.get(`/api/files/base64`, {
+                params: { url: doc.file.url, format },
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const { base64, mimeType, filename } = response.data;
             const byteCharacters = atob(base64);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -201,7 +221,7 @@ export default function ProjectPage() {
             const urlObject = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = urlObject;
-            link.download = filename;
+            link.download = filename || fallbackFilename;
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -209,7 +229,7 @@ export default function ProjectPage() {
         } catch { toast.error('Falha ao baixar arquivo'); }
     };
 
-    const handleDownloadAll = async () => {
+    const handleDownloadAll = async (format: DownloadFormat = 'pdf') => {
         if (!clientDocs || clientDocs.length === 0) {
             toast.error('Nenhum arquivo disponível para download');
             return;
@@ -221,7 +241,7 @@ export default function ProjectPage() {
             const headers = { Authorization: `Bearer ${token}` };
 
             // Fetch all project files in a single request
-            const response = await api.get(`/api/files/project/${id}/base64`, { headers });
+            const response = await api.get(`/api/files/project/${id}/base64`, { params: { format }, headers });
             const { files: projectFiles } = response.data;
 
             if (!projectFiles || projectFiles.length === 0) {
@@ -233,7 +253,7 @@ export default function ProjectPage() {
             toast.loading(`Compactando ${projectFiles.length} arquivos...`, { id: toastId });
 
             for (const fileData of projectFiles) {
-                const { base64, originalName, metadata } = fileData;
+                const { base64, originalName, downloadName, metadata } = fileData;
                 
                 const byteCharacters = atob(base64);
                 const byteNumbers = new Array(byteCharacters.length);
@@ -245,7 +265,7 @@ export default function ProjectPage() {
                 // Organizar nome do arquivo no ZIP
                 const userSlug = metadata.userName.trim().replace(/\s+/g, '_');
                 const typeSlug = metadata.documentType.trim().replace(/\s+/g, '_');
-                const fileName = `${typeSlug}_${userSlug}_${originalName}`;
+                const fileName = `${typeSlug}_${userSlug}_${downloadName || originalName}`;
 
                 zip.file(fileName, byteArray);
             }
@@ -385,12 +405,15 @@ export default function ProjectPage() {
                                 >
                                     <Settings size={16} /> Configurações do projeto
                                 </button>
-                                <button
-                                    onClick={() => handleDownloadAll()}
-                                    className={styles.inviteBtn}
-                                >
-                                    <Download size={16} /> Download ZIP
-                                </button>
+                                <DownloadFormatButton
+                                    menuId="project-zip"
+                                    defaultLabel="ZIP em PDF"
+                                    openMenuId={openDownloadMenu}
+                                    setOpenMenuId={setOpenDownloadMenu}
+                                    onDownload={(format) => handleDownloadAll(format)}
+                                    moduleStyles={styles}
+                                    variant="header"
+                                />
                             </div>
                         )}
                     </header>
@@ -550,9 +573,14 @@ export default function ProjectPage() {
                                                                                 <button onClick={() => handleViewFile(doc.file.url)} className={styles.docActionBtn}>
                                                                                     <Eye size={14} /> Ver
                                                                                 </button>
-                                                                                <button onClick={() => handleDownloadFile(doc)} className={styles.docActionBtn}>
-                                                                                    <Download size={14} /> Baixar
-                                                                                </button>
+                                                                                <DownloadFormatButton
+                                                                                    menuId={`doc-${doc.id}`}
+                                                                                    defaultLabel="Baixar PDF"
+                                                                                    openMenuId={openDownloadMenu}
+                                                                                    setOpenMenuId={setOpenDownloadMenu}
+                                                                                    onDownload={(format) => handleDownloadFile(doc, format)}
+                                                                                    moduleStyles={styles}
+                                                                                />
 
                                                                                 {isAdmin && doc.status === 'pending' && (
                                                                                     <>
@@ -641,6 +669,68 @@ export default function ProjectPage() {
     );
 }
 
+function DownloadFormatButton({
+    menuId,
+    defaultLabel,
+    openMenuId,
+    setOpenMenuId,
+    onDownload,
+    moduleStyles,
+    variant = 'document',
+}: {
+    menuId: string;
+    defaultLabel: string;
+    openMenuId: string | null;
+    setOpenMenuId: (menuId: string | null) => void;
+    onDownload: (format: DownloadFormat) => void;
+    moduleStyles: Record<string, string>;
+    variant?: 'document' | 'header';
+}) {
+    const isOpen = openMenuId === menuId;
+    const rootClassName = variant === 'header' ? moduleStyles.downloadSplitHeader : moduleStyles.downloadSplit;
+
+    const chooseFormat = (format: DownloadFormat) => {
+        setOpenMenuId(null);
+        onDownload(format);
+    };
+
+    return (
+        <div className={rootClassName} data-download-menu-root="true" data-open={isOpen}>
+            <button
+                type="button"
+                className={moduleStyles.downloadPrimaryBtn}
+                onClick={() => chooseFormat('pdf')}
+                title="Baixar como PDF"
+            >
+                <Download size={variant === 'header' ? 16 : 14} />
+                {defaultLabel}
+            </button>
+            <button
+                type="button"
+                className={`${moduleStyles.downloadToggleBtn} ${isOpen ? moduleStyles.active : ''}`}
+                onClick={() => setOpenMenuId(isOpen ? null : menuId)}
+                aria-expanded={isOpen}
+                aria-label="Escolher formato do download"
+            >
+                <ChevronDown size={14} />
+            </button>
+
+            {isOpen && (
+                <div className={moduleStyles.downloadMenu}>
+                    <button type="button" onClick={() => chooseFormat('pdf')} className={moduleStyles.downloadMenuItem}>
+                        <span className={moduleStyles.downloadMenuTitle}>PDF</span>
+                        <span className={moduleStyles.downloadMenuHint}>Padrao do sistema</span>
+                    </button>
+                    <button type="button" onClick={() => chooseFormat('original')} className={moduleStyles.downloadMenuItem}>
+                        <span className={moduleStyles.downloadMenuTitle}>Original</span>
+                        <span className={moduleStyles.downloadMenuHint}>Sem conversao</span>
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
 // DropzoneUploader now receives moduleStyles as prop
 function DropzoneUploader({
     onUpload, isUploading, label = 'Upload', progress, moduleStyles
@@ -649,7 +739,7 @@ function DropzoneUploader({
     isUploading: boolean;
     label?: string;
     progress?: number;
-    moduleStyles: any;
+    moduleStyles: Record<string, string>;
 }) {
     const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
         onDrop: onUpload,

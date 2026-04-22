@@ -6,15 +6,108 @@ import axios from 'axios';
 import FormData from 'form-data';
 import { upload } from '../middleware/upload';
 import crypto from 'crypto';
-import { Readable } from 'stream';
 import { uploadToR2, getFileUrl, getFileFromR2 } from '../services/r2Service';
 
 // Map allowed MIME types to secure, hardcoded extensions
 const mimeToExt: Record<string, string> = {
     'image/jpeg': '.jpg',
     'image/png': '.png',
+    'image/webp': '.webp',
+    'image/bmp': '.bmp',
     'application/pdf': '.pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx'
+};
+
+const DEFAULT_DOWNLOAD_FORMAT = 'pdf';
+const ALLOWED_DOWNLOAD_FORMATS = new Set(['pdf', 'original']);
+const PDF_CONVERTIBLE_MIME_TYPES = new Set([
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]);
+
+type DownloadFormat = 'pdf' | 'original';
+
+const getPythonMicroserviceUrl = () =>
+    process.env.AMBIENTE == 'DEV' ? 'http://localhost:8000' : process.env.PYTHON_MICROSERVICE_URL;
+
+const resolveDownloadFormat = (value: unknown): DownloadFormat => {
+    const normalized = typeof value === 'string' ? value.trim().toLowerCase() : DEFAULT_DOWNLOAD_FORMAT;
+    return ALLOWED_DOWNLOAD_FORMATS.has(normalized) ? normalized as DownloadFormat : DEFAULT_DOWNLOAD_FORMAT;
+};
+
+const replaceExtensionWithPdf = (filename: string) => {
+    const lastDotIndex = filename.lastIndexOf('.');
+    if (lastDotIndex <= 0) return `${filename}.pdf`;
+    return `${filename.slice(0, lastDotIndex)}.pdf`;
+};
+
+const convertBufferToPdf = async (buffer: Buffer, originalName: string, mimeType: string): Promise<Buffer> => {
+    const url = getPythonMicroserviceUrl();
+    if (!url) {
+        throw new Error('PYTHON_MICROSERVICE_URL nao configurada');
+    }
+
+    const formData = new FormData();
+    formData.append('file', buffer, {
+        filename: originalName,
+        contentType: mimeType,
+        knownLength: buffer.length,
+    });
+
+    const response = await axios.post(`${url}/convert-to-pdf`, formData, {
+        headers: {
+            ...formData.getHeaders(),
+        },
+        responseType: 'arraybuffer',
+    });
+
+    return Buffer.from(response.data);
+};
+
+const buildDownloadPayload = async ({
+    buffer,
+    originalName,
+    mimeType,
+    requestedFormat,
+}: {
+    buffer: Buffer;
+    originalName: string;
+    mimeType: string;
+    requestedFormat: DownloadFormat;
+}): Promise<{ buffer: Buffer; mimeType: string; filename: string; format: DownloadFormat }> => {
+    if (requestedFormat === 'original') {
+        return {
+            buffer,
+            mimeType,
+            filename: originalName,
+            format: 'original',
+        };
+    }
+
+    if (mimeType === 'application/pdf') {
+        return {
+            buffer,
+            mimeType,
+            filename: replaceExtensionWithPdf(originalName),
+            format: 'pdf',
+        };
+    }
+
+    if (mimeType.startsWith('image/') || PDF_CONVERTIBLE_MIME_TYPES.has(mimeType)) {
+        const pdfBuffer = await convertBufferToPdf(buffer, originalName, mimeType);
+        return {
+            buffer: pdfBuffer,
+            mimeType: 'application/pdf',
+            filename: replaceExtensionWithPdf(originalName),
+            format: 'pdf',
+        };
+    }
+
+    return {
+        buffer,
+        mimeType,
+        filename: originalName,
+        format: 'original',
+    };
 };
 
 export const uploadFile = async (req: AuthRequest, res: Response) => {
@@ -50,7 +143,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
             console.log('[Upload] Image detected, sending for analysis...');
             try {
 
-                const url = process.env.AMBIENTE == 'DEV' ? 'http://localhost:8000' : process.env.PYTHON_MICROSERVICE_URL;
+                const url = getPythonMicroserviceUrl();
                 const formData = new FormData();
                 const stream = fs.createReadStream(file.path);
                 formData.append('file', stream, {
@@ -222,6 +315,7 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
 export const getFileBase64 = async (req: AuthRequest, res: Response) => {
     try {
         const { url } = req.query;
+        const requestedFormat = resolveDownloadFormat(req.query.format);
         if (!url || typeof url !== 'string') {
             return res.status(400).json({ message: 'URL do arquivo não fornecida' });
         }
@@ -266,8 +360,20 @@ export const getFileBase64 = async (req: AuthRequest, res: Response) => {
             return res.status(404).json({ message: 'Arquivo não encontrado' });
         }
 
-        const base64 = fileBuffer.toString('base64');
-        res.json({ base64, mimeType });
+        const downloadPayload = await buildDownloadPayload({
+            buffer: fileBuffer,
+            originalName: fileRecord.originalName,
+            mimeType,
+            requestedFormat,
+        });
+
+        const base64 = downloadPayload.buffer.toString('base64');
+        res.json({
+            base64,
+            mimeType: downloadPayload.mimeType,
+            filename: downloadPayload.filename,
+            format: downloadPayload.format,
+        });
     } catch (error) {
         console.error('Get file base64 error:', error);
         res.status(500).json({ message: 'Erro interno ao converter arquivo' });
@@ -349,6 +455,7 @@ export const getProjectFilesBase64 = async (req: AuthRequest, res: Response) => 
     try {
         const projectId = req.params.projectId as string;
         const userId = req.user?.userId;
+        const requestedFormat = resolveDownloadFormat(req.query.format);
 
         if (!projectId) {
             return res.status(400).json({ message: 'ID do projeto não fornecido' });
@@ -401,14 +508,21 @@ export const getProjectFilesBase64 = async (req: AuthRequest, res: Response) => 
             clientDocuments.map(async (doc: any) => {
                 try {
                     const r2Data = await getFileFromR2(doc.file.filename);
-                    const base64 = r2Data.buffer.toString('base64');
+                    const downloadPayload = await buildDownloadPayload({
+                        buffer: r2Data.buffer,
+                        originalName: doc.file.originalName,
+                        mimeType: r2Data.contentType,
+                        requestedFormat,
+                    });
                     
                     return {
                         id: doc.id,
                         originalName: doc.file.originalName,
                         filename: doc.file.filename,
-                        mimeType: r2Data.contentType,
-                        base64,
+                        downloadName: downloadPayload.filename,
+                        mimeType: downloadPayload.mimeType,
+                        base64: downloadPayload.buffer.toString('base64'),
+                        format: downloadPayload.format,
                         metadata: {
                             userName: doc.ownerUser.name,
                             userEmail: doc.ownerUser.email,
