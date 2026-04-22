@@ -1,0 +1,6 @@
+# Ignore the docker-compose.yml file
+# This file is used for local development and should not be committed to version control
+# as it may contain sensitive information such as environment variables or database credentials.
+# If you need to share the docker-compose.yml file, consider creating a template version (e.g., docker-compose.example.yml)
+# and adding instructions for developers to copy it and fill in the necessary details.
+docker-compose.yml
