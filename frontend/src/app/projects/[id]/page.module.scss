@@ -1094,3 +1094,286 @@
 
   &:active { transform: translateY(-1rem) scale(0.95); }
 }
+
+// ------------------------------------------------------------------
+// Invite modal
+// ------------------------------------------------------------------
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $sp-4;
+  background: rgba($zinc-900, 0.48);
+}
+
+.inviteModal {
+  width: min(100%, 42rem);
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  background: white;
+  border: 1px solid rgba($zinc-200, 0.9);
+  border-radius: $radius-xl;
+  box-shadow: 0 24px 70px rgba($zinc-900, 0.24);
+}
+
+.inviteModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $sp-4;
+  padding: $sp-6;
+  border-bottom: 1px solid rgba($zinc-200, 0.8);
+}
+
+.inviteModalTitle {
+  font-family: $font-headline;
+  font-size: 1.375rem;
+  font-weight: 900;
+  color: $zinc-900;
+  letter-spacing: -0.02em;
+}
+
+.inviteModalSubtitle {
+  margin-top: $sp-1;
+  color: $zinc-500;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.modalIconBtn,
+.inviteMiniBtn {
+  @include btn-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: $radius-md;
+  color: $zinc-500;
+  background: $zinc-50;
+  border: 1px solid $zinc-200;
+  transition: $transition-base;
+
+  &:hover:not(:disabled) {
+    color: $zinc-900;
+    background: $zinc-100;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+.inviteModalBody {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-5;
+  padding: $sp-6;
+}
+
+.inviteSection {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+}
+
+.inviteSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $sp-3;
+}
+
+.inviteSectionTitle {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: $zinc-700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.inviteLinkBox {
+  @include btn-reset;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $sp-3;
+  min-height: 3.25rem;
+  padding: $sp-3 $sp-4;
+  border-radius: $radius-md;
+  border: 1px dashed $amber-300;
+  background: $amber-50;
+  color: $zinc-900;
+  text-align: left;
+  transition: $transition-base;
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  svg {
+    flex-shrink: 0;
+    color: $amber-700;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: $amber-500;
+    background: rgba($amber-100, 0.8);
+  }
+
+  &:disabled {
+    cursor: wait;
+    color: $zinc-400;
+  }
+}
+
+.inviteEmailRow {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+
+  @include sm {
+    flex-direction: row;
+  }
+}
+
+.inviteEmailInput {
+  min-width: 0;
+  flex: 1;
+  min-height: 2.75rem;
+  border: 1px solid $zinc-200;
+  border-radius: $radius-md;
+  padding: 0 $sp-4;
+  color: $zinc-900;
+  font-size: 0.875rem;
+  font-weight: 600;
+  outline: none;
+  transition: $transition-base;
+
+  &:focus {
+    border-color: $amber-400;
+    box-shadow: 0 0 0 3px rgba($amber-400, 0.18);
+  }
+
+  &::placeholder {
+    color: $zinc-400;
+  }
+}
+
+.inviteSendBtn {
+  @include btn-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $sp-2;
+  min-height: 2.75rem;
+  padding: 0 $sp-5;
+  border-radius: $radius-md;
+  background: $amber-400;
+  color: $amber-950;
+  font-family: $font-headline;
+  font-size: 0.875rem;
+  font-weight: 800;
+  transition: $transition-base;
+
+  &:hover:not(:disabled) {
+    background: $amber-500;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+.inviteStatusList {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-2;
+}
+
+.inviteEmptyText {
+  color: $zinc-500;
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: $sp-4;
+  border: 1px solid $zinc-200;
+  border-radius: $radius-md;
+  background: $zinc-50;
+}
+
+.inviteStatusItem {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+  padding: $sp-4;
+  border: 1px solid $zinc-200;
+  border-radius: $radius-md;
+  background: white;
+
+  @include sm {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.inviteStatusEmail {
+  color: $zinc-900;
+  font-size: 0.875rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.inviteStatusDate {
+  margin-top: $sp-1;
+  color: $zinc-500;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.inviteStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  padding: $sp-1_5 $sp-3;
+  border-radius: $radius-full;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+
+  @include sm {
+    align-self: auto;
+  }
+}
+
+.inviteStatusAccepted {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.inviteStatusExpired {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.inviteStatusSent {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.inviteStatusCreated {
+  background: $zinc-100;
+  color: $zinc-600;
+}
