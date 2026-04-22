@@ -1,6 +1,7 @@
 import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import prisma from '../prisma';
+import { sendProjectInviteEmail } from '../services/emailService';
 
 const getPermissions = (role: string) => {
     if (role === 'ADMIN') {
@@ -8,6 +9,55 @@ const getPermissions = (role: string) => {
     }
     return ['DOCUMENT_VIEW', 'DOCUMENT_UPLOAD'];
 };
+
+const getFrontendUrl = () => {
+    let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    if (!frontendUrl.startsWith('http')) {
+        frontendUrl = `https://${frontendUrl}`;
+    }
+
+    return frontendUrl;
+};
+
+const buildInviteLink = (token: string) => {
+    const inviteUrl = new URL('/login', getFrontendUrl());
+    inviteUrl.searchParams.set('invite', token);
+    return inviteUrl.toString();
+};
+
+const getInviteStatus = (invite: { expiresAt: Date; usedCount: number; acceptedAt: Date | null; emailSentAt: Date | null }) => {
+    if (invite.acceptedAt || invite.usedCount > 0) return 'ACCEPTED';
+    if (invite.expiresAt < new Date()) return 'EXPIRED';
+    if (invite.emailSentAt) return 'EMAIL_SENT';
+    return 'CREATED';
+};
+
+const serializeInvite = (invite: {
+    id: string;
+    projectId: string;
+    token: string;
+    role: string;
+    expiresAt: Date;
+    maxUses: number;
+    usedCount: number;
+    email: string | null;
+    invitedByUserId: string | null;
+    emailSentAt: Date | null;
+    acceptedAt: Date | null;
+    createdAt: Date;
+}) => ({
+    id: invite.id,
+    projectId: invite.projectId,
+    token: invite.token,
+    link: buildInviteLink(invite.token),
+    email: invite.email,
+    invitedByUserId: invite.invitedByUserId,
+    emailSentAt: invite.emailSentAt,
+    acceptedAt: invite.acceptedAt,
+    expiresAt: invite.expiresAt,
+    status: getInviteStatus(invite),
+    permissions: getPermissions(invite.role)
+});
 
 export const acceptProjectInviteForUser = async (inviteToken: string, userId: string) => {
     const validInvite = await prisma.projectInvite.findUnique({
@@ -52,6 +102,11 @@ export const acceptProjectInviteForUser = async (inviteToken: string, userId: st
     });
 
     if (existingMembership) {
+        await prisma.projectInvite.update({
+            where: { id: validInvite.id },
+            data: { acceptedAt: new Date() }
+        });
+
         return {
             ok: true as const,
             projectId: validInvite.projectId,
@@ -69,7 +124,10 @@ export const acceptProjectInviteForUser = async (inviteToken: string, userId: st
 
     await prisma.projectInvite.update({
         where: { id: validInvite.id },
-        data: { usedCount: { increment: 1 } }
+        data: {
+            usedCount: { increment: 1 },
+            acceptedAt: new Date()
+        }
     });
 
     return {
@@ -94,21 +152,93 @@ export const createInvite = async (req: AuthRequest, res: Response) => {
                 projectId,
                 role: 'USER',
                 expiresAt,
+                invitedByUserId: userId,
             }
         });
 
         res.status(201).json({
-            invite: {
-                id: invite.id,
-                projectId: invite.projectId,
-                token: invite.token,
-                expiresAt: invite.expiresAt,
-                permissions: getPermissions(invite.role)
-            }
+            invite: serializeInvite(invite)
         });
     } catch (error) {
         console.error('Error creating invite:', error);
         res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const getInvites = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        const projectId = req.params.id as string;
+
+        if (!userId) return res.status(401).json({ message: 'Nao autorizado' });
+
+        const invites = await prisma.projectInvite.findMany({
+            where: { projectId },
+            orderBy: { createdAt: 'desc' },
+            take: 20
+        });
+
+        res.status(200).json({ invites: invites.map(serializeInvite) });
+    } catch (error) {
+        console.error('Error fetching invites:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+};
+
+export const sendInviteEmail = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+        const projectId = req.params.id as string;
+        const inviteId = req.params.inviteId as string;
+        const rawEmail = typeof req.body.email === 'string' ? req.body.email.trim().toLowerCase() : '';
+
+        if (!userId) return res.status(401).json({ message: 'Nao autorizado' });
+        if (!rawEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(rawEmail)) {
+            return res.status(400).json({ message: 'E-mail invalido' });
+        }
+
+        const invite = await prisma.projectInvite.findFirst({
+            where: { id: inviteId, projectId },
+            include: {
+                project: {
+                    select: { id: true, name: true, status: true }
+                }
+            }
+        });
+
+        if (!invite) return res.status(404).json({ message: 'Convite nao encontrado' });
+        if (invite.expiresAt < new Date()) return res.status(400).json({ message: 'Convite expirado' });
+        if (invite.usedCount >= invite.maxUses) return res.status(400).json({ message: 'Convite ja foi aceito' });
+        if (invite.project.status === 'ARCHIVED') return res.status(403).json({ message: 'Projeto arquivado. Nao e possivel enviar convites.' });
+        if (invite.project.status === 'DELETED') return res.status(404).json({ message: 'Projeto nao encontrado' });
+
+        const inviter = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { name: true }
+        });
+
+        const inviteLink = buildInviteLink(invite.token);
+
+        await sendProjectInviteEmail({
+            email: rawEmail,
+            inviteLink,
+            projectName: invite.project.name,
+            invitedByName: inviter?.name || 'Um administrador'
+        });
+
+        const updatedInvite = await prisma.projectInvite.update({
+            where: { id: invite.id },
+            data: {
+                email: rawEmail,
+                invitedByUserId: userId,
+                emailSentAt: new Date()
+            }
+        });
+
+        res.status(200).json({ invite: serializeInvite(updatedInvite) });
+    } catch (error) {
+        console.error('Error sending invite email:', error);
+        res.status(500).json({ message: 'Falha ao enviar convite por e-mail' });
     }
 };
 

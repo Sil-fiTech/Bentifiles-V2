@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getProjects, createProject, updateProjectName, getProjectDocuments, getProjectDetails, applyTemplateToProject, archiveProject, unarchiveProject, deleteProject } from '../controllers/projectController';
-import { createInvite, getMembers, updateMemberRole, removeMember, joinProject } from '../controllers/membershipController';
+import { createInvite, getInvites, sendInviteEmail, getMembers, updateMemberRole, removeMember, joinProject } from '../controllers/membershipController';
 import { authenticateToken } from '../middleware/auth';
 import { checkRole } from '../middleware/roleMiddleware';
 import { checkProjectNotArchived } from '../middleware/projectStatusMiddleware';
@@ -37,6 +37,8 @@ router.post('/:id/client-documents', checkRole(['ADMIN', 'USER']) as any, checkP
 
 // Membership Rules
 router.post('/:id/invites', checkRole(['ADMIN']) as any, checkProjectNotArchived as any, createInvite as any);
+router.get('/:id/invites', checkRole(['ADMIN']) as any, getInvites as any);
+router.post('/:id/invites/:inviteId/email', checkRole(['ADMIN']) as any, checkProjectNotArchived as any, sendInviteEmail as any);
 router.get('/:id/members', checkRole(['ADMIN', 'USER']) as any, getMembers as any);
 router.patch('/:id/members/:userId', checkRole(['ADMIN']) as any, checkProjectNotArchived as any, updateMemberRole as any);
 router.delete('/:id/members/:userId', checkRole(['ADMIN']) as any, checkProjectNotArchived as any, removeMember as any);

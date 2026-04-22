@@ -1,7 +1,7 @@
 'use client';
 
 import api from '@/lib/api';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
 import { useRouter, useParams } from 'next/navigation';
@@ -14,7 +14,7 @@ import {
     UploadCloud, ArrowLeft, Shield, AlertTriangle, CheckCircle, XCircle,
     Download, LayoutGrid,
     Folder,
-    Settings
+    Settings, Copy, Mail, X, RefreshCw
 } from 'lucide-react';
 import { Nav } from '@/components/Nav';
 import { useAccessGate } from '@/lib/hooks/useAccessGate';
@@ -22,6 +22,18 @@ import JSZip from 'jszip';
 import styles from './page.module.scss';
 
 type DownloadFormat = 'pdf' | 'original';
+type InviteStatus = 'CREATED' | 'EMAIL_SENT' | 'EXPIRED' | 'ACCEPTED';
+
+type ProjectInvite = {
+    id: string;
+    token: string;
+    link?: string;
+    email?: string | null;
+    expiresAt: string;
+    emailSentAt?: string | null;
+    acceptedAt?: string | null;
+    status: InviteStatus;
+};
 
 export default function ProjectPage() {
     const { id } = useParams();
@@ -43,9 +55,14 @@ export default function ProjectPage() {
     const [isEditingName, setIsEditingName] = useState(false);
     const [newName, setNewName] = useState('');
     const [openDownloadMenu, setOpenDownloadMenu] = useState<string | null>(null);
+    const [inviteModalOpen, setInviteModalOpen] = useState(false);
+    const [activeInvite, setActiveInvite] = useState<ProjectInvite | null>(null);
+    const [invites, setInvites] = useState<ProjectInvite[]>([]);
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [inviteLoading, setInviteLoading] = useState(false);
+    const [sendingInvite, setSendingInvite] = useState(false);
 
     const { data: session, status } = useSession();
-    console.log(session);
     
 
     useEffect(() => {
@@ -101,19 +118,111 @@ export default function ProjectPage() {
     const hasPermission = (permission: string) => currentUserPermissions.includes(permission);
     const isAdmin = currentUserPermissions.includes('PROJECT_EDIT');
     const toggleUserExpand = (userId: string) => setExpandedUsers(prev => ({ ...prev, [userId]: !prev[userId] }));
+    const getAuthToken = () => session?.user?.token || localStorage.getItem('token');
 
-    const generateInvite = async () => {
-        if (project?.status === 'ARCHIVED') { toast.error('Projeto arquivado. Não é possível gerar convites.'); return; }
+    const buildInviteLink = (invite: ProjectInvite | null) => {
+        if (!invite) return '';
+        return `${window.location.origin}/login?invite=${invite.token}`;
+    };
+
+    const fetchInvites = async () => {
         try {
-            const token = session?.user?.token || localStorage.getItem('token');
-            const res = await api.post(`/api/projects/${id}/invites`, {}, {
+            const token = getAuthToken();
+            const res = await api.get(`/api/projects/${id}/invites`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            const link = `${window.location.origin}/login?invite=${res.data.invite.token}`;
-            navigator.clipboard.writeText(link);
-            toast.success('Link de convite copiado!');
-        } catch { toast.error('Falha ao gerar convite'); }
+            setInvites(res.data.invites || []);
+        } catch {
+            toast.error('Falha ao carregar convites');
+        }
     };
+
+    const createInvite = async () => {
+        const token = getAuthToken();
+        const res = await api.post(`/api/projects/${id}/invites`, {}, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const invite = res.data.invite as ProjectInvite;
+        setActiveInvite(invite);
+        setInvites(prev => [invite, ...prev.filter(item => item.id !== invite.id)]);
+        return invite;
+    };
+
+    const openInviteModal = async () => {
+        if (project?.status === 'ARCHIVED') { toast.error('Projeto arquivado. Não é possível gerar convites.'); return; }
+        setInviteModalOpen(true);
+        setInviteLoading(true);
+        try {
+            await fetchInvites();
+            await createInvite();
+        } catch {
+            toast.error('Falha ao preparar convite');
+        } finally {
+            setInviteLoading(false);
+        }
+    };
+
+    const copyInviteLink = async () => {
+        if (!activeInvite) return;
+        try {
+            await navigator.clipboard.writeText(buildInviteLink(activeInvite));
+            toast.success('Link de convite copiado!');
+        } catch {
+            toast.error('Falha ao copiar link');
+        }
+    };
+
+    const sendInviteByEmail = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!activeInvite) return;
+        if (!inviteEmail.trim()) {
+            toast.error('Informe o e-mail do cliente');
+            return;
+        }
+
+        setSendingInvite(true);
+        try {
+            const token = getAuthToken();
+            const res = await api.post(`/api/projects/${id}/invites/${activeInvite.id}/email`, {
+                email: inviteEmail.trim()
+            }, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const updatedInvite = res.data.invite as ProjectInvite;
+            setActiveInvite(updatedInvite);
+            setInvites(prev => [updatedInvite, ...prev.filter(item => item.id !== updatedInvite.id)]);
+            setInviteEmail('');
+            toast.success('Convite enviado por e-mail!');
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Falha ao enviar convite por e-mail');
+        } finally {
+            setSendingInvite(false);
+        }
+    };
+
+    const refreshInvite = async () => {
+        setInviteLoading(true);
+        try {
+            await fetchInvites();
+            await createInvite();
+            toast.success('Novo link de convite criado');
+        } catch {
+            toast.error('Falha ao renovar convite');
+        } finally {
+            setInviteLoading(false);
+        }
+    };
+
+    const getInviteStatusMeta = (status: InviteStatus) => {
+        switch (status) {
+            case 'ACCEPTED': return { label: 'Convite aceito', className: styles.inviteStatusAccepted };
+            case 'EXPIRED': return { label: 'Convite expirado', className: styles.inviteStatusExpired };
+            case 'EMAIL_SENT': return { label: 'Email enviado', className: styles.inviteStatusSent };
+            default: return { label: 'Link criado', className: styles.inviteStatusCreated };
+        }
+    };
+
+    const generateInvite = openInviteModal;
 
     const handleRename = async () => {
         if (project?.status === 'ARCHIVED') { toast.error('Projeto arquivado.'); setIsEditingName(false); return; }
@@ -638,6 +747,107 @@ export default function ProjectPage() {
                     </div>
                 )}
             </main>
+
+            {inviteModalOpen && (
+                <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="invite-modal-title">
+                    <div className={styles.inviteModal}>
+                        <div className={styles.inviteModalHeader}>
+                            <div>
+                                <h2 id="invite-modal-title" className={styles.inviteModalTitle}>Convidar cliente</h2>
+                                <p className={styles.inviteModalSubtitle}>{project?.name}</p>
+                            </div>
+                            <button
+                                type="button"
+                                className={styles.modalIconBtn}
+                                onClick={() => setInviteModalOpen(false)}
+                                aria-label="Fechar modal"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className={styles.inviteModalBody}>
+                            <section className={styles.inviteSection}>
+                                <div className={styles.inviteSectionHeader}>
+                                    <span className={styles.inviteSectionTitle}>Link de convite do projeto</span>
+                                    <button
+                                        type="button"
+                                        className={styles.inviteMiniBtn}
+                                        onClick={refreshInvite}
+                                        disabled={inviteLoading}
+                                        title="Gerar novo link"
+                                    >
+                                        {inviteLoading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                                    </button>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className={styles.inviteLinkBox}
+                                    onClick={copyInviteLink}
+                                    disabled={!activeInvite || inviteLoading}
+                                    title="Copiar link"
+                                >
+                                    <span>{activeInvite ? buildInviteLink(activeInvite) : 'Preparando link...'}</span>
+                                    <Copy size={16} />
+                                </button>
+                            </section>
+
+                            <form className={styles.inviteSection} onSubmit={sendInviteByEmail}>
+                                <label className={styles.inviteSectionTitle} htmlFor="invite-email">E-mail do cliente</label>
+                                <div className={styles.inviteEmailRow}>
+                                    <input
+                                        id="invite-email"
+                                        className={styles.inviteEmailInput}
+                                        type="email"
+                                        placeholder="cliente@empresa.com"
+                                        value={inviteEmail}
+                                        onChange={(event) => setInviteEmail(event.target.value)}
+                                        disabled={!activeInvite || sendingInvite || inviteLoading}
+                                    />
+                                    <button
+                                        type="submit"
+                                        className={styles.inviteSendBtn}
+                                        disabled={!activeInvite || sendingInvite || inviteLoading}
+                                    >
+                                        {sendingInvite ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
+                                        Enviar
+                                    </button>
+                                </div>
+                            </form>
+
+                            <section className={styles.inviteSection}>
+                                <div className={styles.inviteSectionHeader}>
+                                    <span className={styles.inviteSectionTitle}>Status dos convites</span>
+                                </div>
+
+                                <div className={styles.inviteStatusList}>
+                                    {invites.filter(invite => invite.email).length === 0 ? (
+                                        <p className={styles.inviteEmptyText}>Nenhum convite por e-mail enviado ainda.</p>
+                                    ) : (
+                                        invites.filter(invite => invite.email).map(invite => {
+                                            const statusMeta = getInviteStatusMeta(invite.status);
+                                            return (
+                                                <div className={styles.inviteStatusItem} key={invite.id}>
+                                                    <div>
+                                                        <p className={styles.inviteStatusEmail}>{invite.email}</p>
+                                                        <p className={styles.inviteStatusDate}>
+                                                            Expira em {new Date(invite.expiresAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                                        </p>
+                                                    </div>
+                                                    <span className={`${styles.inviteStatusBadge} ${statusMeta.className}`}>
+                                                        {statusMeta.label}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Mobile Bottom Nav */}
             <nav className={styles.mobileNav}>
