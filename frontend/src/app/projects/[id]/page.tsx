@@ -22,6 +22,18 @@ import JSZip from 'jszip';
 import styles from './page.module.scss';
 
 type DownloadFormat = 'pdf' | 'original';
+
+const getFilenameExtension = (value?: string | null) => {
+    if (!value) return '';
+    const lastDotIndex = value.lastIndexOf('.');
+    return lastDotIndex > -1 ? value.slice(lastDotIndex) : '';
+};
+
+const replaceFilenameExtension = (value: string, nextExtension: string) => {
+    const lastDotIndex = value.lastIndexOf('.');
+    const baseName = lastDotIndex > -1 ? value.slice(0, lastDotIndex) : value;
+    return `${baseName}${nextExtension}`;
+};
 type InviteStatus = 'CREATED' | 'EMAIL_SENT' | 'EXPIRED' | 'ACCEPTED';
 
 type ProjectInvite = {
@@ -316,13 +328,15 @@ export default function ProjectPage() {
         try {
             const userSlug = doc.ownerUser.name.trim().replace(/\s+/g, '_');
             const typeSlug = doc.documentType.name.trim().replace(/\s+/g, '_');
-            const fallbackFilename = `${userSlug}_${typeSlug}`;
+            const fallbackFilenameBase = `${userSlug}_${typeSlug}`;
             const token = session?.user?.token || localStorage.getItem('token');
             const response = await api.get(`/api/files/base64`, {
                 params: { url: doc.file.url, format },
                 headers: { Authorization: `Bearer ${token}` }
             });
             const { base64, mimeType, filename } = response.data;
+            const fallbackExtension = format === 'pdf' ? '.pdf' : getFilenameExtension(doc.file.originalName);
+            const resolvedExtension = getFilenameExtension(filename) || fallbackExtension;
             const byteCharacters = atob(base64);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -330,7 +344,7 @@ export default function ProjectPage() {
             const urlObject = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = urlObject;
-            link.download = filename || fallbackFilename;
+            link.download = `${fallbackFilenameBase}${resolvedExtension}`;
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -363,6 +377,10 @@ export default function ProjectPage() {
 
             for (const fileData of projectFiles) {
                 const { base64, originalName, downloadName, metadata } = fileData;
+                const resolvedExtension = getFilenameExtension(downloadName) || getFilenameExtension(originalName);
+                const normalizedOriginalName = resolvedExtension
+                    ? replaceFilenameExtension(originalName, resolvedExtension)
+                    : originalName;
                 
                 const byteCharacters = atob(base64);
                 const byteNumbers = new Array(byteCharacters.length);
@@ -374,7 +392,7 @@ export default function ProjectPage() {
                 // Organizar nome do arquivo no ZIP
                 const userSlug = metadata.userName.trim().replace(/\s+/g, '_');
                 const typeSlug = metadata.documentType.trim().replace(/\s+/g, '_');
-                const fileName = `${typeSlug}_${userSlug}_${downloadName || originalName}`;
+                const fileName = `${typeSlug}_${userSlug}_${normalizedOriginalName}`;
 
                 zip.file(fileName, byteArray);
             }
