@@ -11,6 +11,7 @@ function VerifyEmailContent() {
     const router = useRouter();
     const token = searchParams.get('token');
     const inviteToken = searchParams.get('invite');
+    const officeInviteToken = searchParams.get('officeInvite');
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [message, setMessage] = useState('Verificando seu e-mail...');
 
@@ -24,11 +25,17 @@ function VerifyEmailContent() {
         const verifyToken = async () => {
             try {
                 const inviteFromStorage = typeof window !== 'undefined' ? localStorage.getItem('pendingInvite') : null;
+                const officeInviteFromStorage = typeof window !== 'undefined' ? localStorage.getItem('pendingOfficeInvite') : null;
                 const effectiveInvite = inviteToken || inviteFromStorage;
+                const effectiveOfficeInvite = officeInviteToken || officeInviteFromStorage;
                 const params = new URLSearchParams({ token });
 
                 if (effectiveInvite) {
                     params.set('invite', effectiveInvite);
+                }
+
+                if (effectiveOfficeInvite) {
+                    params.set('officeInvite', effectiveOfficeInvite);
                 }
 
                 const res = await api.get(`/api/users/verify-email?${params.toString()}`);
@@ -38,6 +45,9 @@ function VerifyEmailContent() {
                     localStorage.setItem('token', res.data.token);
                     if (effectiveInvite) {
                         localStorage.removeItem('pendingInvite');
+                    }
+                    if (effectiveOfficeInvite) {
+                        localStorage.removeItem('pendingOfficeInvite');
                     }
                     setMessage('E-mail verificado com sucesso! Redirecionando para o painel...');
                     setTimeout(() => {
@@ -53,7 +63,7 @@ function VerifyEmailContent() {
         };
 
         verifyToken();
-    }, [token, inviteToken, router]);
+    }, [token, inviteToken, officeInviteToken, router]);
 
     return (
         <div className={styles.root}>

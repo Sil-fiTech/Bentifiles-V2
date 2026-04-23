@@ -41,13 +41,21 @@ const escapeHtml = (value: string) => value
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 
-export const buildVerificationUrl = (token: string, inviteToken?: string | null) => {
+export const buildVerificationUrl = (
+    token: string,
+    inviteToken?: string | null,
+    officeInviteToken?: string | null
+) => {
     const frontendUrl = getFrontendUrl();
     const verifyUrl = new URL('/verify-email', frontendUrl);
     verifyUrl.searchParams.set('token', token);
 
     if (inviteToken) {
         verifyUrl.searchParams.set('invite', inviteToken);
+    }
+
+    if (officeInviteToken) {
+        verifyUrl.searchParams.set('officeInvite', officeInviteToken);
     }
 
     return verifyUrl.toString();
@@ -137,10 +145,16 @@ export const sendProjectInviteEmail = async (params: {
     }
 };
 
-export const sendVerificationEmail = async (email: string, token: string, name: string, inviteToken?: string | null) => {
+export const sendVerificationEmail = async (
+    email: string,
+    token: string,
+    name: string,
+    inviteToken?: string | null,
+    officeInviteToken?: string | null
+) => {
     try {
         const frontendUrl = getFrontendUrl();
-        const verifyUrl = buildVerificationUrl(token, inviteToken);
+        const verifyUrl = buildVerificationUrl(token, inviteToken, officeInviteToken);
 
         const html = `
 <!DOCTYPE html>
@@ -217,6 +231,88 @@ export const sendVerificationEmail = async (email: string, token: string, name: 
     } catch (error) {
         console.error('Erro ao enviar email de verificacao:', error);
         throw new Error('Falha no envio de e-mail');
+    }
+};
+
+export const sendOfficeSubscriptionInviteEmail = async (params: {
+    email: string;
+    inviteLink: string;
+    invitedByName: string;
+    seatsLabel?: string;
+}) => {
+    try {
+        const frontendUrl = getFrontendUrl();
+        const safeInvitedByName = escapeHtml(params.invitedByName);
+        const safeSeatsLabel = escapeHtml(params.seatsLabel || 'licenca OFFICE');
+
+        const html = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #f9f9f9; font-family: 'Space Grotesk', 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed; background-color: #f9f9f9; padding: 40px 20px;">
+        <tr>
+            <td align="center">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px 0 rgba(0, 0, 0, 0.05); overflow: hidden; border: 1px solid #e4e4e7;">
+                    <tr>
+                        <td align="center" style="padding: 40px 0; background-color: #ffffff; border-bottom: 1px solid #e4e4e7;">
+                            <img src="${frontendUrl}/logo.png" alt="BentiFiles Logo" height="40" style="display: block; max-width: 100%; height: 40px; margin: 0 auto; object-fit: contain;" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px 40px 30px 40px;">
+                            <h2 style="color: #1a1c1c; margin: 0 0 20px 0; font-size: 22px; font-weight: 700;">Convite para licenca OFFICE</h2>
+                            <p style="margin: 0 0 16px 0; color: #3f3f46; font-size: 16px; line-height: 1.6;">
+                                <strong style="color: #18181b;">${safeInvitedByName}</strong> convidou voce para ocupar uma ${safeSeatsLabel} no BentiFiles.
+                            </p>
+                            <p style="margin: 0 0 32px 0; color: #52525b; font-size: 16px; line-height: 1.6;">
+                                Use o link abaixo para aceitar o convite. Se voce ainda nao tiver conta, o cadastro e a validacao do e-mail acontecem no mesmo fluxo.
+                            </p>
+                            <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                <tr>
+                                    <td align="center" style="padding-bottom: 32px;">
+                                        <a href="${params.inviteLink}" style="display: inline-block; background-color: #fbbf24; color: #1a1c1c; font-size: 16px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 8px; box-shadow: 0 2px 4px 0 rgba(251, 191, 36, 0.2); border: 1px solid #f59e0b;">
+                                            Aceitar convite
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <div style="background-color: #f4f4f5; border-radius: 8px; padding: 20px; border: 1px dashed #d4d4d8;">
+                                <p style="margin: 0 0 8px 0; color: #52525b; font-size: 14px; text-align: center;">
+                                    Se o botao nao funcionar, copie e cole o link abaixo no navegador:
+                                </p>
+                                <p style="margin: 0; color: #3b82f6; font-size: 13px; text-align: center; word-break: break-all; line-height: 1.5;">
+                                    <a href="${params.inviteLink}" style="color: #3b82f6; text-decoration: underline;">${params.inviteLink}</a>
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #f9f9f9; border-top: 1px solid #e4e4e7; text-align: center;">
+                            <p style="margin: 0; color: #71717a; font-size: 13px; line-height: 1.5;">
+                                Este convite expira em 72 horas.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+        `;
+
+        await sendEmail({
+            to: params.email,
+            subject: 'BentiFiles: convite para licenca OFFICE',
+            html,
+        });
+    } catch (error) {
+        console.error('Erro ao enviar email de convite OFFICE:', error);
+        throw new Error('Falha no envio de e-mail de convite OFFICE');
     }
 };
 

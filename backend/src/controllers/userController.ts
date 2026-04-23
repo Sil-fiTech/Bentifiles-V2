@@ -4,6 +4,7 @@ import prisma from '../prisma';
 import { generateVerificationToken } from '../utils/cryptoUtil';
 import { sendVerificationEmail } from '../services/emailService';
 import { acceptProjectInviteForUser } from './membershipController';
+import { acceptOfficeInviteForUser } from '../services/officeSubscriptionService';
 
 export const getProfile = async (req: Request, res: Response) => {
     try {
@@ -49,7 +50,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 
 export const verifyEmail = async (req: Request, res: Response) => {
     try {
-        const { token, invite } = req.query;
+        const { token, invite, officeInvite } = req.query;
 
         if (!token || typeof token !== 'string') {
             return res.status(400).json({ message: 'Token nao fornecido ou invalido.' });
@@ -85,6 +86,14 @@ export const verifyEmail = async (req: Request, res: Response) => {
             }
         }
 
+        if (typeof officeInvite === 'string' && officeInvite) {
+            const officeInviteResult = await acceptOfficeInviteForUser(officeInvite, user.id);
+
+            if (!officeInviteResult.ok) {
+                return res.status(officeInviteResult.status).json({ message: officeInviteResult.message });
+            }
+        }
+
         const jwtToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'fallback-secret', {
             expiresIn: '24h',
         });
@@ -102,7 +111,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
 export const resendVerification = async (req: Request, res: Response) => {
     try {
-        const { email, inviteToken } = req.body;
+        const { email, inviteToken, officeInviteToken } = req.body;
 
         if (!email) {
             return res.status(400).json({ message: 'E-mail obrigatorio.' });
@@ -122,7 +131,7 @@ export const resendVerification = async (req: Request, res: Response) => {
                 }
             });
 
-            sendVerificationEmail(user.email, verificationToken, user.name, inviteToken).catch(console.error);
+            sendVerificationEmail(user.email, verificationToken, user.name, inviteToken, officeInviteToken).catch(console.error);
         }
 
         res.status(200).json({ message: 'Se o e-mail estiver cadastrado e nao verificado, um novo link sera enviado.' });

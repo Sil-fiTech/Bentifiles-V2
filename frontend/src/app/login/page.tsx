@@ -18,6 +18,7 @@ function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get('invite');
+  const officeInviteToken = searchParams.get('officeInvite');
 
   const { data: session, status } = useSession();
 
@@ -27,6 +28,13 @@ function LoginContent() {
       localStorage.setItem('pendingInvite', inviteToken);
     }
   }, [inviteToken]);
+
+  useEffect(() => {
+    if (officeInviteToken) {
+      setIsLogin(false);
+      localStorage.setItem('pendingOfficeInvite', officeInviteToken);
+    }
+  }, [officeInviteToken]);
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -56,9 +64,17 @@ function LoginContent() {
     try {
       const endpoint = isLogin ? '/api/users/login' : '/api/users/register';
       const pendingInvite = inviteToken || localStorage.getItem('pendingInvite');
+      const pendingOfficeInvite = officeInviteToken || localStorage.getItem('pendingOfficeInvite');
       const payload = isLogin
         ? { email, password, turnstileToken }
-        : { name, email, password, turnstileToken, inviteToken: pendingInvite };
+        : {
+            name,
+            email,
+            password,
+            turnstileToken,
+            inviteToken: pendingInvite,
+            officeInviteToken: pendingOfficeInvite,
+          };
 
       const res = await api.post(endpoint, payload);
 
@@ -80,7 +96,8 @@ function LoginContent() {
               try {
                 await api.post('/api/users/resend-verification', {
                   email,
-                  inviteToken: inviteToken || localStorage.getItem('pendingInvite')
+                  inviteToken: inviteToken || localStorage.getItem('pendingInvite'),
+                  officeInviteToken: officeInviteToken || localStorage.getItem('pendingOfficeInvite'),
                 });
                 toast.success('Novo e-mail de verificacao enviado! Verifique sua caixa de entrada.');
               } catch (resendError) {

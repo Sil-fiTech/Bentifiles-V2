@@ -9,6 +9,20 @@ export interface AccessStatus {
   hasSelectedPlan: boolean;
   trialEndsAt: string | null;
   currentPeriodEnd: string | null;
+  officeSeatAccess?: {
+    subscriptionId: string;
+    owner: {
+      id: string;
+      name: string;
+      email: string;
+    };
+    seatType: string;
+    plan: string;
+    status: string;
+    totalSeats: number;
+    usedSeats: number;
+    availableSeats: number;
+  } | null;
   hasSystemAccess?: boolean; // Keep for compatibility if needed
   redirectTo?: string | null; // Keep for compatibility if needed
   token: string | null;

@@ -21,7 +21,13 @@ export const createCheckoutSession = async (req: AuthRequest, res: Response) => 
       return res.status(400).json({ message: 'Intervalo inválido' });
     }
 
-    const url = await billingService.createCheckoutSession(userId, plan, interval, Math.max(1, Number(quantity)));
+    const normalizedQuantity = Math.max(1, Number(quantity) || 1);
+
+    if (plan !== 'OFFICE' && normalizedQuantity !== 1) {
+      return res.status(400).json({ message: 'Apenas o plano OFFICE suporta multiplas licencas' });
+    }
+
+    const url = await billingService.createCheckoutSession(userId, plan, interval, normalizedQuantity);
     res.json({ url });
   } catch (error: any) {
     console.error('[Billing] Checkout error:', error);

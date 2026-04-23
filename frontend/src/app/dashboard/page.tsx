@@ -98,6 +98,20 @@ export default function Dashboard() {
                 }
             }
 
+            const pendingOfficeInvite = localStorage.getItem('pendingOfficeInvite');
+            if (pendingOfficeInvite) {
+                try {
+                    const officeInviteRes = await api.post('/api/billing/subscription/invites/accept', { token: pendingOfficeInvite }, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    localStorage.removeItem('pendingOfficeInvite');
+                    toast.success(officeInviteRes.data.message || 'Licenca OFFICE ativada com sucesso');
+                } catch (inviteError: any) {
+                    toast.error(inviteError.response?.data?.message || 'Falha ao processar convite OFFICE');
+                    localStorage.removeItem('pendingOfficeInvite');
+                }
+            }
+
             const [projectsRes, filesRes, statsRes, pendingFilesRes, profileRes] = await Promise.all([
                 api.get('/api/projects', { headers: { Authorization: `Bearer ${token}` } }),
                 api.get('/api/files', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),

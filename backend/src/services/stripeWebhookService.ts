@@ -19,6 +19,7 @@ export const handleStripeWebhook = async (event: any) => {
       break;
 
     case 'invoice.payment_succeeded':
+    case 'invoice.paid':
       await handleInvoicePaymentSucceeded(event.data.object as any);
       break;
 
@@ -40,7 +41,7 @@ export const handleStripeWebhook = async (event: any) => {
  */
 
 const handleCheckoutSessionCompleted = async (session: any) => {
-  const userId = session.metadata?.userId;
+  const userId = session.metadata?.userId || session.client_reference_id;
   const plan = session.metadata?.plan;
   const customerId = session.customer as string;
   const subscriptionId = session.subscription as string;
