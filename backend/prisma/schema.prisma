@@ -54,6 +54,11 @@ model User {
   hasSelectedPlan               Boolean          @default(false)
   hasSystemAccess               Boolean          @default(false)
   subscriptionReminderDispatches SubscriptionReminderDispatch[]
+  ownedSubscription             Subscription?               @relation("OwnedSubscription")
+  subscriptionSeatMemberships   SubscriptionSeatMember[]
+  seatMembershipInvitesSent     SubscriptionSeatMember[]    @relation("SeatMemberInvitedBy")
+  sentSubscriptionInvites       SubscriptionInvite[]        @relation("SentSubscriptionInvites")
+  acceptedSubscriptionInvites   SubscriptionInvite[]        @relation("AcceptedSubscriptionInvites")
 
   files      File[]
   projects   ProjectMembership[]
@@ -86,6 +91,23 @@ enum SubscriptionPlan {
   ENTERPRISE
 }
 
+enum SubscriptionSeatType {
+  OWNER
+  MEMBER
+}
+
+enum SubscriptionSeatMemberStatus {
+  ACTIVE
+  REMOVED
+}
+
+enum SubscriptionInviteStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
 enum SubscriptionReminderType {
   TRIAL_ENDING
   SUBSCRIPTION_ENDING
@@ -97,6 +119,66 @@ enum SubscriptionReminderStatus {
   SENT
   CANCELED
   FAILED
+}
+
+model Subscription {
+  id                   String                 @id @default(uuid())
+  ownerId              String                 @unique
+  owner                User                   @relation("OwnedSubscription", fields: [ownerId], references: [id], onDelete: Cascade)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?                @unique
+  plan                 SubscriptionPlan       @default(NONE)
+  status               SubscriptionStatus     @default(NONE)
+  billingInterval      String?
+  totalSeats           Int                    @default(0)
+  usedSeats            Int                    @default(0)
+  availableSeats       Int                    @default(0)
+  currentPeriodEnd     DateTime?
+  members              SubscriptionSeatMember[]
+  invites              SubscriptionInvite[]
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+
+  @@index([plan, status])
+}
+
+model SubscriptionSeatMember {
+  id              String                       @id @default(uuid())
+  subscriptionId  String
+  subscription    Subscription                 @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User                         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  invitedByUserId String?
+  invitedByUser   User?                        @relation("SeatMemberInvitedBy", fields: [invitedByUserId], references: [id], onDelete: SetNull)
+  seatType        SubscriptionSeatType
+  status          SubscriptionSeatMemberStatus @default(ACTIVE)
+  createdAt       DateTime                     @default(now())
+  updatedAt       DateTime                     @updatedAt
+
+  @@unique([subscriptionId, userId])
+  @@index([subscriptionId, status])
+  @@index([userId, status])
+}
+
+model SubscriptionInvite {
+  id               String                   @id @default(uuid())
+  subscriptionId   String
+  subscription     Subscription             @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  email            String
+  token            String                   @unique
+  status           SubscriptionInviteStatus @default(PENDING)
+  expiresAt        DateTime
+  invitedByUserId  String
+  invitedByUser    User                     @relation("SentSubscriptionInvites", fields: [invitedByUserId], references: [id], onDelete: Cascade)
+  acceptedByUserId String?
+  acceptedByUser   User?                    @relation("AcceptedSubscriptionInvites", fields: [acceptedByUserId], references: [id], onDelete: SetNull)
+  acceptedAt       DateTime?
+  revokedAt        DateTime?
+  createdAt        DateTime                 @default(now())
+  updatedAt        DateTime                 @updatedAt
+
+  @@index([subscriptionId, status])
+  @@index([email, status])
 }
 
 model SubscriptionReminderDispatch {

@@ -36,7 +36,7 @@ const verifyTurnstile = async (token: string): Promise<boolean> => {
 
 export const register = async (req: Request, res: Response) => {
     try {
-        const { name, email, password, turnstileToken, inviteToken } = req.body;
+        const { name, email, password, turnstileToken, inviteToken, officeInviteToken } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({ message: 'Campos obrigatórios ausentes' });
@@ -67,7 +67,7 @@ export const register = async (req: Request, res: Response) => {
         });
 
         // Fire and forget email notification
-        sendVerificationEmail(user.email, verificationToken, user.name, inviteToken).catch(console.error);
+        sendVerificationEmail(user.email, verificationToken, user.name, inviteToken, officeInviteToken).catch(console.error);
 
         res.status(201).json({
             message: 'Usuário registrado com sucesso. Verifique seu e-mail para validar a conta.',

@@ -3,21 +3,20 @@
 import React, { useEffect, useState } from 'react';
 import { 
   CreditCard, 
-  CalendarDays, 
   AlertTriangle, 
   CheckCircle2,
   ExternalLink,
   Zap,
-  Shield,
-  Rocket,
   Download,
   AlertCircle,
   RefreshCw,
   XCircle,
   Clock,
-  ArrowRight
+  Mail,
+  Users,
+  UserMinus
 } from 'lucide-react';
-import { SubscriptionData, PlanData } from './types';
+import { OfficeWorkspaceInvite, OfficeWorkspaceMember, PlanData, SubscriptionData } from './types';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Nav } from '@/components/Nav';
@@ -107,6 +106,7 @@ export default function SubscriptionPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [billingInterval, setBillingInterval] = useState<'monthly' | 'yearly'>('monthly');
   const [creating, setCreating] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
 
   const { data: session } = useSession();
   const { access, loading: accessLoading } = useAccessGate();
@@ -165,6 +165,12 @@ export default function SubscriptionPage() {
       }
     };
 
+  const refreshSubscriptionData = async () => {
+    const token = session?.user?.token || localStorage.getItem('token');
+    if (!token) return;
+    await fetchData(token);
+  };
+
   const handlePortalRedirect = async () => {
     setActionLoading('portal');
     try {
@@ -217,6 +223,67 @@ export default function SubscriptionPage() {
     }
   };
 
+  const handleCreateOfficeInvite = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const email = inviteEmail.trim();
+
+    if (!email) {
+      toast.error('Informe o e-mail do convidado.');
+      return;
+    }
+
+    setActionLoading('office_invite');
+    try {
+      const token = session?.user?.token || localStorage.getItem('token');
+      await api.post('/api/billing/subscription/invites', { email }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setInviteEmail('');
+      toast.success('Convite enviado com sucesso.');
+      await refreshSubscriptionData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Nao foi possivel enviar o convite.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRemoveOfficeMember = async (member: OfficeWorkspaceMember) => {
+    if (!confirm(`Remover ${member.user.name} desta assinatura?`)) return;
+
+    setActionLoading(`remove_member_${member.id}`);
+    try {
+      const token = session?.user?.token || localStorage.getItem('token');
+      await api.delete(`/api/billing/subscription/members/${member.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Membro removido e vaga liberada.');
+      await refreshSubscriptionData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Nao foi possivel remover o membro.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRevokeOfficeInvite = async (invite: OfficeWorkspaceInvite) => {
+    if (!confirm(`Revogar o convite enviado para ${invite.email}?`)) return;
+
+    setActionLoading(`revoke_invite_${invite.id}`);
+    try {
+      const token = session?.user?.token || localStorage.getItem('token');
+      await api.delete(`/api/billing/subscription/invites/${invite.id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      toast.success('Convite revogado.');
+      await refreshSubscriptionData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Nao foi possivel revogar o convite.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleCheckoutRedirect = async (planId: string) => {
     setActionLoading('checkout_' + planId);
     try {
@@ -255,8 +322,9 @@ export default function SubscriptionPage() {
   if (!data) return null;
 
   const status = getStatusConfig(data.subscriptionStatus);
-  console.log(data)
   const StatusIcon = status.icon;
+  const officeWorkspace = data.officeWorkspace;
+  const officeSeatAccess = data.officeSeatAccess;
 
   return (
     <div className={styles.root}>
@@ -399,6 +467,167 @@ export default function SubscriptionPage() {
             </div>
           </section>
         </div>
+
+        {officeSeatAccess && !officeWorkspace && (
+          <section className={styles.card} style={{ marginTop: '1.5rem' }}>
+            <div className={styles.cardTitle}>
+              <Users size={22} />
+              Minha Licenca OFFICE
+            </div>
+            <p style={{ color: 'var(--zinc-300)', marginBottom: '1rem' }}>
+              Sua conta esta vinculada a assinatura OFFICE de <strong>{officeSeatAccess.owner.name}</strong>.
+            </p>
+            <div className={styles.detailsGrid}>
+              <div className={styles.detailItem}>
+                <span>Assinatura dona</span>
+                <strong>{officeSeatAccess.owner.email}</strong>
+              </div>
+              <div className={styles.detailItem}>
+                <span>Uso da equipe</span>
+                <strong>{officeSeatAccess.usedSeats} de {officeSeatAccess.totalSeats} licencas ocupadas</strong>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {officeWorkspace && (
+          <section className={styles.card} style={{ marginTop: '1.5rem' }}>
+            <div className={styles.cardTitle}>
+              <Users size={22} />
+              Gestao de Licencas OFFICE
+            </div>
+
+            <div className={styles.detailsGrid}>
+              <div className={styles.detailItem}>
+                <span>Total de licencas</span>
+                <strong>{officeWorkspace.totalSeats}</strong>
+              </div>
+              <div className={styles.detailItem}>
+                <span>Licencas usadas</span>
+                <strong>{officeWorkspace.usedSeats}</strong>
+              </div>
+              <div className={styles.detailItem}>
+                <span>Licencas disponiveis</span>
+                <strong>{officeWorkspace.availableSeats}</strong>
+              </div>
+              <div className={styles.detailItem}>
+                <span>Regra do plano</span>
+                <strong>O comprador ocupa 1 vaga automaticamente</strong>
+              </div>
+            </div>
+
+            <form onSubmit={handleCreateOfficeInvite} style={{ marginTop: '1.5rem' }}>
+              <div className={styles.cardTitle} style={{ marginBottom: '0.75rem' }}>
+                <Mail size={18} />
+                Convidar por e-mail
+              </div>
+              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <input
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(event) => setInviteEmail(event.target.value)}
+                  placeholder="nome@empresa.com"
+                  style={{
+                    flex: '1 1 260px',
+                    padding: '0.95rem 1rem',
+                    borderRadius: '0.9rem',
+                    border: '1px solid rgba(255,255,255,0.12)',
+                    background: 'rgba(255,255,255,0.04)',
+                    color: 'white'
+                  }}
+                />
+                <button
+                  type="submit"
+                  className={styles.btnPrimary}
+                  disabled={actionLoading === 'office_invite' || officeWorkspace.availableSeats <= 0}
+                >
+                  {actionLoading === 'office_invite' ? <RefreshCw className="animate-spin" /> : <Mail size={18} />}
+                  Enviar convite
+                </button>
+              </div>
+            </form>
+
+            <div style={{ marginTop: '2rem' }}>
+              <div className={styles.cardTitle} style={{ marginBottom: '0.75rem' }}>
+                <Users size={18} />
+                Membros ativos
+              </div>
+              <div style={{ display: 'grid', gap: '0.75rem' }}>
+                {officeWorkspace.members.map((member) => (
+                  <div key={member.id} style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: '1rem',
+                    alignItems: 'center',
+                    padding: '1rem',
+                    borderRadius: '1rem',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.08)'
+                  }}>
+                    <div>
+                      <strong>{member.user.name}</strong>
+                      <div style={{ color: 'var(--zinc-400)', fontSize: '0.95rem' }}>{member.user.email}</div>
+                      <div style={{ color: 'var(--zinc-500)', fontSize: '0.85rem' }}>
+                        {member.seatType === 'OWNER' ? 'Proprietario da assinatura' : 'Membro convidado'}
+                      </div>
+                    </div>
+                    {member.seatType === 'MEMBER' && (
+                      <button
+                        className={styles.btnDanger}
+                        onClick={() => handleRemoveOfficeMember(member)}
+                        disabled={actionLoading === `remove_member_${member.id}`}
+                      >
+                        {actionLoading === `remove_member_${member.id}` ? <RefreshCw className="animate-spin" /> : <UserMinus size={16} />}
+                        Remover
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ marginTop: '2rem' }}>
+              <div className={styles.cardTitle} style={{ marginBottom: '0.75rem' }}>
+                <Mail size={18} />
+                Convites enviados
+              </div>
+              <div style={{ display: 'grid', gap: '0.75rem' }}>
+                {officeWorkspace.invites.length === 0 && (
+                  <p style={{ color: 'var(--zinc-400)' }}>Nenhum convite enviado ainda.</p>
+                )}
+                {officeWorkspace.invites.map((invite) => (
+                  <div key={invite.id} style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: '1rem',
+                    alignItems: 'center',
+                    padding: '1rem',
+                    borderRadius: '1rem',
+                    background: 'rgba(255,255,255,0.04)',
+                    border: '1px solid rgba(255,255,255,0.08)'
+                  }}>
+                    <div>
+                      <strong>{invite.email}</strong>
+                      <div style={{ color: 'var(--zinc-400)', fontSize: '0.9rem' }}>
+                        Status: {invite.status} • Expira em {formatDate(invite.expiresAt)}
+                      </div>
+                    </div>
+                    {invite.status === 'PENDING' && (
+                      <button
+                        className={styles.btnSecondary}
+                        onClick={() => handleRevokeOfficeInvite(invite)}
+                        disabled={actionLoading === `revoke_invite_${invite.id}`}
+                      >
+                        {actionLoading === `revoke_invite_${invite.id}` ? <RefreshCw className="animate-spin" /> : <XCircle size={16} />}
+                        Revogar
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
 
       </main>
