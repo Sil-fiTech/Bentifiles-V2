@@ -1,4 +1,5 @@
 import { User } from '@prisma/client';
+import { computeSystemAccess } from './accessService';
 
 type BillingEntitlementOverrides = {
   canCreateProject?: boolean;
@@ -31,7 +32,7 @@ export const getBillingEntitlements = (
   overrides: BillingEntitlementOverrides = {}
 ) => {
   return {
-    hasSystemAccess: user.hasSystemAccess,
+    hasSystemAccess: computeSystemAccess(user) || Boolean(overrides.officeSeatAccess),
     canCreateProject: overrides.canCreateProject ?? canCreateProject(user),
     canManageBilling: true,
     subscriptionStatus: user.subscriptionStatus,

@@ -1,14 +1,29 @@
 import nodemailer from 'nodemailer';
 
-const createTransporter = () => nodemailer.createTransport({
+let transporterPromise: Promise<nodemailer.Transporter> | null = null;
+
+const createTransporter = async () => {
+    if (!transporterPromise) {
+        const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.ethereal.email',
     port: Number(process.env.SMTP_PORT) || 465,
-    secure: true,
+    secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : true,
     auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
     },
-});
+        });
+
+        transporterPromise = transporter.verify()
+            .then(() => transporter)
+            .catch((error) => {
+                transporterPromise = null;
+                throw error;
+            });
+    }
+
+    return transporterPromise;
+};
 
 const getFrontendUrl = () => {
     let frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
@@ -24,7 +39,7 @@ const sendEmail = async (params: {
     subject: string;
     html: string;
 }) => {
-    const transporter = createTransporter();
+    const transporter = await createTransporter();
 
     await transporter.sendMail({
         from: `"BentiFiles" <${process.env.SMTP_USER || 'noreply@bentifiles.com'}>`,
@@ -138,7 +153,7 @@ export const sendProjectInviteEmail = async (params: {
             html,
         });
 
-        console.log(`Email de convite enviado para ${params.email}`);
+        console.log(`[Email] Convite de projeto enviado para ${params.email}`);
     } catch (error) {
         console.error('Erro ao enviar email de convite:', error);
         throw new Error('Falha no envio de e-mail de convite');
@@ -155,6 +170,7 @@ export const sendVerificationEmail = async (
     try {
         const frontendUrl = getFrontendUrl();
         const verifyUrl = buildVerificationUrl(token, inviteToken, officeInviteToken);
+        const safeName = escapeHtml(name);
 
         const html = `
 <!DOCTYPE html>
@@ -177,7 +193,7 @@ export const sendVerificationEmail = async (
                         <td style="padding: 40px 40px 30px 40px;">
                             <h2 style="color: #1a1c1c; margin: 0 0 20px 0; font-size: 22px; font-weight: 700;">Confirme seu E-mail</h2>
                             <p style="margin: 0 0 16px 0; color: #3f3f46; font-size: 16px; line-height: 1.6;">
-                                Olá, <strong style="color: #18181b;">${name}</strong>!
+                                Olá, <strong style="color: #18181b;">${safeName}</strong>!
                             </p>
                             <p style="margin: 0 0 32px 0; color: #52525b; font-size: 16px; line-height: 1.6;">
                                 Ficamos felizes em ter você conosco! Para começar a usar a plataforma e liberar seu acesso, precisamos apenas que você confirme seu e-mail clicando no botão abaixo:
@@ -227,7 +243,7 @@ export const sendVerificationEmail = async (
             html,
         });
 
-        console.log(`Email de verificacao enviado para ${email}`);
+        console.log(`[Email] Verificacao enviada para ${email}`);
     } catch (error) {
         console.error('Erro ao enviar email de verificacao:', error);
         throw new Error('Falha no envio de e-mail');
@@ -316,7 +332,7 @@ export const sendPasswordResetEmail = async (
             html,
         });
 
-        console.log(`Email de recuperacao de senha enviado para ${email}`);
+        console.log(`[Email] Recuperacao de senha enviada para ${email}`);
     } catch (error) {
         console.error('Erro ao enviar email de recuperacao de senha:', error);
         throw new Error('Falha no envio de e-mail de recuperacao de senha');
@@ -415,6 +431,7 @@ export const sendEndingReminderEmail = async (params: {
     try {
         const frontendUrl = getFrontendUrl();
         const billingUrl = new URL('/subscription', frontendUrl).toString();
+        const safeName = escapeHtml(params.name);
         const periodLabel = params.type === 'trial' ? 'seu teste gratuito' : 'sua assinatura';
         const actionLabel = params.type === 'trial' ? 'Escolher um plano' : 'Gerenciar assinatura';
         const title = params.daysRemaining === 1
@@ -447,7 +464,7 @@ export const sendEndingReminderEmail = async (params: {
                         <td style="padding: 40px 40px 30px 40px;">
                             <h2 style="color: #1a1c1c; margin: 0 0 20px 0; font-size: 22px; font-weight: 700;">Seu acesso esta perto do fim</h2>
                             <p style="margin: 0 0 16px 0; color: #3f3f46; font-size: 16px; line-height: 1.6;">
-                                Ola, <strong style="color: #18181b;">${params.name}</strong>!
+                                Ola, <strong style="color: #18181b;">${safeName}</strong>!
                             </p>
                             <p style="margin: 0 0 16px 0; color: #52525b; font-size: 16px; line-height: 1.6;">
                                 Este e-mail e um lembrete de que ${periodLabel} termina em <strong>${params.daysRemaining} ${params.daysRemaining === 1 ? 'dia' : 'dias'}</strong>.

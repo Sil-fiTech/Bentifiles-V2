@@ -1,3 +1,4 @@
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import express from 'express';
@@ -32,6 +33,7 @@ app.use(cors({
 }));
 
 app.set('trust proxy', 1);
+app.use(cookieParser());
 app.use(attachRequestContext);
 app.use(logHttpRequests);
 

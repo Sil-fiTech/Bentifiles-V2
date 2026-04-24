@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import prisma from '../prisma';
 import { generateVerificationToken } from '../utils/cryptoUtil';
+import { setAuthCookie } from '../utils/authCookie';
 import { sendVerificationEmail } from '../services/emailService';
 import { acceptProjectInviteForUser } from './membershipController';
 import { acceptOfficeInviteForUser } from '../services/officeSubscriptionService';
@@ -98,6 +99,8 @@ export const verifyEmail = async (req: Request, res: Response) => {
             expiresIn: '24h',
         });
 
+        setAuthCookie(res, jwtToken);
+
         res.status(200).json({
             message: 'E-mail verificado com sucesso!',
             token: jwtToken,
@@ -117,7 +120,8 @@ export const resendVerification = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'E-mail obrigatorio.' });
         }
 
-        const user = await prisma.user.findUnique({ where: { email } });
+        const normalizedEmail = String(email).trim().toLowerCase();
+        const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
 
         if (user && !user.emailVerified) {
             const verificationToken = generateVerificationToken();

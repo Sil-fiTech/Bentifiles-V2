@@ -13,7 +13,9 @@ export interface AuthRequest extends Request {
 
 export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
-    const token = authHeader && authHeader.split(' ')[1];
+    const bearerToken = authHeader && authHeader.split(' ')[1];
+    const cookieToken = req.cookies?.token;
+    const token = bearerToken || cookieToken;
 
     if (!token) {
         return res.status(401).json({ message: 'Token nao fornecido' });
@@ -27,7 +29,7 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
         return res.status(500).json({ message: 'Erro interno do servidor (configuracao de seguranca ausente)' });
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err: jwt.VerifyErrors | null, decoded: string | jwt.JwtPayload | undefined) => {
         if (err) {
             logInfo('Token verification failed', {
                 requestId: req.requestId,

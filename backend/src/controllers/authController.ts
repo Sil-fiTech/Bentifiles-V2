@@ -3,8 +3,10 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../prisma';
 import { notifyErrorEvent, notifySignupCreated } from '../services/discordAlertService';
+import { computeSystemAccess } from '../services/accessService';
 import { generateVerificationToken } from '../utils/cryptoUtil';
 import { logError } from '../utils/logger';
+import { clearAuthCookie, setAuthCookie } from '../utils/authCookie';
 import { sendPasswordResetEmail, sendVerificationEmail } from '../services/emailService';
 
 const PASSWORD_MIN_LENGTH = 8;
@@ -162,6 +164,8 @@ export const login = async (req: Request, res: Response) => {
             expiresIn: '24h',
         });
 
+        setAuthCookie(res, token);
+
         res.status(200).json({
             message: 'Login realizado com sucesso',
             token,
@@ -169,7 +173,7 @@ export const login = async (req: Request, res: Response) => {
                 id: user.id,
                 name: user.name,
                 email: user.email,
-                hasSystemAccess: user.hasSystemAccess
+                hasSystemAccess: computeSystemAccess(user)
             },
         });
     } catch (error) {
@@ -228,6 +232,8 @@ export const googleLogin = async (req: Request, res: Response) => {
             expiresIn: '24h',
         });
 
+        setAuthCookie(res, token);
+
         res.status(200).json({
             message: 'Login com Google realizado com sucesso',
             token,
@@ -236,7 +242,7 @@ export const googleLogin = async (req: Request, res: Response) => {
                 name: user.name,
                 email: user.email,
                 image: user.image,
-                hasSystemAccess: user.hasSystemAccess
+                hasSystemAccess: computeSystemAccess(user)
             },
         });
     } catch (error) {
@@ -279,6 +285,8 @@ export const verifyEmail = async (req: Request, res: Response) => {
         const jwtToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'fallback-secret', {
             expiresIn: '24h',
         });
+
+        setAuthCookie(res, jwtToken);
 
         res.status(200).json({
             message: 'E-mail verificado com sucesso!',
@@ -407,10 +415,6 @@ export const resetPassword = async (req: Request, res: Response) => {
 };
 
 export const logout = async (req: Request, res: Response) => {
-    res.clearCookie('token', {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
-    });
+    clearAuthCookie(res);
     res.status(200).json({ message: 'Logout realizado com sucesso' });
 };

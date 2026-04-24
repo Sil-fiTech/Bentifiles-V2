@@ -9,7 +9,7 @@
     "build": "tsc",
     "worker:subscription-reminders": "node dist/workers/subscriptionReminderWorker.js",
     "worker:subscription-reminders:dev": "ts-node src/workers/subscriptionReminderWorker.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm.cmd run build && node tests/index.test.cjs"
   },
   "keywords": [],
   "author": "",
