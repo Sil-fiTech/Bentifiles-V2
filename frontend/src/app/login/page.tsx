@@ -85,10 +85,9 @@ function LoginContent() {
     }
 
     if (status !== 'loading') {
-      const localToken = localStorage.getItem('token');
-      if (localToken) {
-        router.push('/dashboard');
-      }
+      void api.get('/api/billing/access-status')
+        .then(() => router.push('/dashboard'))
+        .catch(() => undefined);
     }
   }, [status, router, session]);
 
@@ -129,7 +128,6 @@ function LoginContent() {
     try {
       if (isLogin) {
         const res = await api.post('/api/users/login', { email, password, turnstileToken });
-        localStorage.setItem('token', res.data.token);
         toast.success(res.data.message);
         router.push('/dashboard');
         return;

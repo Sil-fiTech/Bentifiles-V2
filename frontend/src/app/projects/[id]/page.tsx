@@ -1,6 +1,7 @@
 'use client';
 
 import api from '@/lib/api';
+import { getAuthHeaders, performLogout } from '@/lib/authClient';
 import { useState, useEffect, type FormEvent } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
@@ -81,9 +82,8 @@ export default function ProjectPage() {
         // Only fetch data if we are authenticated
         if (accessLoading || !access?.authenticated) return;
 
-        const token = access.token;
-        if (token && id) {
-            fetchData(token);
+        if (id) {
+            fetchData(access.token);
         }
     }, [id, accessLoading, access]);
 
@@ -101,11 +101,14 @@ export default function ProjectPage() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [openDownloadMenu]);
 
-    const fetchData = async (token: string) => {
+    const fetchData = async (token?: string | null) => {
         try {
             setLoading(true);
-            const headers = { Authorization: `Bearer ${token}` };
-            const response = await api.get(`/api/projects/${id}/details`, { headers });
+            const headers = getAuthHeaders(token);
+            const [response, profileResponse] = await Promise.all([
+                api.get(`/api/projects/${id}/details`, { headers }),
+                api.get('/api/users/me', { headers }).catch(() => ({ data: null })),
+            ]);
             const { project, files, members, requiredDocuments, clientDocuments, currentUserPermissions } = response.data;
             setProject(project);
             setFiles(files);
@@ -114,10 +117,18 @@ export default function ProjectPage() {
             setClientDocs(clientDocuments);
             setCurrentUserPermissions(currentUserPermissions);
 
-            try {
-                const payload = JSON.parse(atob((token || '').split('.')[1]));
-                setCurrentUser(payload);
-            } catch (e) { }
+            if (profileResponse.data?.id) {
+                setCurrentUser({
+                    userId: profileResponse.data.id,
+                    name: profileResponse.data.name,
+                    email: profileResponse.data.email,
+                });
+            } else {
+                try {
+                    const payload = JSON.parse(atob((token || '').split('.')[1]));
+                    setCurrentUser(payload);
+                } catch (e) { }
+            }
         } catch (error) {
             console.log(error);
             toast.error('Falha ao carregar projeto');
@@ -130,7 +141,7 @@ export default function ProjectPage() {
     const hasPermission = (permission: string) => currentUserPermissions.includes(permission);
     const isAdmin = currentUserPermissions.includes('PROJECT_EDIT');
     const toggleUserExpand = (userId: string) => setExpandedUsers(prev => ({ ...prev, [userId]: !prev[userId] }));
-    const getAuthToken = () => session?.user?.token || localStorage.getItem('token');
+    const getAuthToken = () => session?.user?.token || access?.token;
 
     const buildInviteLink = (invite: ProjectInvite | null) => {
         if (!invite) return '';
@@ -141,7 +152,7 @@ export default function ProjectPage() {
         try {
             const token = getAuthToken();
             const res = await api.get(`/api/projects/${id}/invites`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: getAuthHeaders(token)
             });
             setInvites(res.data.invites || []);
         } catch {
@@ -152,7 +163,7 @@ export default function ProjectPage() {
     const createInvite = async () => {
         const token = getAuthToken();
         const res = await api.post(`/api/projects/${id}/invites`, {}, {
-            headers: { Authorization: `Bearer ${token}` }
+            headers: getAuthHeaders(token)
         });
         const invite = res.data.invite as ProjectInvite;
         setActiveInvite(invite);
@@ -198,7 +209,7 @@ export default function ProjectPage() {
             const res = await api.post(`/api/projects/${id}/invites/${activeInvite.id}/email`, {
                 email: inviteEmail.trim()
             }, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: getAuthHeaders(token)
             });
             const updatedInvite = res.data.invite as ProjectInvite;
             setActiveInvite(updatedInvite);
@@ -240,9 +251,9 @@ export default function ProjectPage() {
         if (project?.status === 'ARCHIVED') { toast.error('Projeto arquivado.'); setIsEditingName(false); return; }
         if (!newName.trim() || newName === project?.name) { setIsEditingName(false); return; }
         try {
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = getAuthToken();
             const res = await api.patch(`/api/projects/${id}`, { name: newName }, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: getAuthHeaders(token)
             });
             toast.success('Projeto renomeado com sucesso!');
             setProject((prev: any) => ({ ...prev, name: res.data.name || newName }));
@@ -261,7 +272,7 @@ export default function ProjectPage() {
         setUploadProgress(prev => ({ ...prev, [uploadKey]: 0 }));
 
         const file = acceptedFiles[0];
-        const token = session?.user?.token || localStorage.getItem('token');
+        const token = getAuthToken();
         const toastId = toast.loading(`Enviando ${file.name}...`);
 
         try {
@@ -270,7 +281,7 @@ export default function ProjectPage() {
             formData.append('projectId', id as string);
 
             const uploadRes = await api.post('/api/files/upload', formData, {
-                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+                headers: { ...getAuthHeaders(token), 'Content-Type': 'multipart/form-data' },
                 onUploadProgress: (progressEvent) => {
                     const pct = Math.round((progressEvent.loaded * 100) / (progressEvent.total || file.size));
                     setUploadProgress(prev => ({ ...prev, [uploadKey]: pct }));
@@ -286,7 +297,7 @@ export default function ProjectPage() {
                 ownerUserId: ownerId,
                 fileId: dbFile.id,
                 status: docStatus
-            }, { headers: { Authorization: `Bearer ${token}` } });
+            }, { headers: getAuthHeaders(token) });
 
             setClientDocs(prev => [clientDocRes.data, ...prev.filter(d => !(d.documentTypeId === docTypeId && d.ownerUserId === ownerId))]);
             toast.success('Documento enviado com sucesso!', { id: toastId });
@@ -300,9 +311,9 @@ export default function ProjectPage() {
 
     const handleViewFile = async (url: string) => {
         try {
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = getAuthToken();
             toast.loading('Iniciando visualização', { id: 'loading-file' });
-            const response = await api.get(`/api/files/base64`, { params: { url }, headers: { Authorization: `Bearer ${token}` } });
+            const response = await api.get(`/api/files/base64`, { params: { url }, headers: getAuthHeaders(token) });
             toast.dismiss('loading-file');
             const { base64, mimeType } = response.data;
             const byteCharacters = atob(base64);
@@ -315,10 +326,10 @@ export default function ProjectPage() {
 
     const updateDocStatus = async (docId: string, statusText: string, reason?: string) => {
         try {
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = getAuthToken();
             const res = await api.patch(`/api/documents/${docId}/status`, {
                 status: statusText, rejectionReason: reason, projectId: id
-            }, { headers: { Authorization: `Bearer ${token}` } });
+            }, { headers: getAuthHeaders(token) });
             setClientDocs(prev => prev.map(d => d.id === docId ? res.data : d));
             toast.success('Status atualizado');
         } catch { toast.error('Falha ao atualizar'); }
@@ -329,10 +340,10 @@ export default function ProjectPage() {
             const userSlug = doc.ownerUser.name.trim().replace(/\s+/g, '_');
             const typeSlug = doc.documentType.name.trim().replace(/\s+/g, '_');
             const fallbackFilenameBase = `${userSlug}_${typeSlug}`;
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = getAuthToken();
             const response = await api.get(`/api/files/base64`, {
                 params: { url: doc.file.url, format },
-                headers: { Authorization: `Bearer ${token}` }
+                headers: getAuthHeaders(token)
             });
             const { base64, mimeType, filename } = response.data;
             const fallbackExtension = format === 'pdf' ? '.pdf' : getFilenameExtension(doc.file.originalName);
@@ -360,8 +371,8 @@ export default function ProjectPage() {
 
         const toastId = toast.loading('Preparando arquivos para download...');
         try {
-            const token = session?.user?.token || localStorage.getItem('token');
-            const headers = { Authorization: `Bearer ${token}` };
+            const token = getAuthToken();
+            const headers = getAuthHeaders(token);
 
             // Fetch all project files in a single request
             const response = await api.get(`/api/files/project/${id}/base64`, { params: { format }, headers });
@@ -458,12 +469,7 @@ export default function ProjectPage() {
                     projectName={project?.name}
                     userInitials={userInitials}
                     onLogout={async () => {
-                        localStorage.removeItem('token');
-                        router.push('/');
-                        if (session) {
-                            const { signOut } = await import('next-auth/react');
-                            await signOut({ redirect: false });
-                        }
+                        await performLogout();
                         router.push('/');
                     }}
                 />

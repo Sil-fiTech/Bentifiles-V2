@@ -1,6 +1,7 @@
 'use client';
 
 import api from '@/lib/api';
+import { getAuthHeaders, performLogout } from '@/lib/authClient';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
@@ -56,21 +57,20 @@ export default function DocumentTypesDashboard() {
 
     useEffect(() => {
         if (status === 'loading') return;
-        const localToken = localStorage.getItem('token');
-        const activeToken = session?.user?.token || localToken;
+        const activeToken = session?.user?.token;
         if (!activeToken) {
-            router.push('/');
+            fetchData();
             return;
         }
         fetchData(activeToken);
     }, [status, session]);
 
-    const fetchData = async (token: string) => {
+    const fetchData = async (token?: string | null) => {
         try {
             setLoading(true);
             const [typesRes, templatesRes] = await Promise.all([
-                api.get('/api/documents/types', { headers: { Authorization: `Bearer ${token}` } }),
-                api.get('/api/templates', { headers: { Authorization: `Bearer ${token}` } })
+                api.get('/api/documents/types', { headers: getAuthHeaders(token) }),
+                api.get('/api/templates', { headers: getAuthHeaders(token) })
             ]);
             setDocumentTypes(typesRes.data);
             setTemplates(templatesRes.data);
@@ -86,10 +86,10 @@ export default function DocumentTypesDashboard() {
         if (!newName.trim()) return;
         try {
             setIsCreatingType(true);
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = session?.user?.token;
             const res = await api.post('/api/documents/types',
                 { name: newName, description: newDescription },
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers: getAuthHeaders(token) }
             );
             setDocumentTypes(prev => [res.data, ...prev]);
             setNewName('');
@@ -105,9 +105,9 @@ export default function DocumentTypesDashboard() {
     const handleDeleteType = async (id: string) => {
         if (!confirm('Tem certeza? Isso pode afetar os projetos configurados.')) return;
         try {
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = session?.user?.token;
             await api.delete(`/api/documents/types/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: getAuthHeaders(token)
             });
             setDocumentTypes(prev => prev.filter(t => t.id !== id));
             toast.success('Removido com sucesso');
@@ -130,10 +130,10 @@ export default function DocumentTypesDashboard() {
 
     const saveEditType = async (id: string) => {
         try {
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = session?.user?.token;
             const res = await api.put(`/api/documents/types/${id}`,
                 { name: editName, description: editDescription },
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers: getAuthHeaders(token) }
             );
             setDocumentTypes(prev => prev.map(t => t.id === id ? res.data : t));
             cancelEditType();
@@ -170,7 +170,7 @@ export default function DocumentTypesDashboard() {
         }
         try {
             setIsCreatingTemplate(true);
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = session?.user?.token;
 
             const payload = {
                 name: newTemplateName,
@@ -179,7 +179,7 @@ export default function DocumentTypesDashboard() {
             };
 
             const res = await api.post('/api/templates', payload, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: getAuthHeaders(token)
             });
 
             // Res payload expects to append to templates with manual count or re-fetch
@@ -203,9 +203,9 @@ export default function DocumentTypesDashboard() {
     const handleDeleteTemplate = async (id: string) => {
         if (!confirm('Tem certeza? Projetos que usam este template podem continuar funcionando, mas ele será removido desta lista.')) return;
         try {
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = session?.user?.token;
             await api.delete(`/api/templates/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: getAuthHeaders(token)
             });
             setTemplates(prev => prev.filter(t => t.id !== id));
             toast.success('Removido com sucesso');
@@ -216,9 +216,9 @@ export default function DocumentTypesDashboard() {
 
     const handleDuplicateTemplate = async (id: string) => {
         try {
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = session?.user?.token;
             const res = await api.post(`/api/templates/${id}/duplicate`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: getAuthHeaders(token)
             });
 
             const newTpl: Template = {
@@ -234,10 +234,7 @@ export default function DocumentTypesDashboard() {
     };
 
     const handleLogout = async () => {
-        localStorage.removeItem('token');
-        if (session) {
-            await signOut({ redirect: false });
-        }
+        await performLogout();
         router.push('/');
     };
 

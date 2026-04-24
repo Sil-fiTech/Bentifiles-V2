@@ -1,6 +1,7 @@
 'use client';
 
 import api from '@/lib/api';
+import { getAuthHeaders, performLogout } from '@/lib/authClient';
 import axios from 'axios';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
@@ -73,21 +74,19 @@ export default function Dashboard() {
         // Only fetch data if we are authenticated
         if (accessLoading || !access?.authenticated) return;
 
-        const token = access.token;
-        if (token) {
-            fetchData(token);
-        }
+        fetchData(access.token);
     }, [accessLoading, access?.authenticated, access?.token]);
 
-    const fetchData = async (token: string) => {
+    const fetchData = async (token?: string | null) => {
         try {
             setLoading(true);
+            const headers = getAuthHeaders(token);
 
             const pendingInvite = localStorage.getItem('pendingInvite');
             if (pendingInvite) {
                 try {
                     const joinRes = await api.post('/api/projects/join', { inviteToken: pendingInvite }, {
-                        headers: { Authorization: `Bearer ${token}` }
+                        headers
                     });
                     localStorage.removeItem('pendingInvite');
                     toast.success(joinRes.data.message);
@@ -102,7 +101,7 @@ export default function Dashboard() {
             if (pendingOfficeInvite) {
                 try {
                     const officeInviteRes = await api.post('/api/billing/subscription/invites/accept', { token: pendingOfficeInvite }, {
-                        headers: { Authorization: `Bearer ${token}` }
+                        headers
                     });
                     localStorage.removeItem('pendingOfficeInvite');
                     toast.success(officeInviteRes.data.message || 'Licenca OFFICE ativada com sucesso');
@@ -113,11 +112,11 @@ export default function Dashboard() {
             }
 
             const [projectsRes, filesRes, statsRes, pendingFilesRes, profileRes] = await Promise.all([
-                api.get('/api/projects', { headers: { Authorization: `Bearer ${token}` } }),
-                api.get('/api/files', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
-                api.get('/api/files/stats', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
-                api.get('/api/files/pending', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] })),
-                api.get('/api/users/me', { headers: { Authorization: `Bearer ${token}` } }).catch(() => ({ data: [] }))
+                api.get('/api/projects', { headers }),
+                api.get('/api/files', { headers }).catch(() => ({ data: [] })),
+                api.get('/api/files/stats', { headers }).catch(() => ({ data: [] })),
+                api.get('/api/files/pending', { headers }).catch(() => ({ data: [] })),
+                api.get('/api/users/me', { headers }).catch(() => ({ data: [] }))
             ]);
 
             setProfile(profileRes.data);
@@ -137,8 +136,7 @@ export default function Dashboard() {
     };
 
     const handleLogout = async () => {
-        localStorage.removeItem('token');
-        if (session) await signOut({ redirect: false });
+        await performLogout();
         router.push('/');
     };
 
@@ -152,9 +150,9 @@ export default function Dashboard() {
 
         try {
             setCreating(true);
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = session?.user?.token || access?.token;
             const res = await api.post('/api/projects', { name: 'Novo Projeto' }, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: getAuthHeaders(token)
             });
             setProjects(prev => [...prev, res.data.project]);
             toast.success('Projeto criado');

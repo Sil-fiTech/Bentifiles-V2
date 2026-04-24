@@ -63,12 +63,11 @@ export function Nav({
 
     useEffect(() => {
         const fetchProfile = async () => {
-            const localToken = localStorage.getItem('token');
-            const activeToken = session?.user?.token || localToken;
-            if (!activeToken) return;
-
             try {
-                const profileRes = await api.get('/api/users/me', { headers: { Authorization: `Bearer ${activeToken}` } });
+                const activeToken = session?.user?.token;
+                const profileRes = await api.get('/api/users/me', {
+                    headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : undefined,
+                });
                 if (profileRes.data?.name) {
                     setNavUserName(profileRes.data.name);
                 }

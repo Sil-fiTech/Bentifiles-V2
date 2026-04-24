@@ -1,7 +1,6 @@
 import NextAuth from "next-auth"
 import Google from "next-auth/providers/google"
 import type { DefaultSession } from "next-auth"
-import api from '@/lib/api';
 
 declare module "next-auth" {
     interface Session {

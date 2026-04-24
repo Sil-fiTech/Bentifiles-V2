@@ -1,7 +1,7 @@
 'use client';
 
 import api from '@/lib/api';
-import { signOut } from 'next-auth/react';
+import { performLogout } from '@/lib/authClient';
 import { toast } from 'sonner';
 
 let isInterceptorSetup = false;
@@ -21,8 +21,7 @@ if (typeof window !== 'undefined' && !isInterceptorSetup) {
                         window.sessionStorage.removeItem('session_expired_toast_shown');
                     }, 5000);
                     
-                    localStorage.removeItem('token');
-                    await signOut({ redirect: false });
+                    await performLogout();
                     window.location.href = '/';
                 }
             }

@@ -21,6 +21,7 @@ import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Nav } from '@/components/Nav';
 import api from '@/lib/api';
+import { getAuthHeaders, performLogout } from '@/lib/authClient';
 import { toast } from 'sonner';
 import styles from './page.module.scss';
 import { useAccessGate } from '@/lib/hooks/useAccessGate';
@@ -113,17 +114,16 @@ export default function SubscriptionPage() {
   const router = useRouter();
 
   const handleLogout = async () => {
-    localStorage.removeItem('token');
-    if (session) await signOut({ redirect: false });
+    await performLogout();
     router.push('/');
   };
 
   const handleCreateProject = async () => {
     try {
       setCreating(true);
-      const token = session?.user?.token || localStorage.getItem('token');
+      const token = session?.user?.token || access?.token;
       const res = await api.post('/api/projects', { name: 'Novo Projeto' }, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders(token)
       });
       toast.success('Projeto criado');
       router.push(`/projects/${res.data.project.id}`);
@@ -144,16 +144,13 @@ export default function SubscriptionPage() {
         // Only fetch data if we are authenticated
         if (accessLoading || !access?.authenticated) return;
 
-        const token = access.token;
-        if (token) {
-            fetchData(token);
-        }
+        fetchData(access.token);
     }, [accessLoading, access, session]);
 
-    const fetchData = async (token: string) => {
+    const fetchData = async (token?: string | null) => {
       try {        
         const res = await api.get('/api/billing/subscription', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: getAuthHeaders(token)
         });
         setData(res.data);
         setBillingInterval(res.data.billingInterval || 'monthly');
@@ -166,17 +163,16 @@ export default function SubscriptionPage() {
     };
 
   const refreshSubscriptionData = async () => {
-    const token = session?.user?.token || localStorage.getItem('token');
-    if (!token) return;
+    const token = session?.user?.token || access?.token;
     await fetchData(token);
   };
 
   const handlePortalRedirect = async () => {
     setActionLoading('portal');
     try {
-      const token = session?.user?.token || localStorage.getItem('token');
+      const token = session?.user?.token || access?.token;
       const res = await api.post('/api/billing/create-portal-session', {}, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders(token)
       });
       if (res.data.url) {
         window.open(res.data.url, '_blank', 'noopener,noreferrer');
@@ -193,9 +189,9 @@ export default function SubscriptionPage() {
     if (!confirm('Você realmente deseja interromper sua assinatura? Você perderá acesso aos recursos premium ao fim do ciclo.')) return;
     setActionLoading('cancel');
     try {
-      const token = session?.user?.token || localStorage.getItem('token');
+      const token = session?.user?.token || access?.token;
       await api.post('/api/billing/cancel-subscription', {}, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders(token)
       });
       toast.success('Assinatura agendada para cancelamento.');
       setData(prev => prev ? { ...prev, cancelAtPeriodEnd: true } : prev);
@@ -210,9 +206,9 @@ export default function SubscriptionPage() {
   const handleReactivateSubscription = async () => {
     setActionLoading('reactivate');
     try {
-      const token = session?.user?.token || localStorage.getItem('token');
+      const token = session?.user?.token || access?.token;
       await api.post('/api/billing/reactivate-subscription', {}, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders(token)
       });
       toast.success('Sua assinatura foi reativada com sucesso!');
       setData(prev => prev ? { ...prev, cancelAtPeriodEnd: false } : prev);
@@ -234,9 +230,9 @@ export default function SubscriptionPage() {
 
     setActionLoading('office_invite');
     try {
-      const token = session?.user?.token || localStorage.getItem('token');
+      const token = session?.user?.token || access?.token;
       await api.post('/api/billing/subscription/invites', { email }, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders(token)
       });
       setInviteEmail('');
       toast.success('Convite enviado com sucesso.');
@@ -253,9 +249,9 @@ export default function SubscriptionPage() {
 
     setActionLoading(`remove_member_${member.id}`);
     try {
-      const token = session?.user?.token || localStorage.getItem('token');
+      const token = session?.user?.token || access?.token;
       await api.delete(`/api/billing/subscription/members/${member.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders(token)
       });
       toast.success('Membro removido e vaga liberada.');
       await refreshSubscriptionData();
@@ -271,9 +267,9 @@ export default function SubscriptionPage() {
 
     setActionLoading(`revoke_invite_${invite.id}`);
     try {
-      const token = session?.user?.token || localStorage.getItem('token');
+      const token = session?.user?.token || access?.token;
       await api.delete(`/api/billing/subscription/invites/${invite.id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders(token)
       });
       toast.success('Convite revogado.');
       await refreshSubscriptionData();
@@ -287,12 +283,12 @@ export default function SubscriptionPage() {
   const handleCheckoutRedirect = async (planId: string) => {
     setActionLoading('checkout_' + planId);
     try {
-      const token = session?.user?.token || localStorage.getItem('token');
+      const token = session?.user?.token || access?.token;
       const res = await api.post('/api/billing/create-checkout-session', {
           plan: planId,
           interval: billingInterval,
       }, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders(token)
       });
       if (res.data.url) {
         window.location.href = res.data.url;
@@ -494,7 +490,7 @@ export default function SubscriptionPage() {
           <section className={`${styles.card} ${styles.sectionSpacer}`}>
             <div className={styles.cardTitle}>
               <Users size={22} />
-              Gestao de Licencas OFFICE
+              Gestão de Licencas OFFICE
             </div>
 
             <div className={styles.detailsGrid}>
