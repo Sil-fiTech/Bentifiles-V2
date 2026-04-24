@@ -250,6 +250,191 @@
   @include input-base;
 }
 
+.passwordField {
+  position: relative;
+
+  .fieldInput {
+    padding-right: 3.5rem;
+  }
+}
+
+.passwordToggle {
+  @include btn-reset;
+  position: absolute;
+  top: 50%;
+  right: $sp-3;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: $radius-full;
+  color: $zinc-500;
+  transition: $transition-base;
+
+  svg {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+
+  &:hover {
+    color: $amber-700;
+    background: rgba($amber-100, 0.9);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba($amber-500, 0.45);
+    outline-offset: 2px;
+    color: $amber-700;
+  }
+}
+
+.passwordChecklist {
+  background:
+    linear-gradient(135deg, rgba(255, 251, 235, 0.92), rgba(255, 255, 255, 0.96));
+  border: 1px solid rgba($amber-200, 0.95);
+  border-radius: $radius-xl;
+  padding: $sp-4;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 12px 30px rgba(245, 158, 11, 0.08);
+}
+
+.passwordChecklistHeader {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-1;
+  margin-bottom: $sp-3;
+}
+
+.passwordChecklistTopline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $sp-3;
+}
+
+.passwordChecklistEyebrow {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: $sp-1 $sp-2;
+  border-radius: $radius-full;
+  background: rgba($amber-500, 0.12);
+  color: $amber-800;
+  font-size: 0.625rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.passwordChecklistTitle {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: $zinc-800;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+
+.passwordChecklistStatus {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: $amber-800;
+  background: rgba($amber-500, 0.14);
+  border: 1px solid rgba($amber-400, 0.2);
+  border-radius: $radius-full;
+  padding: $sp-1_5 $sp-2;
+  white-space: nowrap;
+}
+
+.passwordProgressMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $sp-3;
+  color: $zinc-600;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.passwordProgressTrack {
+  position: relative;
+  width: 100%;
+  height: 0.7rem;
+  border-radius: $radius-full;
+  overflow: hidden;
+  background: rgba($zinc-200, 0.9);
+  box-shadow: inset 0 1px 2px rgba(161, 161, 170, 0.18);
+}
+
+.passwordProgressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(to right, #f59e0b, #facc15, #22c55e);
+  box-shadow: 0 6px 18px rgba(245, 158, 11, 0.22);
+  transition: width 0.28s ease;
+}
+
+.passwordChecklistList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: $sp-2;
+}
+
+.passwordChecklistItemOk,
+.passwordChecklistItemPending {
+  display: inline-flex;
+  align-items: center;
+  gap: $sp-2;
+  padding: $sp-2 $sp-3;
+  border-radius: $radius-full;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1;
+  transition: $transition-base;
+}
+
+.passwordChecklistItemOk {
+  color: #166534;
+  background: rgba(34, 197, 94, 0.12);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.08);
+}
+
+.passwordChecklistItemPending {
+  color: $zinc-600;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba($zinc-200, 0.95);
+}
+
+.passwordChecklistIcon {
+  min-width: 2rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.625rem;
+  font-weight: 900;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
+  letter-spacing: 0.04em;
+}
+
+.inlineLink {
+  @include btn-reset;
+  margin-top: $sp-4;
+  width: fit-content;
+  color: $amber-700;
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 // Submit button
 .submitBtn {
   @include btn-primary;
