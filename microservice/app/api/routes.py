@@ -127,9 +127,10 @@ async def convert_to_pdf(file: UploadFile = File(...)) -> FileResponse:
 
 
 @router.get("/health")
-def health_check() -> dict[str, str]:
+def health_check() -> dict[str, str | int]:
     return {
         "status": "ok",
         "service": settings.PROJECT_NAME,
-        "message": "Microservice modularized successfully.",
+        "version": settings.APP_VERSION,
+        "uptime_seconds": settings.uptime_seconds,
     }

@@ -1,0 +1,1702 @@
+openapi: 3.0.3
+info:
+  title: BentiFiles Backend API
+  version: 1.0.0
+  description: |
+    Documentacao inicial da API principal do BentiFiles V2.
+    Esta especificacao cobre os endpoints mais relevantes do backend Express.
+servers:
+  - url: http://localhost:4000
+    description: Ambiente local
+  - url: https://api.bentifiles.com
+    description: Producao
+tags:
+  - name: Health
+  - name: Auth
+  - name: Users
+  - name: Projects
+  - name: Documents
+  - name: Files
+  - name: Templates
+  - name: Billing
+  - name: Office Subscription
+  - name: Webhooks
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        error:
+          type: string
+        errors:
+          type: array
+          items:
+            type: string
+    UserSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        image:
+          type: string
+          nullable: true
+    AuthUser:
+      allOf:
+        - $ref: '#/components/schemas/UserSummary'
+        - type: object
+          properties:
+            hasSystemAccess:
+              type: boolean
+    AuthResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        token:
+          type: string
+        user:
+          $ref: '#/components/schemas/AuthUser'
+    RegisterRequest:
+      type: object
+      required: [name, email, password, turnstileToken]
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        turnstileToken:
+          type: string
+        inviteToken:
+          type: string
+          nullable: true
+        officeInviteToken:
+          type: string
+          nullable: true
+    LoginRequest:
+      type: object
+      required: [email, password, turnstileToken]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+        turnstileToken:
+          type: string
+    GoogleLoginRequest:
+      type: object
+      required: [email, name, providerId]
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        image:
+          type: string
+          nullable: true
+        providerId:
+          type: string
+    ForgotPasswordRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+    ResetPasswordRequest:
+      type: object
+      required: [token, password]
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+    ResendVerificationRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+        inviteToken:
+          type: string
+          nullable: true
+        officeInviteToken:
+          type: string
+          nullable: true
+    ProfileResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        image:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+    UpdateProfileRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+    Project:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        createdByUserId:
+          type: string
+        templateId:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [ACTIVE, ARCHIVED, DELETED]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    CreateProjectRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        templateId:
+          type: string
+          nullable: true
+    ProjectListResponse:
+      type: object
+      properties:
+        projects:
+          type: array
+          items:
+            $ref: '#/components/schemas/Project'
+    JoinProjectRequest:
+      type: object
+      required: [inviteToken]
+      properties:
+        inviteToken:
+          type: string
+    UpdateProjectRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+    PermissionsMember:
+      type: object
+      properties:
+        userId:
+          type: string
+        user:
+          $ref: '#/components/schemas/UserSummary'
+        permissions:
+          type: array
+          items:
+            type: string
+    DocumentType:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+          nullable: true
+        isDefault:
+          type: boolean
+        tenantId:
+          type: string
+          nullable: true
+    CreateDocumentTypeRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+    UpdateDocumentTypeRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+    ProjectRequiredDocument:
+      type: object
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+        documentTypeId:
+          type: string
+        required:
+          type: boolean
+        order:
+          type: integer
+        documentType:
+          $ref: '#/components/schemas/DocumentType'
+    ConfigureRequiredDocumentsRequest:
+      type: object
+      required: [documentTypeIds]
+      properties:
+        documentTypeIds:
+          type: array
+          items:
+            type: string
+    VerificationResult:
+      type: object
+      properties:
+        id:
+          type: string
+        score:
+          type: number
+        status:
+          type: string
+          enum: [APPROVED, CONDITIONAL, REJECTED]
+        blurScore:
+          type: number
+          nullable: true
+        brightness:
+          type: number
+          nullable: true
+        textDetected:
+          type: boolean
+        usefulAreaPct:
+          type: number
+          nullable: true
+        recommendation:
+          type: string
+          nullable: true
+    FileRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        filename:
+          type: string
+        originalName:
+          type: string
+        mimetype:
+          type: string
+        size:
+          type: integer
+        url:
+          type: string
+        projectId:
+          type: string
+        userId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        verificationResults:
+          type: array
+          items:
+            $ref: '#/components/schemas/VerificationResult'
+    UploadFileResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        docStatus:
+          type: string
+        analysis:
+          type: object
+          additionalProperties: true
+        file:
+          $ref: '#/components/schemas/FileRecord'
+        document:
+          $ref: '#/components/schemas/FileRecord'
+    FilesResponse:
+      type: object
+      properties:
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/FileRecord'
+    FileBase64Response:
+      type: object
+      properties:
+        base64:
+          type: string
+        mimeType:
+          type: string
+        filename:
+          type: string
+        format:
+          type: string
+          enum: [pdf, original]
+    ClientDocument:
+      type: object
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+        ownerUserId:
+          type: string
+        uploadedByUserId:
+          type: string
+        documentTypeId:
+          type: string
+        fileId:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        rejectionReason:
+          type: string
+          nullable: true
+        documentType:
+          $ref: '#/components/schemas/DocumentType'
+        file:
+          $ref: '#/components/schemas/FileRecord'
+        ownerUser:
+          $ref: '#/components/schemas/UserSummary'
+        uploadedByUser:
+          $ref: '#/components/schemas/UserSummary'
+        reviewedByUser:
+          allOf:
+            - $ref: '#/components/schemas/UserSummary'
+          nullable: true
+    CreateClientDocumentRequest:
+      type: object
+      required: [documentTypeId, ownerUserId, fileId]
+      properties:
+        projectId:
+          type: string
+        documentTypeId:
+          type: string
+        ownerUserId:
+          type: string
+        fileId:
+          type: string
+        status:
+          type: string
+          enum: [APPROVED, REJECTED]
+    UpdateClientDocumentStatusRequest:
+      type: object
+      required: [status, projectId]
+      properties:
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        rejectionReason:
+          type: string
+          nullable: true
+        projectId:
+          type: string
+    Template:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        isDefault:
+          type: boolean
+        isActive:
+          type: boolean
+    CreateTemplateRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        isDefault:
+          type: boolean
+        documentTypes:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+                nullable: true
+              isRequired:
+                type: boolean
+              order:
+                type: integer
+    ApplyTemplateRequest:
+      type: object
+      required: [templateId]
+      properties:
+        templateId:
+          type: string
+    CheckoutRequest:
+      type: object
+      required: [plan]
+      properties:
+        plan:
+          type: string
+          enum: [INDIVIDUAL, OFFICE, ENTERPRISE]
+        interval:
+          type: string
+          enum: [monthly, yearly]
+          default: monthly
+        quantity:
+          type: integer
+          default: 1
+    CheckoutResponse:
+      type: object
+      properties:
+        url:
+          type: string
+    AccessStatusResponse:
+      type: object
+      properties:
+        authenticated:
+          type: boolean
+        hasSystemAccess:
+          type: boolean
+        canCreateProject:
+          type: boolean
+        subscriptionStatus:
+          type: string
+        subscriptionPlan:
+          type: string
+    SubscriptionInvoice:
+      type: object
+      properties:
+        id:
+          type: string
+        amountPaid:
+          type: number
+        created:
+          type: string
+          format: date-time
+    OfficeWorkspace:
+      type: object
+      properties:
+        totalSeats:
+          type: integer
+        usedSeats:
+          type: integer
+        availableSeats:
+          type: integer
+        members:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              seatType:
+                type: string
+              user:
+                $ref: '#/components/schemas/UserSummary'
+        invites:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              email:
+                type: string
+              status:
+                type: string
+              expiresAt:
+                type: string
+                format: date-time
+    SubscriptionResponse:
+      type: object
+      properties:
+        planName:
+          type: string
+        amount:
+          type: number
+        billingInterval:
+          type: string
+        subscriptionStatus:
+          type: string
+        currentPeriodStart:
+          type: string
+          format: date-time
+        currentPeriodEnd:
+          type: string
+          format: date-time
+        cancelAtPeriodEnd:
+          type: boolean
+        quantity:
+          type: integer
+        paymentMethodSummary:
+          type: string
+        trialEnd:
+          type: string
+          format: date-time
+          nullable: true
+        invoices:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubscriptionInvoice'
+        officeWorkspace:
+          $ref: '#/components/schemas/OfficeWorkspace'
+        officeSeatAccess:
+          type: object
+          nullable: true
+          additionalProperties: true
+    OfficeInviteRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+    OfficeAcceptInviteRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+    ProjectInvite:
+      type: object
+      properties:
+        id:
+          type: string
+        projectId:
+          type: string
+        token:
+          type: string
+        link:
+          type: string
+        email:
+          type: string
+          nullable: true
+        expiresAt:
+          type: string
+          format: date-time
+        emailSentAt:
+          type: string
+          format: date-time
+          nullable: true
+        acceptedAt:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum: [CREATED, EMAIL_SENT, EXPIRED, ACCEPTED]
+        permissions:
+          type: array
+          items:
+            type: string
+paths:
+  /health:
+    get:
+      tags: [Health]
+      summary: Healthcheck do backend
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  message:
+                    type: string
+  /api/users/register:
+    post:
+      tags: [Auth]
+      summary: Registrar usuario
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Usuario criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Dados invalidos
+  /api/users/login:
+    post:
+      tags: [Auth]
+      summary: Login por senha
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login realizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '403':
+          description: Email nao verificado
+  /api/auth/google:
+    post:
+      tags: [Auth]
+      summary: Login ou cadastro via Google
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GoogleLoginRequest'
+      responses:
+        '200':
+          description: Login Google realizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+  /api/users/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Solicitar reset de senha
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+      responses:
+        '200':
+          description: Solicitacao processada
+  /api/users/reset-password:
+    post:
+      tags: [Auth]
+      summary: Redefinir senha
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '200':
+          description: Senha redefinida
+  /api/users/verify-email:
+    get:
+      tags: [Auth]
+      summary: Verificar email
+      parameters:
+        - in: query
+          name: token
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: invite
+          schema:
+            type: string
+        - in: query
+          name: officeInvite
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Email validado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+  /api/users/resend-verification:
+    post:
+      tags: [Auth]
+      summary: Reenviar verificacao
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResendVerificationRequest'
+      responses:
+        '200':
+          description: Reenvio processado
+  /api/users/me:
+    get:
+      tags: [Users]
+      summary: Obter perfil atual
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Perfil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+    put:
+      tags: [Users]
+      summary: Atualizar perfil atual
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Perfil atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProfileResponse'
+  /api/projects:
+    get:
+      tags: [Projects]
+      summary: Listar projetos do usuario
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de projetos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectListResponse'
+    post:
+      tags: [Projects]
+      summary: Criar projeto
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProjectRequest'
+      responses:
+        '201':
+          description: Projeto criado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  project:
+                    $ref: '#/components/schemas/Project'
+  /api/projects/join:
+    post:
+      tags: [Projects]
+      summary: Entrar em projeto por convite
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinProjectRequest'
+      responses:
+        '200':
+          description: Convite aceito
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  projectId:
+                    type: string
+  /api/projects/{id}:
+    patch:
+      tags: [Projects]
+      summary: Renomear projeto
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProjectRequest'
+      responses:
+        '200':
+          description: Projeto atualizado
+    delete:
+      tags: [Projects]
+      summary: Excluir projeto logicamente
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Projeto excluido
+  /api/projects/{id}/archive:
+    patch:
+      tags: [Projects]
+      summary: Arquivar projeto
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Projeto arquivado
+  /api/projects/{id}/unarchive:
+    patch:
+      tags: [Projects]
+      summary: Desarquivar projeto
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Projeto desarquivado
+  /api/projects/{id}/details:
+    get:
+      tags: [Projects]
+      summary: Obter detalhes consolidados do projeto
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Detalhes do projeto
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  project:
+                    $ref: '#/components/schemas/Project'
+                  files:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/FileRecord'
+                  members:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PermissionsMember'
+                  requiredDocuments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProjectRequiredDocument'
+                  clientDocuments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClientDocument'
+                  currentUserPermissions:
+                    type: array
+                    items:
+                      type: string
+  /api/projects/{id}/documents:
+    get:
+      tags: [Projects]
+      summary: Listar arquivos do projeto
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Arquivos do projeto
+  /api/projects/{id}/members:
+    get:
+      tags: [Projects]
+      summary: Listar membros do projeto
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Membros do projeto
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  members:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PermissionsMember'
+  /api/projects/{id}/members/{userId}:
+    patch:
+      tags: [Projects]
+      summary: Atualizar papel de membro
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  enum: [ADMIN, USER]
+      responses:
+        '200':
+          description: Papel atualizado
+    delete:
+      tags: [Projects]
+      summary: Remover membro do projeto
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Membro removido
+  /api/projects/{id}/invites:
+    get:
+      tags: [Projects]
+      summary: Listar convites do projeto
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Convites do projeto
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invites:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProjectInvite'
+    post:
+      tags: [Projects]
+      summary: Criar convite do projeto
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Convite criado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  invite:
+                    $ref: '#/components/schemas/ProjectInvite'
+  /api/projects/{id}/invites/{inviteId}/email:
+    post:
+      tags: [Projects]
+      summary: Enviar convite por email
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: inviteId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+      responses:
+        '200':
+          description: Convite enviado
+  /api/documents/types:
+    get:
+      tags: [Documents]
+      summary: Listar tipos de documento
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Tipos de documento
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DocumentType'
+    post:
+      tags: [Documents]
+      summary: Criar tipo de documento
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDocumentTypeRequest'
+      responses:
+        '201':
+          description: Tipo criado
+  /api/documents/types/{id}:
+    put:
+      tags: [Documents]
+      summary: Atualizar tipo de documento
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateDocumentTypeRequest'
+      responses:
+        '200':
+          description: Tipo atualizado
+    delete:
+      tags: [Documents]
+      summary: Remover tipo de documento
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Tipo removido
+  /api/projects/{id}/required-documents:
+    get:
+      tags: [Documents]
+      summary: Listar documentos obrigatorios do projeto
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Documentos obrigatorios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectRequiredDocument'
+    post:
+      tags: [Documents]
+      summary: Configurar documentos obrigatorios do projeto
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigureRequiredDocumentsRequest'
+      responses:
+        '200':
+          description: Configuracao atualizada
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectRequiredDocument'
+  /api/projects/{id}/client-documents:
+    get:
+      tags: [Documents]
+      summary: Listar client documents do projeto
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de client documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ClientDocument'
+    post:
+      tags: [Documents]
+      summary: Criar client document no projeto
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateClientDocumentRequest'
+      responses:
+        '201':
+          description: Client document criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientDocument'
+  /api/documents/{docId}/status:
+    patch:
+      tags: [Documents]
+      summary: Aprovar ou rejeitar documento
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: docId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateClientDocumentStatusRequest'
+      responses:
+        '200':
+          description: Status atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClientDocument'
+  /api/files/upload:
+    post:
+      tags: [Files]
+      summary: Upload de arquivo com validacao automatica
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file, projectId]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                projectId:
+                  type: string
+      responses:
+        '201':
+          description: Upload realizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadFileResponse'
+        '400':
+          description: Upload rejeitado ou invalido
+  /api/files:
+    get:
+      tags: [Files]
+      summary: Listar arquivos do usuario
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de arquivos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilesResponse'
+  /api/files/base64:
+    get:
+      tags: [Files]
+      summary: Obter arquivo em base64
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: url
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [pdf, original]
+      responses:
+        '200':
+          description: Arquivo em base64
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FileBase64Response'
+  /api/files/project/{projectId}/base64:
+    get:
+      tags: [Files]
+      summary: Exportar arquivos do projeto em base64
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: projectId
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: format
+          schema:
+            type: string
+            enum: [pdf, original]
+      responses:
+        '200':
+          description: Arquivos do projeto
+  /api/files/stats:
+    get:
+      tags: [Files]
+      summary: Estatisticas do dashboard
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Estatisticas
+  /api/files/pending:
+    get:
+      tags: [Files]
+      summary: Arquivos pendentes de revisao
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Pendencias
+  /api/templates:
+    get:
+      tags: [Templates]
+      summary: Listar templates
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Templates
+    post:
+      tags: [Templates]
+      summary: Criar template
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTemplateRequest'
+      responses:
+        '201':
+          description: Template criado
+  /api/templates/{id}:
+    get:
+      tags: [Templates]
+      summary: Obter template por id
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Template detalhado
+    put:
+      tags: [Templates]
+      summary: Atualizar template
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Template atualizado
+    delete:
+      tags: [Templates]
+      summary: Remover template
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Template removido
+  /api/templates/{id}/duplicate:
+    post:
+      tags: [Templates]
+      summary: Duplicar template
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '201':
+          description: Template duplicado
+  /api/projects/{id}/apply-template:
+    post:
+      tags: [Templates]
+      summary: Aplicar template ao projeto
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApplyTemplateRequest'
+      responses:
+        '200':
+          description: Template aplicado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectRequiredDocument'
+  /api/billing/access-status:
+    get:
+      tags: [Billing]
+      summary: Obter status de acesso
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Status de acesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessStatusResponse'
+  /api/billing/create-checkout-session:
+    post:
+      tags: [Billing]
+      summary: Criar checkout do Stripe
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckoutRequest'
+      responses:
+        '200':
+          description: URL do checkout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutResponse'
+  /api/billing/create-portal-session:
+    post:
+      tags: [Billing]
+      summary: Criar sessao do portal Stripe
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: URL do portal
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CheckoutResponse'
+  /api/billing/sync-subscription:
+    post:
+      tags: [Billing]
+      summary: Sincronizar assinatura com Stripe
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Assinatura sincronizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessStatusResponse'
+  /api/billing/subscription:
+    get:
+      tags: [Billing]
+      summary: Detalhes da assinatura
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Assinatura
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionResponse'
+  /api/billing/cancel-subscription:
+    post:
+      tags: [Billing]
+      summary: Cancelar assinatura no fim do ciclo
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Cancelamento agendado
+  /api/billing/reactivate-subscription:
+    post:
+      tags: [Billing]
+      summary: Reativar assinatura
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Assinatura reativada
+  /api/billing/subscription/office:
+    get:
+      tags: [Office Subscription]
+      summary: Gestao da assinatura OFFICE
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dados da assinatura OFFICE
+  /api/billing/subscription/invites:
+    get:
+      tags: [Office Subscription]
+      summary: Listar convites OFFICE
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista de convites
+    post:
+      tags: [Office Subscription]
+      summary: Criar convite OFFICE
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfficeInviteRequest'
+      responses:
+        '201':
+          description: Convite criado
+  /api/billing/subscription/invites/accept:
+    post:
+      tags: [Office Subscription]
+      summary: Aceitar convite OFFICE
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OfficeAcceptInviteRequest'
+      responses:
+        '200':
+          description: Convite aceito
+  /api/billing/subscription/invites/{id}:
+    delete:
+      tags: [Office Subscription]
+      summary: Revogar convite OFFICE
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Convite revogado
+  /api/billing/subscription/members/{id}:
+    delete:
+      tags: [Office Subscription]
+      summary: Remover membro OFFICE
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Membro removido
+  /webhooks/stripe:
+    post:
+      tags: [Webhooks]
+      summary: Webhook do Stripe
+      description: Endpoint interno chamado pelo Stripe com corpo raw.
+      responses:
+        '200':
+          description: Evento recebido
