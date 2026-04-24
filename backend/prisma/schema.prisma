@@ -42,6 +42,8 @@ model User {
   emailVerified      Boolean   @default(false)
   emailVerifyToken   String?
   emailVerifyExpires DateTime?
+  passwordResetToken String?
+  passwordResetExpires DateTime?
 
   // ── Stripe / Billing ──────────────────────────────────────
   stripeCustomerId              String?          @unique
