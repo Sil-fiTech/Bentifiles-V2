@@ -1,8 +1,11 @@
 import dotenv from 'dotenv';
-dotenv.config();
 
 import prisma from '../prisma';
+import { notifyErrorEventAsync } from '../services/discordAlertService';
 import { runSubscriptionReminderWorkerCycle } from '../services/subscriptionReminderService';
+import { logError, logInfo } from '../utils/logger';
+
+dotenv.config();
 
 const DEFAULT_POLL_MS = 60 * 1000;
 
@@ -17,7 +20,7 @@ const run = async () => {
     const workerId = process.env.SUBSCRIPTION_REMINDER_WORKER_ID || undefined;
 
     await prisma.$connect();
-    console.log(`[Reminder Worker] Connected to database in mode=${mode}`);
+    logInfo('Subscription reminder worker connected to database', { mode, workerId });
 
     try {
         do {
@@ -43,7 +46,11 @@ const run = async () => {
 
             const summary = await runSubscriptionReminderWorkerCycle(cycleOptions);
 
-            console.log('[Reminder Worker] Cycle summary:', summary);
+            logInfo('Subscription reminder worker cycle finished', {
+                mode,
+                workerId,
+                summary,
+            });
 
             if (mode !== 'loop') {
                 break;
@@ -57,7 +64,8 @@ const run = async () => {
 };
 
 run().catch(async (error) => {
-    console.error('[Reminder Worker] Fatal error', error);
+    logError('Subscription reminder worker fatal error', error);
+    await notifyErrorEventAsync('Subscription reminder worker fatal error', error);
     await prisma.$disconnect();
     process.exit(1);
 });

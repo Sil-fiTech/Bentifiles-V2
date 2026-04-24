@@ -4,6 +4,7 @@ import { stripe, getPlanFromPriceId, mapStripeStatus, fromStripeUnixTimestamp } 
 import prisma from '../prisma';
 import { computeSystemAccess } from './accessService';
 import { getBillingEntitlements } from './billingAccessService';
+import { notifyBillingEvent } from './discordAlertService';
 import {
   canUserCreateProjects,
   getOfficeSeatAccessForUser,
@@ -95,6 +96,7 @@ export const createCheckoutSession = async (
         selectedSeats: String(normalizedQuantity),
       },
     },
+    allow_promotion_codes: true,
     success_url: process.env.STRIPE_SUCCESS_URL || 'http://localhost:3000/billing/success',
     cancel_url: process.env.STRIPE_CANCEL_URL || 'http://localhost:3000/billing/cancel',
     metadata: {
@@ -104,7 +106,17 @@ export const createCheckoutSession = async (
     },
   });
 
-  
+
+  notifyBillingEvent('Checkout criado', [
+    ['Evento', 'checkout.session.created'],
+    ['User ID', userId],
+    ['Plano', plan],
+    ['Intervalo', interval],
+    ['Quantidade', normalizedQuantity],
+    ['Customer ID', customerId],
+    ['Session ID', session.id],
+  ]);
+
   return session.url;
 };
 

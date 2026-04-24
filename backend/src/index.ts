@@ -1,36 +1,41 @@
-import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-dotenv.config();
-import prisma from './prisma';
+import express from 'express';
+import helmet from 'helmet';
 
+import { handleUnhandledErrors } from './middleware/errorHandler';
+import { attachRequestContext, logHttpRequests } from './middleware/observability';
+import prisma from './prisma';
 import authRoutes from './routes/authRoutes';
-import usersRoutes from './routes/usersRoutes';
+import billingRoutes from './routes/billingRoutes';
+import documentRoutes from './routes/documentRoutes';
 import fileRoutes from './routes/fileRoutes';
 import projectRoutes from './routes/projectRoutes';
-import documentRoutes from './routes/documentRoutes';
-import templateRoutes from './routes/templateRoutes';
-import billingRoutes from './routes/billingRoutes';
 import stripeWebhookRoutes from './routes/stripeWebhookRoutes';
+import templateRoutes from './routes/templateRoutes';
+import usersRoutes from './routes/usersRoutes';
+import { notifyErrorEventAsync } from './services/discordAlertService';
+import { logError, logInfo } from './utils/logger';
 
-import helmet from 'helmet';
-import { error } from 'console';
+dotenv.config();
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;
+const startedAt = Date.now();
 
 app.use(helmet());
 
 app.use(cors({
     origin: ['https://bentifiles.com', 'https://www.bentifiles.com', 'http://localhost:3000', 'http://localhost:3001'],
     methods: 'GET,POST,PUT,DELETE,PATCH,OPTIONS',
-    credentials: true
+    credentials: true,
 }));
-console.log('CORS loaded with PATCH string format');
 
 app.set('trust proxy', 1);
+app.use(attachRequestContext);
+app.use(logHttpRequests);
 
-// Register Stripe Webhooks BEFORE express.json() to maintain raw body for signature verification
+// Register Stripe webhooks before express.json() to preserve raw body for signature verification.
 app.use('/webhooks', stripeWebhookRoutes);
 
 app.use(express.json());
@@ -44,20 +49,39 @@ app.use('/api/templates', templateRoutes);
 app.use('/api/billing', billingRoutes);
 
 app.get('/health', (req, res) => {
-    res.json({ status: 'ok', message: 'O backend do BentiFiles está rodando' });
+    res.json({
+        status: 'ok',
+        service: 'backend',
+        version: process.env.npm_package_version || '1.0.0',
+        uptimeSeconds: Math.round((Date.now() - startedAt) / 1000),
+        timestamp: new Date().toISOString(),
+    });
 });
 
-const server = app.listen(port, "0.0.0.0", () => {
-    console.log(`Server is running on port ${port}`);
+app.use(handleUnhandledErrors);
+
+app.listen(port, '0.0.0.0', () => {
+    logInfo('Backend server started', { port });
 });
 
 prisma.$connect().then(() => {
-    console.log('Connected to database');
-    console.log('Database URL:', process.env.DATABASE_URL);
-}).catch((error:any) => {
-    console.error('Failed to connect to database:', error);
+    logInfo('Database connection established');
+}).catch((error: unknown) => {
+    logError('Failed to connect to database', error);
     process.exit(1);
 });
 
-// Keep-alive to prevent silent exit in some environments
+process.on('unhandledRejection', (reason) => {
+    logError('Unhandled promise rejection', reason);
+    void notifyErrorEventAsync('Unhandled promise rejection', reason);
+});
+
+process.on('uncaughtException', (error) => {
+    logError('Uncaught exception', error);
+    void notifyErrorEventAsync('Uncaught exception', error).finally(() => {
+        process.exit(1);
+    });
+});
+
+// Keep-alive to prevent silent exit in some environments.
 setInterval(() => { }, 1000 * 60 * 60);

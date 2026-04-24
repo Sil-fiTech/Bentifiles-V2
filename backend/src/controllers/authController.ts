@@ -2,7 +2,9 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import prisma from '../prisma';
+import { notifyErrorEvent, notifySignupCreated } from '../services/discordAlertService';
 import { generateVerificationToken } from '../utils/cryptoUtil';
+import { logError } from '../utils/logger';
 import { sendPasswordResetEmail, sendVerificationEmail } from '../services/emailService';
 
 const PASSWORD_MIN_LENGTH = 8;
@@ -108,12 +110,19 @@ export const register = async (req: Request, res: Response) => {
         });
 
         sendVerificationEmail(user.email, verificationToken, user.name, inviteToken, officeInviteToken).catch(console.error);
+        notifySignupCreated({
+            userId: user.id,
+            email: user.email,
+            name: user.name,
+            provider: 'credentials',
+        });
 
         res.status(201).json({
             message: 'Usuario registrado com sucesso. Verifique seu e-mail para validar a conta.',
         });
     } catch (error) {
-        console.error('Registration error:', error);
+        logError('Registration error', error);
+        notifyErrorEvent('Falha no cadastro', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
@@ -164,7 +173,8 @@ export const login = async (req: Request, res: Response) => {
             },
         });
     } catch (error) {
-        console.error('Login error:', error);
+        logError('Login error', error);
+        notifyErrorEvent('Falha no login', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
@@ -205,6 +215,13 @@ export const googleLogin = async (req: Request, res: Response) => {
                     emailVerified: true,
                 },
             });
+
+            notifySignupCreated({
+                userId: user.id,
+                email: user.email,
+                name: user.name,
+                provider: 'google',
+            });
         }
 
         const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'fallback-secret', {
@@ -223,7 +240,8 @@ export const googleLogin = async (req: Request, res: Response) => {
             },
         });
     } catch (error) {
-        console.error('Google login error:', error);
+        logError('Google login error', error);
+        notifyErrorEvent('Falha no login Google', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
     }
 };
@@ -268,7 +286,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
             user: { id: user.id, name: user.name, email: user.email }
         });
     } catch (error) {
-        console.error('Verify email error:', error);
+        logError('Verify email error', error);
         res.status(500).json({ message: 'Erro interno do servidor.' });
     }
 };
@@ -301,7 +319,7 @@ export const resendVerification = async (req: Request, res: Response) => {
 
         res.status(200).json({ message: 'Se o e-mail estiver cadastrado e nao verificado, um novo link sera enviado.' });
     } catch (error) {
-        console.error('Resend verification error:', error);
+        logError('Resend verification error', error);
         res.status(500).json({ message: 'Erro interno do servidor.' });
     }
 };
@@ -336,7 +354,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
             message: 'Se o e-mail estiver cadastrado, enviaremos um link para redefinir sua senha.',
         });
     } catch (error) {
-        console.error('Forgot password error:', error);
+        logError('Forgot password error', error);
         return res.status(500).json({ message: 'Erro interno do servidor.' });
     }
 };
@@ -383,7 +401,7 @@ export const resetPassword = async (req: Request, res: Response) => {
 
         return res.status(200).json({ message: 'Senha atualizada com sucesso. Voce ja pode fazer login.' });
     } catch (error) {
-        console.error('Reset password error:', error);
+        logError('Reset password error', error);
         return res.status(500).json({ message: 'Erro interno do servidor.' });
     }
 };
