@@ -13,6 +13,7 @@
   display: flex;
   justify-content: center;
   width: 100%;
+  position: relative;
 
   &.sticky {
     position: sticky;
@@ -106,6 +107,11 @@
   padding: $sp-4 $sp-4;
   gap: $sp-4;
 
+  @include below-sm {
+    gap: $sp-2;
+    padding: $sp-3 $sp-4;
+  }
+
   @include md { padding: $sp-4 $sp-6; }
   @include lg { padding: $sp-4 $sp-8; }
 }
@@ -117,12 +123,14 @@
   display: flex;
   align-items: center;
   gap: $sp-8;
+  min-width: 0;
 }
 
 .logoGroup {
   display: flex;
   align-items: center;
   gap: $sp-3;
+  min-width: 0;
 }
 
 .logoIcon {
@@ -149,6 +157,10 @@
   font-weight: 900;
   color: $zinc-900;
   letter-spacing: -0.04em;
+
+  @include below-sm {
+    display: none;
+  }
 }
 
 // ------------------------------------------------------------------
@@ -199,6 +211,7 @@
   gap: $sp-4;
   flex: 1;
   justify-content: flex-end;
+  min-width: 0;
 
   @include sm { gap: $sp-6; }
 }
@@ -267,6 +280,10 @@
   display: flex;
   align-items: center;
   gap: $sp-3;
+
+  @include below-md {
+    display: none;
+  }
 }
 
 .iconBtn {

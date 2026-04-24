@@ -23,8 +23,11 @@
     color: white;
     border: 2px solid $amber-400;
     box-shadow: $shadow-2xl;
-    transform: scale(1.05);
     z-index: 10;
+
+    @include lg {
+      transform: scale(1.05);
+    }
 
     &:hover {
       box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.45);
@@ -53,6 +56,7 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: $sp-6;
+  gap: $sp-4;
 }
 
 .iconBox {
@@ -103,7 +107,9 @@
 .priceWrapper {
   display: flex;
   align-items: baseline;
+  flex-wrap: wrap;
   margin-bottom: $sp-8;
+  gap: $sp-2;
 }
 
 .priceValue {
@@ -278,6 +284,7 @@
   display: flex;
   align-items: center;
   gap: $sp-4;
+  justify-content: space-between;
 }
 
 .quantityBtn {

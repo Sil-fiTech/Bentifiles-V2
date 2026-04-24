@@ -9,6 +9,11 @@
   margin: 0 auto;
   padding: 0 $sp-4;
 
+  @include below-sm {
+    gap: $sp-8;
+    padding: 0;
+  }
+
   @include md {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -31,6 +36,11 @@
   border: 1px solid rgba($zinc-200, 0.8);
   box-shadow: $shadow-sm;
   position: relative;
+
+  @include below-sm {
+    width: 100%;
+    max-width: 22rem;
+  }
 }
 
 .toggleOption {
@@ -43,6 +53,13 @@
   transition: $transition-base;
   z-index: 10;
   position: relative;
+  min-width: 8rem;
+
+  @include below-sm {
+    flex: 1;
+    min-width: 0;
+    padding: $sp-2_5 $sp-4;
+  }
 
   &.active {
     color: white;

@@ -438,7 +438,7 @@ export default function SubscriptionPage() {
               </div>
             </div>
 
-            <h3 style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--zinc-400)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>Histórico Recente</h3>
+            <h3 className={styles.eyebrow}>Histórico Recente</h3>
             
             <div className={styles.invoiceList}>
               {data.invoices.map(invoice => (
@@ -455,7 +455,7 @@ export default function SubscriptionPage() {
               ))}
             </div>
 
-            <div className={styles.cardActions} style={{ marginTop: '2rem' }}>
+            <div className={`${styles.cardActions} ${styles.sectionSpacer}`}>
               <button 
                 className={styles.btnSecondary} 
                 onClick={handlePortalRedirect}
@@ -469,12 +469,12 @@ export default function SubscriptionPage() {
         </div>
 
         {officeSeatAccess && !officeWorkspace && (
-          <section className={styles.card} style={{ marginTop: '1.5rem' }}>
+          <section className={`${styles.card} ${styles.sectionSpacer}`}>
             <div className={styles.cardTitle}>
               <Users size={22} />
               Minha Licenca OFFICE
             </div>
-            <p style={{ color: 'var(--zinc-300)', marginBottom: '1rem' }}>
+            <p className={styles.mutedText}>
               Sua conta esta vinculada a assinatura OFFICE de <strong>{officeSeatAccess.owner.name}</strong>.
             </p>
             <div className={styles.detailsGrid}>
@@ -491,7 +491,7 @@ export default function SubscriptionPage() {
         )}
 
         {officeWorkspace && (
-          <section className={styles.card} style={{ marginTop: '1.5rem' }}>
+          <section className={`${styles.card} ${styles.sectionSpacer}`}>
             <div className={styles.cardTitle}>
               <Users size={22} />
               Gestao de Licencas OFFICE
@@ -516,25 +516,18 @@ export default function SubscriptionPage() {
               </div>
             </div>
 
-            <form onSubmit={handleCreateOfficeInvite} style={{ marginTop: '1.5rem' }}>
-              <div className={styles.cardTitle} style={{ marginBottom: '0.75rem' }}>
+            <form onSubmit={handleCreateOfficeInvite} className={styles.inviteForm}>
+              <div className={styles.cardTitle}>
                 <Mail size={18} />
                 Convidar por e-mail
               </div>
-              <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <div className={styles.inviteRow}>
                 <input
+                  className={styles.inviteInput}
                   type="email"
                   value={inviteEmail}
                   onChange={(event) => setInviteEmail(event.target.value)}
                   placeholder="nome@empresa.com"
-                  style={{
-                    flex: '1 1 260px',
-                    padding: '0.95rem 1rem',
-                    borderRadius: '0.9rem',
-                    border: '1px solid rgba(255,255,255,0.12)',
-                    background: 'rgba(255,255,255,0.04)',
-                    color: 'black'
-                  }}
                 />
                 <button
                   type="submit"
@@ -547,33 +540,24 @@ export default function SubscriptionPage() {
               </div>
             </form>
 
-            <div style={{ marginTop: '2rem' }}>
-              <div className={styles.cardTitle} style={{ marginBottom: '0.75rem' }}>
+            <div className={styles.sectionSpacer}>
+              <div className={styles.cardTitle}>
                 <Users size={18} />
                 Membros ativos
               </div>
-              <div style={{ display: 'grid', gap: '0.75rem' }}>
+              <div className={styles.workspaceList}>
                 {officeWorkspace.members.map((member) => (
-                  <div key={member.id} style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: '1rem',
-                    alignItems: 'center',
-                    padding: '1rem',
-                    borderRadius: '1rem',
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.08)'
-                  }}>
-                    <div>
+                  <div key={member.id} className={styles.workspaceRow}>
+                    <div className={styles.workspaceMeta}>
                       <strong>{member.user.name}</strong>
-                      <div style={{ color: 'var(--zinc-400)', fontSize: '0.95rem' }}>{member.user.email}</div>
-                      <div style={{ color: 'var(--zinc-500)', fontSize: '0.85rem' }}>
+                      <div className={styles.workspaceEmail}>{member.user.email}</div>
+                      <div className={styles.workspaceHint}>
                         {member.seatType === 'OWNER' ? 'Proprietario da assinatura' : 'Membro convidado'}
                       </div>
                     </div>
                     {member.seatType === 'MEMBER' && (
                       <button
-                        className={styles.btnDanger}
+                        className={`${styles.btnDanger} ${styles.workspaceAction}`}
                         onClick={() => handleRemoveOfficeMember(member)}
                         disabled={actionLoading === `remove_member_${member.id}`}
                       >
@@ -586,35 +570,26 @@ export default function SubscriptionPage() {
               </div>
             </div>
 
-            <div style={{ marginTop: '2rem' }}>
-              <div className={styles.cardTitle} style={{ marginBottom: '0.75rem' }}>
+            <div className={styles.sectionSpacer}>
+              <div className={styles.cardTitle}>
                 <Mail size={18} />
                 Convites enviados
               </div>
-              <div style={{ display: 'grid', gap: '0.75rem' }}>
+              <div className={styles.workspaceList}>
                 {officeWorkspace.invites.length === 0 && (
-                  <p style={{ color: 'var(--zinc-400)' }}>Nenhum convite enviado ainda.</p>
+                  <p className={styles.emptyText}>Nenhum convite enviado ainda.</p>
                 )}
                 {officeWorkspace.invites.map((invite) => (
-                  <div key={invite.id} style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: '1rem',
-                    alignItems: 'center',
-                    padding: '1rem',
-                    borderRadius: '1rem',
-                    background: 'rgba(255,255,255,0.04)',
-                    border: '1px solid rgba(255,255,255,0.08)'
-                  }}>
-                    <div>
+                  <div key={invite.id} className={styles.workspaceRow}>
+                    <div className={styles.workspaceMeta}>
                       <strong>{invite.email}</strong>
-                      <div style={{ color: 'var(--zinc-400)', fontSize: '0.9rem' }}>
+                      <div className={styles.workspaceEmail}>
                         Status: {invite.status} • Expira em {formatDate(invite.expiresAt)}
                       </div>
                     </div>
                     {invite.status === 'PENDING' && (
                       <button
-                        className={styles.btnSecondary}
+                        className={`${styles.btnSecondary} ${styles.workspaceAction}`}
                         onClick={() => handleRevokeOfficeInvite(invite)}
                         disabled={actionLoading === `revoke_invite_${invite.id}`}
                       >

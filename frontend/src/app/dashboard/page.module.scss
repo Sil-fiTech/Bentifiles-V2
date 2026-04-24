@@ -10,14 +10,14 @@
   color: var(--color-on-surface);
   overflow: hidden;
   display: flex;
-  height: 100vh;
+  @include app-shell;
   width: 100%;
   position: relative;
 }
 
 .main {
   flex: 1;
-  height: 100vh;
+  @include app-shell;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -42,7 +42,7 @@
 // Loading
 // ------------------------------------------------------------------
 .loadingScreen {
-  height: 100vh;
+  @include app-shell;
   width: 100%;
   display: flex;
   align-items: center;
@@ -57,6 +57,12 @@
   @include flex-between;
   margin-bottom: $sp-6;
   align-items: flex-end;
+
+  @include below-md {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $sp-4;
+  }
 }
 
 .sectionTitle {
@@ -130,6 +136,10 @@
     align-items: center;
     width: auto;
   }
+
+  @include below-md {
+    align-items: stretch;
+  }
 }
 
 .filterArchivedBtn {
@@ -167,6 +177,7 @@
   display: flex;
   align-items: center;
   margin-top: $sp-2;
+  width: 100%;
 
   @include sm {
     margin-top: 0;
@@ -611,6 +622,11 @@
   gap: $sp-4;
   z-index: 50;
   border-left: 4px solid $amber-400;
+
+  @include below-sm {
+    align-items: flex-start;
+    padding: $sp-3;
+  }
 
   @include md {
     bottom: $sp-8;
