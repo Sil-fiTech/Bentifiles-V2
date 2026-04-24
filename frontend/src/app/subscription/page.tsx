@@ -533,7 +533,7 @@ export default function SubscriptionPage() {
                     borderRadius: '0.9rem',
                     border: '1px solid rgba(255,255,255,0.12)',
                     background: 'rgba(255,255,255,0.04)',
-                    color: 'white'
+                    color: 'black'
                   }}
                 />
                 <button
