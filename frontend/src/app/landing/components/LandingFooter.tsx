@@ -10,8 +10,7 @@ const footerLinks = [
 ];
 
 const legalLinks = [
-  { label: 'Termos de Serviço', href: '/terms-of-service' },
-  { label: 'Política de Privacidade', href: '/privacy-policy' },
+  { label: 'Termos de Serviço e Política de Privacidade', href: '/terms-of-service' },
 ];
 
 export default function LandingFooter() {

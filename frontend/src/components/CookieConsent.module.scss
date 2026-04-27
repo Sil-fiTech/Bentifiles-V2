@@ -1,0 +1,139 @@
+@use '../styles/tokens' as *;
+@use '../styles/mixins' as *;
+
+.banner {
+  position: fixed;
+  left: $sp-4;
+  right: $sp-4;
+  bottom: $sp-4;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  gap: $sp-4;
+  width: min(100% - #{$sp-8}, 66rem);
+  margin: 0 auto;
+  padding: $sp-4;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba($zinc-200, 0.9);
+  border-radius: $radius-sm;
+  box-shadow: $shadow-2xl;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  @include md {
+    left: $sp-6;
+    right: $sp-6;
+    bottom: $sp-6;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: $sp-6;
+    padding: $sp-5;
+  }
+}
+
+.content {
+  display: flex;
+  align-items: flex-start;
+  gap: $sp-3;
+  min-width: 0;
+}
+
+.iconWrap {
+  @include flex-center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 2.75rem;
+  color: $amber-800;
+  background: $amber-100;
+  border: 1px solid rgba($amber-300, 0.8);
+  border-radius: $radius-sm;
+}
+
+.text {
+  display: grid;
+  gap: $sp-1_5;
+
+  h2 {
+    font-family: $font-headline;
+    font-size: 1rem;
+    font-weight: 900;
+    color: $zinc-900;
+  }
+
+  p {
+    max-width: 42rem;
+    color: $zinc-600;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+}
+
+.actions {
+  display: grid;
+  gap: $sp-2;
+  width: 100%;
+
+  @include sm {
+    grid-template-columns: repeat(3, auto);
+    justify-content: flex-start;
+  }
+
+  @include md {
+    width: auto;
+    flex: 0 0 auto;
+    justify-content: flex-end;
+  }
+}
+
+.primaryButton,
+.secondaryButton,
+.ghostButton {
+  @include btn-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: $sp-2_5 $sp-4;
+  border-radius: $radius-sm;
+  font-family: $font-headline;
+  font-size: 0.875rem;
+  font-weight: 900;
+  line-height: 1.2;
+  text-align: center;
+  transition: $transition-base;
+  white-space: normal;
+}
+
+.primaryButton {
+  color: $amber-950;
+  background: linear-gradient(90deg, $amber-400, $amber-500);
+  box-shadow: 0 4px 14px rgba($amber-500, 0.28);
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba($amber-500, 0.34);
+  }
+}
+
+.secondaryButton {
+  color: $zinc-900;
+  background: $zinc-100;
+  border: 1px solid $zinc-200;
+
+  &:hover {
+    background: $zinc-200;
+  }
+}
+
+.ghostButton {
+  color: $zinc-600;
+  border: 1px solid transparent;
+
+  &:hover {
+    color: $red-600;
+    background: $red-50;
+    border-color: $red-100;
+  }
+}
