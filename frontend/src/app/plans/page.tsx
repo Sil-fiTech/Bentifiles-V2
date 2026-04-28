@@ -29,7 +29,7 @@ export default function PlansPage() {
           </p>
 
           <p className={styles.trialNote}>
-            Comece hoje mesmo com <span className={styles.highlight}>3 dias totalmente grátis</span> em qualquer plano.
+            Comece hoje mesmo com <span className={styles.highlight}>10 dias totalmente grátis</span> no plano individual.
             Cancele a qualquer momento.
           </p>
 
