@@ -8,9 +8,9 @@
   padding: $sp-8;
   border-radius: $radius-3xl;
   transition: $transition-slow;
-  background: white;
-  color: $zinc-900;
-  border: 1px solid rgba($zinc-200, 0.8);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
   height: 100%;
 
   &:hover {
@@ -62,8 +62,8 @@
 .iconBox {
   padding: $sp-3;
   border-radius: $radius-xl;
-  background: $zinc-100;
-  color: $zinc-600;
+  background: var(--surface-muted);
+  color: var(--text-primary);
 
   .recommended & {
     background: $zinc-800;
@@ -78,7 +78,7 @@
 .trialText {
   font-size: 0.875rem;
   font-weight: 700;
-  color: $zinc-500;
+  color: var(--text-muted);
 
   .recommended & {
     color: $zinc-400;
@@ -95,7 +95,7 @@
 
 .description {
   font-size: 0.875rem;
-  color: $zinc-500;
+  color: var(--text-muted);
   margin-bottom: $sp-6;
   line-height: 1.5;
 
@@ -122,7 +122,7 @@
 .pricePeriod {
   font-size: 0.875rem;
   margin-left: $sp-2;
-  color: $zinc-500;
+  color: var(--text-muted);
 
   .recommended & {
     color: $zinc-400;
@@ -160,7 +160,7 @@
 .pricingMetaNote {
   font-size: 0.82rem;
   line-height: 1.5;
-  color: $zinc-600;
+  color: var(--text-muted);
   font-weight: 600;
 
   .recommended & {
@@ -202,7 +202,7 @@
 
 .featureText {
   font-size: 0.875rem;
-  color: $zinc-600;
+  color: var(--text-muted);
   line-height: 1.4;
 
   .recommended & {
@@ -218,20 +218,20 @@
   font-weight: 800;
   font-size: 0.9375rem;
   transition: $transition-base;
-  background: $zinc-900;
-  color: white;
+  background: var(--surface-muted);
+  color: var(--text-primary);
 
   &:hover:not(:disabled) {
-    background: $zinc-800;
+    background: var(--surface-hover);
     transform: translateY(-2px);
   }
 
   .recommended & {
-    background: white;
-    color: $zinc-900;
+    background: var(--surface-card);
+    color: var(--text-primary);
 
     &:hover:not(:disabled) {
-      background: $zinc-100;
+      background: var(--surface-hover);
     }
   }
 
@@ -245,7 +245,7 @@
   text-align: center;
   margin-top: $sp-4;
   font-size: 0.625rem;
-  color: $zinc-400;
+  color: var(--text-muted);
 
   .recommended & {
     color: $zinc-500;
@@ -258,9 +258,9 @@
   gap: $sp-2;
   margin-bottom: $sp-6;
   padding: $sp-3;
-  background: $zinc-50;
+  background: var(--surface-muted);
   border-radius: $radius-xl;
-  border: 1px solid $zinc-200;
+  border: 1px solid var(--border-subtle);
 
   .recommended & {
     background: $zinc-800;
@@ -271,7 +271,7 @@
 .quantityLabel {
   font-size: 0.75rem;
   font-weight: 700;
-  color: $zinc-500;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 
@@ -295,14 +295,14 @@
   align-items: center;
   justify-content: center;
   border-radius: $radius-lg;
-  background: white;
-  border: 1px solid $zinc-200;
-  color: $zinc-600;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
   transition: $transition-base;
 
   &:hover:not(:disabled) {
-    background: $zinc-50;
-    border-color: $zinc-400;
+    background: var(--surface-hover);
+    border-color: rgba($amber-400, 0.35);
   }
 
   &:disabled {
@@ -326,7 +326,7 @@
   font-family: $font-headline;
   font-size: 1.125rem;
   font-weight: 800;
-  color: $zinc-900;
+  color: var(--text-primary);
   min-width: $sp-6;
   text-align: center;
 

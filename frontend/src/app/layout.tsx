@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import './globals.scss';
-import { Toaster } from 'sonner';
 import Providers from '../components/Providers';
+import ThemeToggleGate from '../components/ThemeToggleGate';
+import ThemedToaster from '../components/ThemedToaster';
 
 export const metadata: Metadata = {
   title: 'Bentifiles — Centralize, Organize e Padronize seus Documentos',
@@ -15,11 +16,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="pt-BR">
-      <body>
+    <html lang="pt-BR" data-theme="light" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <Providers>
           {children}
-          <Toaster theme="dark" position="bottom-right" />
+          <ThemeToggleGate />
+          <ThemedToaster />
         </Providers>
       </body>
     </html>

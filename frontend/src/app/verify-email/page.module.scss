@@ -12,10 +12,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: $zinc-50;
+  background: var(--page-gradient);
   overflow: hidden;
   font-family: $font-body;
-  color: $zinc-900;
+  color: var(--text-primary);
   ::selection { background: rgba($amber-200, 1); }
 }
 
@@ -104,7 +104,7 @@
   font-size: clamp(2.5rem, 6vw, 3.75rem);
   font-weight: 900;
   letter-spacing: -0.04em;
-  color: $zinc-900;
+  color: var(--text-primary);
   filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.08));
   line-height: 1;
 }
@@ -118,7 +118,7 @@
   margin-top: $sp-3;
   font-size: 0.875rem;
   @include sm { margin-top: $sp-4; font-size: 0.9375rem; }
-  color: $zinc-500; font-weight: 500; letter-spacing: -0.02em;
+  color: var(--text-muted); font-weight: 500; letter-spacing: -0.02em;
 }
 
 // ------------------------------------------------------------------
@@ -138,14 +138,14 @@
   font-family: $font-headline;
   font-size: 1.5rem;
   font-weight: 900;
-  color: $zinc-900;
+  color: var(--text-primary);
   letter-spacing: -0.03em;
   margin-bottom: $sp-2;
 }
 
 .text {
   font-size: 0.875rem;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-weight: 500;
   margin-bottom: $sp-8;
 }
@@ -158,7 +158,7 @@
   align-items: center;
   justify-content: center;
   border-radius: $radius-full;
-  background-color: $zinc-100;
+  background-color: var(--surface-muted);
   
   &.success { background-color: rgba(16, 185, 129, 0.1); color: #059669; }
   &.error { background-color: rgba(239, 68, 68, 0.1); color: #dc2626; }

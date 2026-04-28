@@ -3,7 +3,7 @@
 
 .root {
   min-height: 100vh;
-  background: $zinc-50;
+  background: var(--page-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -17,8 +17,8 @@
   width: 100%;
   padding: $sp-10;
   text-align: center;
-  background: white;
-  box-shadow: $shadow-xl;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-floating);
 }
 
 .iconWrapper {
@@ -44,22 +44,22 @@
   font-family: $font-headline;
   font-size: 1.875rem;
   font-weight: 900;
-  color: $zinc-900;
+  color: var(--text-primary);
   margin-bottom: $sp-4;
   letter-spacing: -0.03em;
 }
 
 .description {
-  color: $zinc-600;
+  color: var(--text-muted);
   margin-bottom: $sp-8;
   line-height: 1.6;
 }
 
 .statusPanel {
   padding: $sp-6;
-  background: $zinc-50;
+  background: var(--surface-muted);
   border-radius: $radius-2xl;
-  border: 1px solid $zinc-100;
+  border: 1px solid var(--border-subtle);
   margin-bottom: $sp-8;
 }
 
@@ -83,7 +83,7 @@
 .statusText {
   font-size: 0.875rem;
   font-weight: 700;
-  color: $zinc-500;
+  color: var(--text-muted);
 }
 
 .successState {
@@ -112,8 +112,8 @@
   @include btn-reset;
   width: 100%;
   padding: $sp-4;
-  background: $zinc-900;
-  color: white;
+  background: var(--surface-muted);
+  color: var(--text-primary);
   border-radius: $radius-xl;
   font-weight: 700;
   display: flex;
@@ -123,7 +123,7 @@
   transition: $transition-base;
 
   &:hover {
-    background: $zinc-800;
+    background: var(--surface-hover);
     transform: translateY(-2px);
   }
 
@@ -139,7 +139,7 @@
 .tip {
   margin-top: $sp-4;
   font-size: 0.625rem;
-  color: $zinc-400;
+  color: var(--text-muted);
 }
 
 .disabled {

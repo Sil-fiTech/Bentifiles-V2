@@ -5,9 +5,9 @@
 // Root
 // ------------------------------------------------------------------
 .root {
-  background: $zinc-50;
+  background: var(--page-gradient);
   font-family: $font-body;
-  color: $zinc-900;
+  color: var(--text-primary);
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -18,7 +18,7 @@
 
 .loadingScreen {
   min-height: 100vh;
-  background: $zinc-50;
+  background: var(--page-gradient);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -46,17 +46,17 @@
   display: flex;
   align-items: center;
   gap: $sp-2;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-weight: 700;
   font-size: 0.875rem;
   padding: $sp-2 $sp-3;
   border-radius: $radius-md;
-  background: white;
-  box-shadow: $shadow-sm;
+  background: var(--surface-card);
+  box-shadow: var(--shadow-elevated);
   transition: $transition-base;
   width: max-content;
 
-  &:hover { color: $zinc-900; }
+  &:hover { color: var(--text-primary); background: var(--surface-hover); }
   &:active { transform: scale(0.98); }
 }
 
@@ -72,12 +72,12 @@
   font-family: $font-headline;
   font-size: 1.875rem;
   font-weight: 900;
-  color: $zinc-900;
+  color: var(--text-primary);
   letter-spacing: -0.04em;
 }
 
 .pageSubtitle {
-  color: $zinc-500;
+  color: var(--text-muted);
   font-weight: 500;
   margin-top: $sp-1;
 }
@@ -135,7 +135,7 @@
   width: 1.5rem;
   height: 1.5rem;
   background: $emerald-500;
-  border: 2px solid white;
+  border: 2px solid var(--surface-card);
   border-radius: $radius-full;
 }
 
@@ -143,18 +143,18 @@
   font-family: $font-headline;
   font-weight: 700;
   font-size: 1.25rem;
-  color: $zinc-900;
+  color: var(--text-primary);
 }
 
 .profileEmail {
-  color: $zinc-500;
+  color: var(--text-muted);
   font-size: 0.875rem;
 }
 
 .divider {
   width: 100%;
   height: 1px;
-  background: rgba($zinc-200, 0.6);
+  background: var(--border-subtle);
   margin: $sp-6 0;
 }
 
@@ -171,10 +171,10 @@
   align-items: center;
   gap: $sp-3;
   font-size: 0.875rem;
-  color: $zinc-600;
+  color: var(--text-muted);
   font-weight: 500;
 
-  svg { color: $zinc-400; flex-shrink: 0; }
+  svg { color: var(--text-muted); flex-shrink: 0; }
 }
 
 // ------------------------------------------------------------------
@@ -192,7 +192,7 @@
   font-family: $font-headline;
   font-weight: 700;
   font-size: 1.125rem;
-  color: $zinc-900;
+  color: var(--text-primary);
   margin-bottom: $sp-6;
   display: flex;
   align-items: center;
@@ -211,7 +211,7 @@
   display: block;
   font-size: 0.6875rem;
   font-weight: 700;
-  color: $zinc-600;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: $sp-1_5;
@@ -219,23 +219,12 @@
 }
 
 .fieldInput {
-  width: 100%;
+  @include input-base;
   padding: $sp-3 $sp-4;
-  background: $zinc-50;
-  border: 1px solid rgba($zinc-200, 0.8);
   border-radius: $radius-xl;
-  outline: none;
-  color: $zinc-900;
-  font-size: 0.9375rem;
-  font-weight: 500;
-  box-shadow: $shadow-sm;
-  transition: $transition-base;
-
-  &::placeholder { color: $zinc-400; }
+  box-shadow: var(--shadow-elevated);
 
   &:focus {
-    border-color: $amber-400;
-    background: white;
     box-shadow: 0 0 0 2px rgba($amber-500, 0.2);
   }
 }
@@ -249,28 +238,28 @@
   left: $sp-4;
   top: 50%;
   transform: translateY(-50%);
-  color: $zinc-400;
+  color: var(--text-muted);
   pointer-events: none;
 }
 
 .fieldInputReadonly {
   @extend .fieldInput;
   padding-left: 2.75rem;
-  background: rgba($zinc-100, 0.8);
-  border-color: rgba($zinc-200, 0.5);
-  color: $zinc-500;
+  background: var(--surface-muted);
+  border-color: var(--border-subtle);
+  color: var(--text-muted);
   cursor: not-allowed;
 
   &:focus {
-    background: rgba($zinc-100, 0.8);
-    border-color: rgba($zinc-200, 0.5);
+    background: var(--surface-muted);
+    border-color: var(--border-subtle);
     box-shadow: none;
   }
 }
 
 .fieldHint {
   font-size: 0.75rem;
-  color: $zinc-400;
+  color: var(--text-muted);
   margin-top: $sp-2;
   padding: 0 $sp-1;
 }
@@ -279,7 +268,7 @@
 .panelFooter {
   margin-top: $sp-8;
   padding-top: $sp-6;
-  border-top: 1px solid rgba($zinc-200, 0.6);
+  border-top: 1px solid var(--border-subtle);
   display: flex;
   justify-content: flex-end;
 }
@@ -301,4 +290,27 @@
   &:hover:not(:disabled) { background: $amber-500; }
   &:active:not(:disabled) { transform: scale(0.98); }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
+}
+
+.successMeta {
+  color: $emerald-500 !important;
+}
+
+.inactiveMeta {
+  color: var(--text-muted) !important;
+}
+
+.manageSubscriptionText {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-bottom: $sp-4;
+}
+
+.secondaryBtn {
+  @include btn-secondary;
+  width: 100%;
+  justify-content: center;
+  padding: $sp-3 $sp-4;
+  border-radius: $radius-xl;
 }

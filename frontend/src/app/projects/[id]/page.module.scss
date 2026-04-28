@@ -66,13 +66,13 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: $zinc-500;
+  color: var(--text-muted);
   margin-bottom: $sp-2;
 }
 
 .breadcrumbLink {
   @include btn-reset;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -80,7 +80,7 @@
   cursor: pointer;
   transition: $transition-fast;
 
-  &:hover { color: $zinc-900; }
+  &:hover { color: var(--text-primary); }
 }
 
 .breadcrumbActive {
@@ -98,7 +98,7 @@
   font-size: clamp(1.875rem, 4vw, 2.25rem);
   font-weight: 900;
   letter-spacing: -0.04em;
-  color: $zinc-900;
+  color: var(--text-primary);
 }
 
 .titleInput {
@@ -106,27 +106,27 @@
   font-size: clamp(1.5rem, 3vw, 1.875rem);
   font-weight: 900;
   letter-spacing: -0.03em;
-  color: $zinc-900;
-  background: white;
+  color: var(--text-primary);
+  background: var(--surface-card);
   border: 1px solid $amber-400;
   border-radius: $radius-md;
   padding: $sp-1 $sp-3;
   outline: none;
   width: 100%;
   max-width: 300px;
-  box-shadow: $shadow-sm;
+  box-shadow: var(--shadow-elevated);
 }
 
 .editBtn {
   @include btn-reset;
-  color: $zinc-400;
+  color: var(--text-muted);
   padding: $sp-1_5;
   border-radius: $radius-md;
   transition: $transition-base;
 
   &:hover {
     color: $amber-500;
-    background: $zinc-50;
+    background: var(--surface-hover);
   }
 }
 
@@ -138,8 +138,8 @@
 
 .cancelNameBtn {
   @extend .editBtn;
-  color: $zinc-400;
-  &:hover { color: $zinc-700; background: $zinc-100; }
+  color: var(--text-muted);
+  &:hover { color: var(--text-primary); background: var(--surface-hover); }
 }
 
 .headerMeta {
@@ -162,9 +162,9 @@
   border-radius: $radius-full;
 
   &.archived {
-    background: $zinc-100;
-    color: $zinc-500;
-    border: 1px solid $zinc-200;
+    background: var(--surface-muted);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
   }
 }
 
@@ -188,7 +188,7 @@
 
 .updatedAt {
   font-size: 0.75rem;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-weight: 500;
   font-style: italic;
 }
@@ -206,16 +206,16 @@
   align-items: center;
   gap: $sp-2;
   padding: $sp-2_5 $sp-5;
-  background: $zinc-200;
-  color: $zinc-900;
+  background: var(--surface-muted);
+  color: var(--text-primary);
   font-family: $font-headline;
   font-weight: 700;
   font-size: 0.875rem;
   border-radius: $radius-xl;
-  box-shadow: $shadow-sm;
+  box-shadow: var(--shadow-elevated);
   transition: $transition-base;
 
-  &:hover { background: $zinc-300; }
+  &:hover { background: var(--surface-hover); }
   &:active { transform: scale(0.98); }
 }
 
@@ -268,7 +268,7 @@
   font-family: $font-headline;
   font-size: 2.25rem;
   font-weight: 900;
-  color: $zinc-900;
+  color: var(--text-primary);
   letter-spacing: -0.04em;
 
   .dark & { color: $amber-400; }
@@ -279,7 +279,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: $zinc-400;
+  color: var(--text-muted);
   margin-top: $sp-1;
   transition: color 0.15s;
 
@@ -319,18 +319,18 @@
   font-size: 1.875rem;
   font-weight: 900;
   letter-spacing: -0.04em;
-  color: $zinc-900;
+  color: var(--text-primary);
 }
 
 .searchBox {
   display: flex;
   align-items: center;
   gap: $sp-2;
-  background: white;
-  border: 1px solid rgba($zinc-200, 0.6);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   padding: $sp-2 $sp-4;
   border-radius: $radius-md;
-  box-shadow: $shadow-sm;
+  box-shadow: var(--shadow-elevated);
   transition: $transition-base;
 
   &:focus-within {
@@ -346,11 +346,11 @@
   font-size: 0.875rem;
   font-weight: 500;
   width: 100%;
-  color: $zinc-900;
+  color: var(--text-primary);
 
   @include sm { width: 12rem; }
 
-  &::placeholder { color: $zinc-400; }
+  &::placeholder { color: var(--text-muted); }
 }
 
 // ------------------------------------------------------------------
@@ -376,29 +376,29 @@
   font-size: 1.125rem;
   font-weight: 700;
   font-family: $font-headline;
-  color: $zinc-900;
+  color: var(--text-primary);
 }
 
 .memberEmptyText {
   font-size: 0.875rem;
-  color: $zinc-500;
+  color: var(--text-muted);
 }
 
 .memberCard {
-  background: white;
+  background: var(--surface-card);
   border-radius: $radius-xl;
   overflow: hidden;
   transition: border-color 0.2s, box-shadow 0.2s;
 
   &.expanded {
-    border: 1px solid rgba($zinc-200, 0.6);
-    box-shadow: $shadow-md;
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-elevated);
     overflow: visible;
   }
 
   &:not(.expanded) {
-    border: 1px solid rgba($zinc-200, 0.6);
-    box-shadow: $shadow-sm;
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-elevated);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -419,7 +419,7 @@
   transition: background-color 0.15s;
 
   @media (hover: hover) and (pointer: fine) {
-    &:hover { background: $zinc-50; }
+    &:hover { background: var(--surface-hover); }
   }
 
   @include md { padding: $sp-6 $sp-8; flex-direction: row; align-items: center; }
@@ -453,7 +453,7 @@
   font-size: clamp(1rem, 2vw, 1.25rem);
   font-weight: 900;
   letter-spacing: -0.02em;
-  color: $zinc-900;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: $sp-2;
@@ -461,7 +461,7 @@
 
 .memberEmail {
   font-size: 0.875rem;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-weight: 500;
 }
 
@@ -482,25 +482,25 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: $zinc-400;
+  color: var(--text-muted);
 }
 
 .progressStat {
   font-size: 0.875rem;
   font-family: $font-headline;
   font-weight: 700;
-  color: $zinc-900;
+  color: var(--text-primary);
 }
 
 .progressStatMuted {
-  color: $zinc-500;
+  color: var(--text-muted);
   font-weight: 400;
 }
 
 .progressTrack {
   width: 100%;
   height: 0.5rem;
-  background: $zinc-100;
+  background: var(--surface-muted);
   border-radius: $radius-full;
   overflow: hidden;
 }
@@ -519,7 +519,7 @@
   display: flex;
   align-items: center;
   gap: $sp-2;
-  color: $zinc-400;
+  color: var(--text-muted);
   font-family: $font-headline;
   font-weight: 700;
   padding: $sp-1_5 $sp-3;
@@ -533,7 +533,7 @@
 
   &:hover {
     color: $amber-500;
-    background: $amber-50;
+    background: rgba($amber-400, 0.12);
   }
 }
 
@@ -547,16 +547,16 @@
 // Document rows (expanded section)
 // ------------------------------------------------------------------
 .docSection {
-  background: rgba($zinc-50, 0.3);
+  background: rgba(255, 255, 255, 0.02);
   padding: $sp-4 $sp-4 $sp-6;
-  border-top: 1px solid rgba($zinc-200, 0.6);
+  border-top: 1px solid var(--border-subtle);
 
   @include md { padding: $sp-4 $sp-8 $sp-6; }
 }
 
 .docEmpty {
   padding: $sp-4 0;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-size: 0.875rem;
   font-style: italic;
 }
@@ -570,8 +570,8 @@
 .docRow {
   padding: $sp-3 $sp-4;
   border-radius: $radius-xl;
-  border: 1px solid rgba($zinc-200, 0.6);
-  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
   display: flex;
   flex-direction: column;
   gap: $sp-4;
@@ -581,7 +581,7 @@
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
-      background: white;
+      background: var(--surface-hover);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
     }
   }
@@ -610,10 +610,10 @@
   @include md { margin-top: 0; }
 
   &.filled {
-    background: white;
-    border: 1px solid $zinc-200;
-    color: $zinc-600;
-    box-shadow: $shadow-sm;
+    background: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    box-shadow: var(--shadow-elevated);
   }
 
   &.empty {
@@ -627,7 +627,7 @@
   font-size: 0.875rem;
   font-family: $font-headline;
   font-weight: 700;
-  color: $zinc-900;
+  color: var(--text-primary);
   line-height: 1.3;
   overflow-wrap: break-word;
   word-wrap: break-word;
@@ -639,7 +639,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: $zinc-400;
+  color: var(--text-muted);
   margin-top: $sp-1;
   line-clamp: 1;
 }
@@ -698,13 +698,13 @@
   font-size: 0.6875rem;
   font-family: $font-headline;
   font-weight: 700;
-  color: $zinc-700;
-  background: white;
-  border: 1px solid $zinc-200;
+  color: var(--text-primary);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   padding: $sp-3 $sp-4; // Increased padding for 44px min-height target
   min-height: 44px;
   border-radius: $radius-md;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-elevated);
   transition: $transition-base;
 
   @include md {
@@ -755,9 +755,9 @@
 .downloadPrimaryBtn {
   gap: $sp-1_5;
   font-size: 0.6875rem;
-  color: $zinc-700;
-  background: white;
-  border: 1px solid $zinc-200;
+  color: var(--text-primary);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   border-right: 0;
   padding: $sp-3 $sp-3;
   min-height: 44px;
@@ -773,8 +773,8 @@
     padding: $sp-2_5 $sp-4;
     min-height: auto;
     font-size: 0.875rem;
-    color: $zinc-900;
-    background: $zinc-200;
+    color: var(--text-primary);
+    background: var(--surface-muted);
     border-color: transparent;
     border-radius: $radius-xl 0 0 $radius-xl;
   }
@@ -786,8 +786,8 @@
     }
 
     .downloadSplitHeader &:hover {
-      color: $zinc-900;
-      background: $zinc-300;
+      color: var(--text-primary);
+      background: var(--surface-hover);
       border-color: transparent;
     }
   }
@@ -795,9 +795,9 @@
 
 .downloadToggleBtn {
   width: 2.25rem;
-  color: $zinc-500;
-  background: white;
-  border: 1px solid $zinc-200;
+  color: var(--text-muted);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   border-radius: 0 $radius-md $radius-md 0;
 
   svg {
@@ -813,8 +813,8 @@
   }
 
   .downloadSplitHeader & {
-    color: $zinc-700;
-    background: $zinc-200;
+    color: var(--text-primary);
+    background: var(--surface-muted);
     border-color: transparent;
     box-shadow: inset 1px 0 0 rgba($zinc-900, 0.08);
     border-radius: 0 $radius-xl $radius-xl 0;
@@ -847,8 +847,8 @@
   z-index: 40;
   min-width: 13rem;
   padding: $sp-2;
-  background: white;
-  border: 1px solid rgba($zinc-200, 0.9);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-xl;
   box-shadow: 0 18px 45px rgba($zinc-900, 0.16);
   animation: downloadMenuIn 0.16s ease-out;
@@ -875,13 +875,13 @@
   font-family: $font-headline;
   font-size: 0.8125rem;
   font-weight: 800;
-  color: $zinc-900;
+  color: var(--text-primary);
 }
 
 .downloadMenuHint {
   font-size: 0.6875rem;
   font-weight: 600;
-  color: $zinc-400;
+  color: var(--text-muted);
 }
 
 @keyframes downloadMenuIn {
@@ -1043,8 +1043,8 @@
   position: fixed;
   bottom: 0;
   width: 100%;
-  background: white;
-  border-top: 1px solid rgba($zinc-200, 0.6);
+  background: var(--surface-card);
+  border-top: 1px solid var(--border-subtle);
   height: 4rem;
   align-items: center;
   justify-content: space-around;
@@ -1061,7 +1061,7 @@
   flex-direction: column;
   align-items: center;
   gap: $sp-1;
-  color: $zinc-400;
+  color: var(--text-muted);
   padding: $sp-2;
   transition: $transition-base;
 
@@ -1089,7 +1089,7 @@
   transform: translateY(-1rem);
   box-shadow: $shadow-lg;
   color: $amber-950;
-  border: 4px solid white;
+  border: 4px solid var(--surface-card);
   transition: $transition-base;
 
   &:active { transform: translateY(-1rem) scale(0.95); }
@@ -1113,8 +1113,8 @@
   width: min(100%, 42rem);
   max-height: calc(100vh - 2rem);
   overflow: auto;
-  background: white;
-  border: 1px solid rgba($zinc-200, 0.9);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-xl;
   box-shadow: 0 24px 70px rgba($zinc-900, 0.24);
 }
@@ -1125,20 +1125,20 @@
   justify-content: space-between;
   gap: $sp-4;
   padding: $sp-6;
-  border-bottom: 1px solid rgba($zinc-200, 0.8);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
 .inviteModalTitle {
   font-family: $font-headline;
   font-size: 1.375rem;
   font-weight: 900;
-  color: $zinc-900;
+  color: var(--text-primary);
   letter-spacing: -0.02em;
 }
 
 .inviteModalSubtitle {
   margin-top: $sp-1;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-size: 0.875rem;
   font-weight: 600;
 }
@@ -1153,14 +1153,14 @@
   height: 2.25rem;
   flex-shrink: 0;
   border-radius: $radius-md;
-  color: $zinc-500;
-  background: $zinc-50;
-  border: 1px solid $zinc-200;
+  color: var(--text-muted);
+  background: var(--surface-muted);
+  border: 1px solid var(--border-subtle);
   transition: $transition-base;
 
   &:hover:not(:disabled) {
-    color: $zinc-900;
-    background: $zinc-100;
+    color: var(--text-primary);
+    background: var(--surface-hover);
   }
 
   &:disabled {
@@ -1192,7 +1192,7 @@
 .inviteSectionTitle {
   font-size: 0.75rem;
   font-weight: 800;
-  color: $zinc-700;
+  color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -1208,7 +1208,7 @@
   border-radius: $radius-md;
   border: 1px dashed $amber-300;
   background: $amber-50;
-  color: $zinc-900;
+  color: var(--text-primary);
   text-align: left;
   transition: $transition-base;
 
@@ -1232,7 +1232,7 @@
 
   &:disabled {
     cursor: wait;
-    color: $zinc-400;
+    color: var(--text-muted);
   }
 }
 
@@ -1250,10 +1250,10 @@
   min-width: 0;
   flex: 1;
   min-height: 2.75rem;
-  border: 1px solid $zinc-200;
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-md;
   padding: 0 $sp-4;
-  color: $zinc-900;
+  color: var(--text-primary);
   font-size: 0.875rem;
   font-weight: 600;
   outline: none;
@@ -1265,7 +1265,7 @@
   }
 
   &::placeholder {
-    color: $zinc-400;
+    color: var(--text-muted);
   }
 }
 
@@ -1302,13 +1302,13 @@
 }
 
 .inviteEmptyText {
-  color: $zinc-500;
+  color: var(--text-muted);
   font-size: 0.875rem;
   font-weight: 600;
   padding: $sp-4;
-  border: 1px solid $zinc-200;
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-md;
-  background: $zinc-50;
+  background: var(--surface-muted);
 }
 
 .inviteStatusItem {
@@ -1316,9 +1316,9 @@
   flex-direction: column;
   gap: $sp-3;
   padding: $sp-4;
-  border: 1px solid $zinc-200;
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-md;
-  background: white;
+  background: var(--surface-card);
 
   @include sm {
     flex-direction: row;
@@ -1328,7 +1328,7 @@
 }
 
 .inviteStatusEmail {
-  color: $zinc-900;
+  color: var(--text-primary);
   font-size: 0.875rem;
   font-weight: 800;
   overflow-wrap: anywhere;
@@ -1336,7 +1336,7 @@
 
 .inviteStatusDate {
   margin-top: $sp-1;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-size: 0.75rem;
   font-weight: 600;
 }
@@ -1374,6 +1374,6 @@
 }
 
 .inviteStatusCreated {
-  background: $zinc-100;
-  color: $zinc-600;
+  background: var(--surface-muted);
+  color: var(--text-muted);
 }

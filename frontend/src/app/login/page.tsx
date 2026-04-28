@@ -171,6 +171,9 @@ function LoginContent() {
       if (isLogin) {
         const res = await api.post('/api/users/login', { email, password, turnstileToken });
         toast.success(res.data.message);
+        if (res.data?.token) {
+          localStorage.setItem('backend_token', String(res.data.token));
+        }
         router.push('/dashboard');
         return;
       }
