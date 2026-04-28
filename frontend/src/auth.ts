@@ -7,6 +7,7 @@ declare module "next-auth" {
         user: {
             id: string;
             token?: string;
+            systemRole?: 'USER' | 'SUPPORT' | 'SUPER_ADMIN';
         } & DefaultSession["user"]
     }
 }
@@ -43,6 +44,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
                         // Salva os dados do backend no token do NextAuth
                         token.backendToken = data.token;
                         token.backendUserId = data.user.id;
+                        (token as any).backendSystemRole = data.user.systemRole;
                     } else {
                         throw new Error(data.message || 'Erro ao sincronizar com backend');
                     }
@@ -60,6 +62,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
             if (token.backendToken) {
                 session.user.token = token.backendToken as string;
             }
+            const backendSystemRole = (token as any).backendSystemRole as ('USER' | 'SUPPORT' | 'SUPER_ADMIN') | undefined;
+            if (backendSystemRole) session.user.systemRole = backendSystemRole;
             return session;
         },
     },

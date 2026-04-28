@@ -70,13 +70,13 @@
   font-family: $font-headline;
   font-size: 1.875rem;
   font-weight: 900;
-  color: $zinc-900;
+  color: var(--text-primary);
   letter-spacing: -0.04em;
 }
 
 .sectionSubtitle {
   font-size: 0.875rem;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-weight: 500;
   margin-top: $sp-1;
 }
@@ -88,7 +88,7 @@
   display: flex;
   gap: $sp-4;
   margin-bottom: $sp-6;
-  border-bottom: 1px solid rgba($zinc-200, 0.6);
+  border-bottom: 1px solid var(--border-subtle);
   padding-bottom: $sp-2;
   overflow-x: auto;
   @include custom-scrollbar;
@@ -98,13 +98,13 @@
   @include btn-reset;
   font-size: 0.875rem;
   font-weight: 700;
-  color: $zinc-500;
+  color: var(--text-muted);
   padding: $sp-2 0;
   position: relative;
   transition: $transition-base;
 
   &:hover {
-    color: $zinc-900;
+    color: var(--text-primary);
   }
 
   &.active {
@@ -140,9 +140,14 @@
   gap: $sp-2;
   padding: $sp-2 $sp-3;
   margin-bottom: $sp-3;
-  border: 1px solid rgba(228, 228, 231, 0.6);
+  border: 1px solid var(--border-subtle);
   border-radius: 0.5rem;
-  background: #fafafe;
+  background: var(--surface-card);
+
+  .searchIcon {
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
 
   input {
     flex: 1;
@@ -150,23 +155,27 @@
     background: transparent;
     font-size: 0.875rem;
     outline: none;
-    color: #3f3f46;
+    color: var(--text-primary);
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
   }
 }
 
 .templateTableWrapper {
   max-height: 250px;
   overflow-y: auto;
-  border: 1px solid rgba(228, 228, 231, 0.6);
+  border: 1px solid var(--border-subtle);
   border-radius: 0.5rem;
-  background: #ffffff;
+  background: var(--surface-card);
   padding: 0.25rem;
   
   &::-webkit-scrollbar {
     width: 6px;
   }
   &::-webkit-scrollbar-thumb {
-    background-color: #d4d4d8;
+    background-color: rgba(255, 255, 255, 0.18);
     border-radius: 3px;
   }
 }
@@ -175,6 +184,15 @@
   display: flex;
   gap: $sp-3;
   align-items: center;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid transparent;
+  transition: $transition-base;
+
+  &.selected {
+    background: rgba($amber-400, 0.12);
+    border-color: rgba($amber-300, 0.55);
+  }
   
   .nameInput {
     flex: 1;
@@ -187,10 +205,27 @@
     align-items: center;
     gap: $sp-2;
     font-size: 0.75rem;
-    color: $zinc-600;
+    color: var(--text-muted);
     font-weight: 600;
     cursor: pointer;
   }
+}
+
+.templateDocLabel {
+  flex: 1;
+  font-size: 0.875rem;
+}
+
+.templateDocDescription {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.templateDocEmpty {
+  padding: 1rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.875rem;
 }
 
 // ------------------------------------------------------------------
@@ -225,7 +260,7 @@
   font-family: $font-headline;
   font-weight: 700;
   font-size: 1.125rem;
-  color: $zinc-900;
+  color: var(--text-primary);
 }
 
 .createForm {
@@ -252,17 +287,21 @@
   display: block;
   font-size: 0.6875rem;
   font-weight: 700;
-  color: $zinc-600;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.1em;
   margin-bottom: $sp-1_5;
   padding: 0 $sp-1;
 }
 
+.templateSectionLabel {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
 .fieldInput {
   @include input-base;
   width: 100%;
-  background: $zinc-50;
 }
 
 .addBtn {
@@ -304,7 +343,17 @@
 }
 
 .emptyText {
-  color: $zinc-500;
+  color: var(--text-muted);
+}
+
+.templateSubmitRow {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.templateSubmitBtn {
+  margin-top: 0;
 }
 
 // ------------------------------------------------------------------
@@ -328,8 +377,8 @@
   height: 100%;
 
   &:hover {
-    box-shadow: $shadow-md;
-    border-color: $zinc-300;
+    box-shadow: var(--shadow-elevated);
+    border-color: rgba($amber-400, 0.35);
   }
 }
 
@@ -350,7 +399,7 @@
     display: block;
     font-size: 0.625rem;
     font-weight: 700;
-    color: $zinc-500;
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: $sp-1;
@@ -374,7 +423,7 @@
     resize: none;
     height: 5rem;
     font-size: 0.75rem;
-    color: $zinc-600;
+    color: var(--text-primary);
   }
 }
 
@@ -393,12 +442,12 @@
   width: 2.5rem;
   height: 2.5rem;
   border-radius: $radius-lg;
-  background: $zinc-50;
+  background: var(--surface-muted);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba($zinc-200, 0.6);
-  color: $zinc-400;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
   transition: $transition-fast;
 
   .docCard:hover & {
@@ -409,8 +458,8 @@
 }
 
 .systemBadge {
-  background: $zinc-100;
-  color: $zinc-500;
+  background: var(--surface-muted);
+  color: var(--text-muted);
   font-size: 0.625rem;
   font-weight: 700;
   padding: $sp-1 $sp-2_5;
@@ -423,7 +472,7 @@
   font-family: $font-headline;
   font-weight: 700;
   font-size: 1.125rem;
-  color: $zinc-900;
+  color: var(--text-primary);
   margin-bottom: $sp-1;
   display: -webkit-box;
   line-clamp: 1;
@@ -434,7 +483,7 @@
 
 .docDescription {
   font-size: 0.875rem;
-  color: $zinc-500;
+  color: var(--text-muted);
   display: -webkit-box;
   line-clamp: 2;
   -webkit-line-clamp: 2;
@@ -454,7 +503,7 @@
 .cardFooter {
   margin-top: $sp-6;
   padding-top: $sp-4;
-  border-top: 1px solid rgba($zinc-200, 0.6);
+  border-top: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -464,24 +513,24 @@
 .actionBtn {
   @include btn-reset;
   padding: $sp-2;
-  color: $zinc-400;
+  color: var(--text-muted);
   border-radius: $radius-lg;
   transition: $transition-base;
 
   &:hover {
     color: $amber-600;
-    background: $amber-50;
+    background: rgba($amber-400, 0.12);
   }
 
   &.danger:hover {
     color: $red-600;
-    background: $red-50;
+    background: rgba($red-500, 0.12);
   }
 }
 
 .readOnlyText {
   font-size: 0.625rem;
-  color: $zinc-400;
+  color: var(--text-muted);
   font-weight: 500;
   font-style: italic;
 }
@@ -496,12 +545,12 @@
   padding: $sp-1_5 $sp-3;
   font-size: 0.75rem;
   font-weight: 700;
-  color: $zinc-500;
+  color: var(--text-muted);
   border-radius: $radius-lg;
 
   &:hover {
-    color: $zinc-700;
-    background: $zinc-100;
+    color: var(--text-primary);
+    background: var(--surface-hover);
   }
 }
 
@@ -525,4 +574,17 @@
   &:active {
     transform: scale(0.98);
   }
+}
+
+.templateCount {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.templateIcon {
+  background-color: rgba($emerald-500, 0.12);
+  color: $emerald-500;
+  border-color: rgba($emerald-200, 0.5);
 }
