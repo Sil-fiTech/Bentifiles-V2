@@ -150,7 +150,7 @@ export default function ProfilePage() {
                                     <span>Plano: {accessData?.subscriptionPlan || 'Padrão'}</span>
                                 </div>
                                 <div className={styles.metaItem}>
-                                    <CheckCircle2 size={16} className={accessData?.hasSystemAccess ? 'text-green-500' : 'text-slate-400'} />
+                                    <CheckCircle2 size={16} className={accessData?.hasSystemAccess ? styles.successMeta : styles.inactiveMeta} />
                                     <span>Status: {accessData?.hasSystemAccess ? 'Ativo' : 'Inativo'}</span>
                                 </div>
                                 <div className={styles.metaItem}>
@@ -165,14 +165,13 @@ export default function ProfilePage() {
                               <h3 className={styles.panelTitle} style={{ fontSize: '1rem', marginBottom: '1rem' }}>
                                   <CreditCard size={18} /> Assinatura
                               </h3>
-                              <p className="text-sm text-slate-500 mb-4">
+                              <p className={styles.manageSubscriptionText}>
                                 Gerencie sua forma de pagamento, histórico de faturas e plano atual no Stripe.
                               </p>
                               <button 
                                 onClick={handleManageSubscription}
                                 disabled={portalLoading}
-                                className={styles.saveBtn}
-                                style={{ width: '100%', justifyContent: 'center', background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0' }}
+                                className={styles.secondaryBtn}
                               >
                                 {portalLoading ? <Loader2 size={16} className="animate-spin" /> : <ExternalLink size={16} />}
                                 Gerenciar Assinatura

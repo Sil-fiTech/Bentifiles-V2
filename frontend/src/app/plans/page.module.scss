@@ -3,10 +3,10 @@
 
 .root {
   min-height: 100vh;
-  background: $zinc-50;
+  background: var(--page-gradient);
   padding: $sp-16 0;
   font-family: $font-body;
-  color: $zinc-900;
+  color: var(--text-primary);
   position: relative;
   overflow-x: hidden;
 }
@@ -30,14 +30,14 @@
   display: flex;
   align-items: center;
   gap: $sp-2;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-weight: 700;
   margin-bottom: $sp-8;
   transition: $transition-base;
   font-size: 0.875rem;
 
   &:hover {
-    color: $zinc-900;
+    color: var(--text-primary);
     transform: translateX(-4px);
   }
 }
@@ -48,7 +48,7 @@
   font-weight: 900;
   line-height: 1.1;
   letter-spacing: -0.04em;
-  color: $zinc-900;
+  color: var(--text-primary);
   margin-bottom: $sp-6;
 }
 
@@ -59,7 +59,7 @@
 
 .subtitle {
   font-size: 1.125rem;
-  color: $zinc-600;
+  color: var(--text-muted);
   max-width: 40rem;
   margin: 0 auto;
   line-height: 1.6;
@@ -67,7 +67,7 @@
 
 .highlight {
   font-weight: 800;
-  color: $zinc-900;
+  color: var(--text-primary);
   text-decoration: underline;
   text-decoration-color: $amber-400;
   text-decoration-thickness: 3px;
@@ -82,7 +82,7 @@
   margin-top: $sp-8;
   font-size: 0.8125rem;
   font-weight: 700;
-  color: $zinc-400;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 
@@ -100,7 +100,7 @@
 .dot {
   width: $sp-1_5;
   height: $sp-1_5;
-  background: $zinc-300;
+  background: var(--border-subtle);
   border-radius: $radius-full;
 }
 
@@ -121,12 +121,12 @@
   font-family: $font-headline;
   font-weight: 800;
   font-size: 1.25rem;
-  color: $zinc-900;
+  color: var(--text-primary);
   margin-bottom: $sp-2;
 }
 
 .faqText {
-  color: $zinc-600;
+  color: var(--text-muted);
   font-size: 0.9375rem;
   line-height: 1.5;
 }

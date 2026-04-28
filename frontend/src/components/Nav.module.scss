@@ -5,10 +5,10 @@
 // Root header element
 // ------------------------------------------------------------------
 .header {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--surface-glass);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba($zinc-200, 0.6);
+  border-bottom: 1px solid var(--border-subtle);
   z-index: 40;
   display: flex;
   justify-content: center;
@@ -27,12 +27,12 @@
   top: 100%;
   left: 0;
   width: 100%;
-  background: rgba(255, 255, 255, 0.95);
+  background: var(--surface-card);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba($zinc-200, 0.6);
+  border-bottom: 1px solid var(--border-subtle);
   padding: $sp-4;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-elevated);
   z-index: 30;
   animation: slideDown 0.2s ease-out;
 
@@ -64,7 +64,7 @@
 
   &:hover {
     color: $amber-500;
-    background: rgba($amber-50, 0.8);
+    background: rgba($amber-400, 0.12);
   }
 }
 
@@ -76,7 +76,7 @@
 
 .mobileDivider {
   height: 1px;
-  background: rgba($zinc-200, 0.6);
+  background: var(--border-subtle);
   margin: $sp-2 $sp-4;
 }
 
@@ -86,7 +86,7 @@
 
   &:hover {
     color: $red-600;
-    background: $red-50;
+    background: rgba($red-500, 0.12);
   }
 }
 
@@ -155,7 +155,7 @@
   font-family: $font-headline;
   font-size: 1.25rem;
   font-weight: 900;
-  color: $zinc-900;
+  color: var(--text-primary);
   letter-spacing: -0.04em;
 
   @include below-sm {
@@ -182,13 +182,13 @@
 
   &:hover {
     color: $amber-500;
-    background: rgba($amber-50, 0.8);
+    background: rgba($amber-400, 0.12);
   }
 
   &.active {
-    color: $zinc-900;
-    background: white;
-    box-shadow: $shadow-sm;
+    color: var(--text-primary);
+    background: var(--surface-card);
+    box-shadow: var(--shadow-elevated);
   }
 }
 
@@ -196,7 +196,7 @@
   font-family: $font-headline;
   font-weight: 700;
   letter-spacing: -0.03em;
-  color: $zinc-900;
+  color: var(--text-primary);
   border-bottom: 2px solid $amber-500;
   padding-bottom: 0.25rem;
   margin-top: 0.25rem;
@@ -232,14 +232,14 @@
   align-items: center;
   justify-content: center;
   padding: $sp-2;
-  color: $zinc-500;
+  color: var(--text-muted);
   border-radius: $radius-md;
   margin-left: $sp-2;
   transition: $transition-base;
 
   &:hover {
-    color: $zinc-900;
-    background: $zinc-50;
+    color: var(--text-primary);
+    background: var(--surface-hover);
   }
 
   @include md {
@@ -252,20 +252,20 @@
   left: $sp-3;
   top: 50%;
   transform: translateY(-50%);
-  color: $zinc-400;
+  color: var(--text-muted);
   transition: $transition-base;
   pointer-events: none;
 }
 
 .searchInput {
   width: 100%;
-  background: $zinc-100;
-  border: 1px solid rgba($zinc-200, 0.6);
+  background: var(--surface-muted);
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-md;
   padding: $sp-2 $sp-4 $sp-2 2.25rem;
   font-size: 0.875rem;
   font-family: $font-body;
-  color: $zinc-900;
+  color: var(--text-primary);
   outline: none;
   transition: $transition-base;
 
@@ -288,15 +288,15 @@
 
 .iconBtn {
   @include btn-reset;
-  color: $zinc-500;
+  color: var(--text-muted);
   padding: $sp-2;
   border-radius: $radius-md;
   transition: $transition-base;
   position: relative;
 
   &:hover {
-    color: $zinc-900;
-    background: $zinc-50;
+    color: var(--text-primary);
+    background: var(--surface-hover);
   }
 }
 
@@ -308,13 +308,13 @@
   height: 0.5rem;
   background: $amber-500;
   border-radius: $radius-full;
-  border: 1px solid white;
+  border: 1px solid var(--border-strong);
 }
 
 .divider {
   height: 1.5rem;
   width: 1px;
-  background: $zinc-200;
+  background: var(--border-subtle);
   margin: 0 $sp-1;
 }
 
@@ -335,7 +335,7 @@
   border-radius: $radius-xl;
   transition: $transition-base;
 
-  &:hover { background: $zinc-50; }
+  &:hover { background: var(--surface-hover); }
 }
 
 .avatar {
@@ -355,7 +355,7 @@
 }
 
 .chevron {
-  color: $zinc-500;
+  color: var(--text-muted);
   margin-right: $sp-1;
 }
 
@@ -365,10 +365,10 @@
   right: 0;
   top: calc(100% + $sp-2);
   width: 12rem;
-  background: white;
-  border: 1px solid rgba($zinc-200, 0.6);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-xl;
-  box-shadow: 0 10px 40px rgba($zinc-200, 0.8), 0 4px 16px rgba(0,0,0,0.06);
+  box-shadow: var(--shadow-floating);
   padding: $sp-1 0;
   overflow: hidden;
   z-index: 50;
@@ -396,17 +396,17 @@
   padding: $sp-2 $sp-4;
   font-size: 0.875rem;
   font-weight: 500;
-  color: $zinc-700;
+  color: var(--text-primary);
   transition: $transition-fast;
 
-  &:hover { background: $zinc-50; }
+  &:hover { background: var(--surface-hover); }
 
-  svg { color: $zinc-400; }
+  svg { color: var(--text-muted); }
 }
 
 .dropdownDivider {
   height: 1px;
-  background: $zinc-100;
+  background: var(--border-subtle);
   margin: $sp-1 0;
 }
 
@@ -414,7 +414,7 @@
   @extend .dropdownItem;
   color: $red-600;
 
-  &:hover { background: $red-50; }
+  &:hover { background: rgba($red-500, 0.12); }
 
   svg { color: $red-500; }
 }

@@ -46,7 +46,7 @@
       color: var(--text-primary);
       margin-bottom: 1rem;
       font-weight: 600;
-      border-left: 4px solid #4299e1;
+      border-left: 4px solid #48bb78;
       padding-left: 1rem;
 
       @media (max-width: 768px) {
@@ -81,8 +81,12 @@
           content: '→';
           position: absolute;
           left: -1.5rem;
-          color: #4299e1;
+          color: #48bb78;
           font-weight: bold;
+        }
+
+        strong {
+          color: var(--text-primary);
         }
       }
     }
