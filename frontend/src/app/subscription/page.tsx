@@ -14,7 +14,8 @@ import {
   Clock,
   Mail,
   Users,
-  UserMinus
+  UserMinus,
+  ArrowRight
 } from 'lucide-react';
 import { OfficeWorkspaceInvite, OfficeWorkspaceMember, PlanData, SubscriptionData } from './types';
 import { useSession, signOut } from 'next-auth/react';
@@ -321,6 +322,7 @@ export default function SubscriptionPage() {
   const StatusIcon = status.icon;
   const officeWorkspace = data.officeWorkspace;
   const officeSeatAccess = data.officeSeatAccess;
+  const canCancelSubscription = Boolean(data.stripeSubscriptionId) && ['active', 'trialing', 'past_due'].includes(data.subscriptionStatus);
 
   return (
     <div className={styles.root}>
@@ -403,14 +405,24 @@ export default function SubscriptionPage() {
                 </button>
               ) : (
                 <>
-
-                  <button 
-                    className={styles.btnDanger} 
-                    onClick={handleCancelSubscription}
+                  <button
+                    className={styles.btnPrimary}
+                    onClick={() => router.push('/plans')}
                     disabled={!!actionLoading}
                   >
-                    {actionLoading === 'cancel' ? <RefreshCw className="animate-spin" /> : 'Cancelar Plano'}
+                    Ver planos disponíveis
+                    <ArrowRight size={18} />
                   </button>
+
+                  {canCancelSubscription && (
+                    <button
+                      className={styles.btnDanger}
+                      onClick={handleCancelSubscription}
+                      disabled={!!actionLoading}
+                    >
+                      {actionLoading === 'cancel' ? <RefreshCw className="animate-spin" /> : 'Cancelar Plano'}
+                    </button>
+                  )}
                 </>
               )}
             </div>
@@ -605,4 +617,3 @@ export default function SubscriptionPage() {
     </div>
   );
 }
-
