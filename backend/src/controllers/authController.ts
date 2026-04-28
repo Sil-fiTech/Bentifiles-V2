@@ -41,32 +41,58 @@ const validatePasswordRequirements = (password: string) => {
     };
 };
 
-const verifyTurnstile = async (token: string): Promise<boolean> => {
-    if (!token) return false;
+type TurnstileVerifyResult = { success: boolean; errorCodes: string[] };
+
+const getClientIp = (req: Request): string | undefined => {
+    const cfConnectingIp = req.headers['cf-connecting-ip'];
+    if (typeof cfConnectingIp === 'string' && cfConnectingIp.trim()) return cfConnectingIp.trim();
+
+    const forwardedFor = req.headers['x-forwarded-for'];
+    if (typeof forwardedFor === 'string' && forwardedFor.trim()) {
+        return forwardedFor.split(',')[0]?.trim() || undefined;
+    }
+
+    if (typeof req.ip === 'string' && req.ip.trim()) return req.ip.trim();
+
+    return undefined;
+};
+
+const verifyTurnstile = async (token: string, remoteip?: string): Promise<TurnstileVerifyResult> => {
+    if (!token) return { success: false, errorCodes: ['missing-input-response'] };
 
     try {
         const secret = process.env.TURNSTILE_SECRET_KEY;
         if (!secret) {
             console.error('TURNSTILE_SECRET_KEY nao configurado no servidor');
-            return false;
+            return { success: false, errorCodes: ['missing-input-secret'] };
         }
+
+        const params = new URLSearchParams();
+        params.set('secret', secret);
+        params.set('response', token);
+        if (remoteip) params.set('remoteip', remoteip);
 
         const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: JSON.stringify({
-                secret,
-                response: token,
-            }),
+            body: params.toString(),
         });
 
-        const data = await response.json();
-        return data.success;
+        if (!response.ok) {
+            console.error('Falha HTTP ao validar Turnstile:', response.status, response.statusText);
+            return { success: false, errorCodes: ['bad-request'] };
+        }
+
+        const data = (await response.json()) as { success?: boolean; 'error-codes'?: string[] };
+        return {
+            success: Boolean(data?.success),
+            errorCodes: Array.isArray(data?.['error-codes']) ? data['error-codes'] : [],
+        };
     } catch (error) {
         console.error('Erro na validacao do Turnstile:', error);
-        return false;
+        return { success: false, errorCodes: ['internal-error'] };
     }
 };
 
@@ -86,8 +112,9 @@ export const register = async (req: Request, res: Response) => {
             });
         }
 
-        const isTurnstileValid = await verifyTurnstile(turnstileToken);
-        if (!isTurnstileValid) {
+        const turnstileVerify = await verifyTurnstile(turnstileToken, getClientIp(req));
+        if (!turnstileVerify.success) {
+            console.warn('Turnstile invalido (register):', { errorCodes: turnstileVerify.errorCodes });
             return res.status(400).json({ message: 'Falha na verificacao de seguranca (Turnstile)' });
         }
 
@@ -137,8 +164,9 @@ export const login = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Campos obrigatorios ausentes' });
         }
 
-        const isTurnstileValid = await verifyTurnstile(turnstileToken);
-        if (!isTurnstileValid) {
+        const turnstileVerify = await verifyTurnstile(turnstileToken, getClientIp(req));
+        if (!turnstileVerify.success) {
+            console.warn('Turnstile invalido (login):', { errorCodes: turnstileVerify.errorCodes });
             return res.status(400).json({ message: 'Falha na verificacao de seguranca (Turnstile)' });
         }
 

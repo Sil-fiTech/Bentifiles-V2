@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useMemo, useState, Suspense } from 'react';
+import { useEffect, useMemo, useRef, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
 import { signIn, useSession } from 'next-auth/react';
-import { Turnstile } from '@marsidev/react-turnstile';
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import styles from '../page.module.scss';
 
-type AuthMode = 'login' | 'register' | 'forgot' | 'reset';
+type AuthMode = 'login' | 'register' | 'forgot' | 'reset' | 'verify';
 
 const passwordChecks = (password: string) => [
   { key: 'length', label: 'Pelo menos 8 caracteres', ok: password.length >= 8 },
@@ -27,19 +27,23 @@ function LoginContent() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [name, setName] = useState('');
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileInstance | undefined>(undefined);
   const [loading, setLoading] = useState(false);
+  const [resendCooldownSeconds, setResendCooldownSeconds] = useState(0);
   const router = useRouter();
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get('invite');
   const officeInviteToken = searchParams.get('officeInvite');
   const urlMode = searchParams.get('mode');
   const resetToken = searchParams.get('token');
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAACvhVvi_0lSDhv6U';
 
   const { data: session, status } = useSession();
   const isLogin = mode === 'login';
   const isRegister = mode === 'register';
   const isForgot = mode === 'forgot';
   const isReset = mode === 'reset';
+  const isVerify = mode === 'verify';
   const shouldShowPasswordRules = isRegister || isReset;
   const passwordRequirements = useMemo(() => passwordChecks(password), [password]);
   const completedPasswordRequirements = passwordRequirements.filter((item) => item.ok).length;
@@ -63,6 +67,17 @@ function LoginContent() {
       setMode('reset');
     }
   }, [urlMode, resetToken]);
+
+  useEffect(() => {
+    if (!isVerify) return;
+    if (resendCooldownSeconds <= 0) return;
+
+    const interval = setInterval(() => {
+      setResendCooldownSeconds((current) => Math.max(0, current - 1));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [isVerify, resendCooldownSeconds]);
 
   useEffect(() => {
     if (inviteToken) {
@@ -96,13 +111,40 @@ function LoginContent() {
     setConfirmPassword('');
     setShowPassword(false);
     setShowConfirmPassword(false);
+    turnstileRef.current?.reset();
     setTurnstileToken(null);
     setLoading(false);
+    setResendCooldownSeconds(0);
   };
 
   const switchMode = (nextMode: AuthMode) => {
     setMode(nextMode);
     resetFormState();
+  };
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast.error('Informe o e-mail usado no cadastro.');
+      return;
+    }
+
+    if (resendCooldownSeconds > 0) return;
+
+    setLoading(true);
+    try {
+      await api.post('/api/users/resend-verification', {
+        email,
+        inviteToken: inviteToken || localStorage.getItem('pendingInvite'),
+        officeInviteToken: officeInviteToken || localStorage.getItem('pendingOfficeInvite'),
+      });
+
+      toast.success('Novo e-mail de verificacao enviado! Verifique sua caixa de entrada.');
+      setResendCooldownSeconds(60);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Erro ao reenviar e-mail de verificacao.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -146,7 +188,7 @@ function LoginContent() {
         });
 
         toast.success('Conta criada! Verifique seu e-mail para validar a conta.');
-        switchMode('login');
+        switchMode('verify');
         return;
       }
 
@@ -192,6 +234,10 @@ function LoginContent() {
         toast.error(error.response?.data?.message || 'Falha na autenticacao');
       }
     } finally {
+      if (isLogin || isRegister) {
+        turnstileRef.current?.reset();
+        setTurnstileToken(null);
+      }
       setLoading(false);
     }
   };
@@ -212,7 +258,9 @@ function LoginContent() {
       ? 'Crie sua conta'
       : isForgot
         ? 'Recuperar senha'
-        : 'Defina sua nova senha';
+        : isReset
+          ? 'Defina sua nova senha'
+          : 'Confirme seu e-mail';
 
   const subtitle = isLogin
     ? 'Faca o login para acessar o workspace.'
@@ -220,7 +268,9 @@ function LoginContent() {
       ? 'Junte-se a nos para gerenciar seus arquivos.'
       : isForgot
         ? 'Enviaremos um link de recuperacao para o seu e-mail.'
-        : 'Escolha uma senha forte para voltar ao sistema com seguranca.';
+        : isReset
+          ? 'Escolha uma senha forte para voltar ao sistema com seguranca.'
+          : 'Enviamos um link de confirmacao para o seu e-mail.';
 
   return (
     <div className={styles.root}>
@@ -246,7 +296,45 @@ function LoginContent() {
             <p className={styles.cardSubtitle}>{subtitle}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className={styles.form}>
+          {isVerify ? (
+            <div className={styles.form}>
+              <div className={styles.fieldGroup}>
+                <label className={styles.fieldLabel}>E-mail cadastrado</label>
+                <input
+                  type="email"
+                  className={styles.fieldInput}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seuemail@exemplo.com"
+                />
+              </div>
+
+              <button
+                type="button"
+                className={styles.submitBtn}
+                onClick={handleResendVerification}
+                disabled={loading || resendCooldownSeconds > 0}
+              >
+                <div className={styles.submitBtnSheen} />
+                <span className={styles.submitBtnText}>
+                  {resendCooldownSeconds > 0
+                    ? `Reenviar em ${resendCooldownSeconds}s`
+                    : loading
+                      ? 'Enviando...'
+                      : 'Reenviar E-mail de Confirmacao'}
+                </span>
+              </button>
+
+              <button type="button" className={styles.inlineLink} onClick={() => switchMode('login')}>
+                Ir para o login
+              </button>
+
+              <button type="button" className={styles.inlineLink} onClick={() => switchMode('register')}>
+                Trocar e-mail e cadastrar novamente
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className={styles.form}>
             {isRegister && (
               <div className={styles.fieldGroup}>
                 <label className={styles.fieldLabel}>Nome</label>
@@ -422,8 +510,11 @@ function LoginContent() {
 
             {(isLogin || isRegister) && (
               <Turnstile
-                siteKey="0x4AAAAAACvhVvi_0lSDhv6U"
+                siteKey={turnstileSiteKey}
+                ref={turnstileRef}
                 onSuccess={(token: string) => setTurnstileToken(token)}
+                onExpire={() => setTurnstileToken(null)}
+                onError={() => setTurnstileToken(null)}
                 options={{ theme: 'light' }}
               />
             )}
@@ -447,6 +538,7 @@ function LoginContent() {
               </span>
             </button>
           </form>
+          )}
 
           {isLogin && (
             <button type="button" className={styles.inlineLink} onClick={() => switchMode('forgot')}>
@@ -505,6 +597,15 @@ function LoginContent() {
               <span className={styles.footerText}>Lembrou a senha? </span>
               <button onClick={() => switchMode('login')} className={styles.footerToggle}>
                 Voltar para o login
+              </button>
+            </>
+          )}
+
+          {isVerify && (
+            <>
+              <span className={styles.footerText}>Ja confirmou o e-mail? </span>
+              <button onClick={() => switchMode('login')} className={styles.footerToggle}>
+                Fazer login
               </button>
             </>
           )}
