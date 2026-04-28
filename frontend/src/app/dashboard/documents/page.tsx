@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { Plus, Loader2, Trash2, Edit2, FileText, AlertTriangle, ShieldCheck, Copy, Check, Search } from 'lucide-react';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { Nav } from '@/components/Nav';
 import styles from './page.module.scss';
 
@@ -144,18 +144,9 @@ export default function DocumentTypesDashboard() {
     };
 
     // --- Template Functions ---
-    const addTemplateDocRow = () => {
-        setNewTemplateDocs([...newTemplateDocs, { name: '', isRequired: true, order: newTemplateDocs.length }]);
-    };
-
-    const updateTemplateDocRow = (index: number, field: keyof TemplateDocType, value: any) => {
+    const updateTemplateDocRow = (index: number, field: keyof TemplateDocType, value: string | boolean | number) => {
         const updated = [...newTemplateDocs];
         updated[index] = { ...updated[index], [field]: value };
-        setNewTemplateDocs(updated);
-    };
-
-    const removeTemplateDocRow = (index: number) => {
-        const updated = newTemplateDocs.filter((_, i) => i !== index);
         setNewTemplateDocs(updated);
     };
 
@@ -244,7 +235,7 @@ export default function DocumentTypesDashboard() {
     if (loading) {
         return (
             <div className={styles.loadingScreen}>
-                <Loader2 className="animate-spin" style={{ width: 32, height: 32, color: '#f59e0b' }} />
+                <Loader2 className="animate-spin" size={32} style={{ color: '#f59e0b' }} />
             </div>
         );
     }
@@ -459,12 +450,12 @@ export default function DocumentTypesDashboard() {
                                 </div>
 
                                 <div className={styles.templateDocsList}>
-                                    <label className={styles.fieldLabel} style={{ marginTop: '1rem', marginBottom: '0.5rem' }}>
+                                    <label className={`${styles.fieldLabel} ${styles.templateSectionLabel}`}>
                                         Selecione os Documentos para este Template
                                     </label>
 
                                     <div className={styles.templateTableSearch}>
-                                        <Search size={16} color="#71717a" />
+                                        <Search size={16} className={styles.searchIcon} />
                                         <input
                                             placeholder="Buscar documentos cadastrados..."
                                             value={templateDocSearch}
@@ -480,8 +471,8 @@ export default function DocumentTypesDashboard() {
                                                 const isSelected = selectedDocIndex !== -1;
 
                                                 return (
-                                                    <div key={doc.id} className={styles.templateDocRow} style={{ background: isSelected ? '#fffbeb' : 'transparent', padding: '0.5rem', borderRadius: '0.5rem', border: isSelected ? '1px solid #fde68a' : '1px solid transparent' }}>
-                                                        <label className={styles.reqToggle} style={{ flex: 1, fontSize: '0.875rem' }}>
+                                                    <div key={doc.id} className={`${styles.templateDocRow} ${isSelected ? styles.selected : ''}`}>
+                                                        <label className={`${styles.reqToggle} ${styles.templateDocLabel}`}>
                                                             <input
                                                                 type="checkbox"
                                                                 checked={isSelected}
@@ -493,7 +484,7 @@ export default function DocumentTypesDashboard() {
                                                                     }
                                                                 }}
                                                             />
-                                                            {doc.name} {doc.description ? <span style={{ color: '#a1a1aa', fontWeight: 400 }}>({doc.description})</span> : ''}
+                                                            {doc.name} {doc.description ? <span className={styles.templateDocDescription}>({doc.description})</span> : ''}
                                                         </label>
 
                                                         {isSelected && (
@@ -510,19 +501,18 @@ export default function DocumentTypesDashboard() {
                                                 );
                                             })}
                                         {documentTypes.filter(doc => doc.name.toLowerCase().includes(templateDocSearch.toLowerCase())).length === 0 && (
-                                            <div style={{ padding: '1rem', textAlign: 'center', color: '#a1a1aa', fontSize: '0.875rem' }}>
+                                            <div className={styles.templateDocEmpty}>
                                                 Nenhum documento encontrado.
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '1rem' }}>
+                                <div className={styles.templateSubmitRow}>
                                     <button
                                         onClick={handleCreateTemplate}
                                         disabled={isCreatingTemplate || !newTemplateName.trim()}
-                                        className={styles.addBtn}
-                                        style={{ marginTop: 0 }}
+                                        className={`${styles.addBtn} ${styles.templateSubmitBtn}`}
                                     >
                                         {isCreatingTemplate ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} />}
                                         Salvar Template
@@ -542,7 +532,7 @@ export default function DocumentTypesDashboard() {
                                             <div key={tpl.id} className={styles.docCard}>
                                                 <div className={styles.docCardContent}>
                                                     <div className={styles.docCardHeader}>
-                                                        <div className={styles.docIconWrapper} style={{ backgroundColor: '#f0fdf4', color: '#16a34a', borderColor: '#dcfce7' }}>
+                                                        <div className={`${styles.docIconWrapper} ${styles.templateIcon}`}>
                                                             <Copy size={20} />
                                                         </div>
                                                         {tpl.isDefault && (
@@ -555,7 +545,7 @@ export default function DocumentTypesDashboard() {
                                                     <p className={styles.docDescription} title={tpl.description || ''}>
                                                         {tpl.description || <span className={styles.italic}>Sem descrição</span>}
                                                     </p>
-                                                    <div style={{ marginTop: '1rem', fontSize: '0.75rem', fontWeight: 600, color: '#71717a' }}>
+                                                    <div className={styles.templateCount}>
                                                         {tpl.documentTypeCount} documento(s) inclusos
                                                     </div>
                                                 </div>

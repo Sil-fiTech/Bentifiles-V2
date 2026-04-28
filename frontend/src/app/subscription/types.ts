@@ -15,8 +15,8 @@ export interface SubscriptionData {
   amount: number;
   quantity?: number;
   currency: string;
-  currentPeriodStart: string; // ISO String
-  currentPeriodEnd: string; // ISO String
+  currentPeriodStart: string | null; // ISO String
+  currentPeriodEnd: string | null; // ISO String
   cancelAtPeriodEnd: boolean;
   trialEnd: string | null; // ISO String se estiver em trial
   stripeCustomerId: string | null;

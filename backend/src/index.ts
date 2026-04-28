@@ -8,6 +8,7 @@ import { handleUnhandledErrors } from './middleware/errorHandler';
 import { attachRequestContext, logHttpRequests } from './middleware/observability';
 import prisma from './prisma';
 import authRoutes from './routes/authRoutes';
+import adminUsersRoutes from './routes/adminUsersRoutes';
 import billingRoutes from './routes/billingRoutes';
 import documentRoutes from './routes/documentRoutes';
 import fileRoutes from './routes/fileRoutes';
@@ -43,6 +44,7 @@ app.use('/webhooks', stripeWebhookRoutes);
 app.use(express.json());
 
 app.use('/api/auth', authRoutes);
+app.use('/api/admin/users', adminUsersRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/projects', projectRoutes);

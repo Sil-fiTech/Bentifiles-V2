@@ -13,6 +13,12 @@ enum Role {
   USER
 }
 
+enum SystemRole {
+  USER
+  SUPPORT
+  SUPER_ADMIN
+}
+
 enum ProjectStatus {
   ACTIVE
   ARCHIVED
@@ -39,6 +45,7 @@ model User {
   image      String?
   provider   String?
   providerId String?
+  systemRole         SystemRole @default(USER)
   emailVerified      Boolean   @default(false)
   emailVerifyToken   String?
   emailVerifyExpires DateTime?
@@ -74,6 +81,9 @@ model User {
   createdAt DateTime   @default(now())
   updatedAt DateTime   @updatedAt
   templates Template[]
+
+  adminAuditLogsAsActor  AdminAuditLog[] @relation("AdminAuditActor")
+  adminAuditLogsAsTarget AdminAuditLog[] @relation("AdminAuditTarget")
 }
 
 enum SubscriptionStatus {
@@ -399,4 +409,19 @@ model TemplateDocumentType {
   order       Int      @default(0)
 
   createdAt DateTime @default(now())
+}
+
+model AdminAuditLog {
+  id           String   @id @default(uuid())
+  actorId      String
+  targetUserId String?
+  action       String
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  actor      User  @relation("AdminAuditActor", fields: [actorId], references: [id], onDelete: Cascade)
+  targetUser User? @relation("AdminAuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorId, createdAt])
+  @@index([targetUserId, createdAt])
 }

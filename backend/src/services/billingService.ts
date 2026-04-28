@@ -253,6 +253,8 @@ export const getSubscriptionDetails = async (userId: string) => {
     throw new Error('Usuario nao encontrado');
   }
 
+  const isNoSubscription = user.subscriptionStatus === 'NONE';
+
   const officeWorkspace = user.subscriptionPlan === 'OFFICE'
     ? await getOfficeSubscriptionManagement(user.id)
     : null;
@@ -272,8 +274,10 @@ export const getSubscriptionDetails = async (userId: string) => {
     billingInterval: 'monthly',
     amount: 0,
     currency: 'BRL',
-    currentPeriodStart: new Date().toISOString(),
-    currentPeriodEnd: user.subscriptionCurrentPeriodEnd?.toISOString() || new Date().toISOString(),
+    currentPeriodStart: isNoSubscription ? null : new Date().toISOString(),
+    currentPeriodEnd: isNoSubscription
+      ? null
+      : (user.subscriptionCurrentPeriodEnd?.toISOString() || new Date().toISOString()),
     cancelAtPeriodEnd: user.subscriptionCancelAtPeriodEnd,
     trialEnd: user.subscriptionTrialEndsAt?.toISOString() || null,
     stripeCustomerId: user.stripeCustomerId,

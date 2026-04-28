@@ -201,6 +201,7 @@ export const login = async (req: Request, res: Response) => {
                 id: user.id,
                 name: user.name,
                 email: user.email,
+                systemRole: user.systemRole,
                 hasSystemAccess: computeSystemAccess(user)
             },
         });
@@ -270,6 +271,7 @@ export const googleLogin = async (req: Request, res: Response) => {
                 name: user.name,
                 email: user.email,
                 image: user.image,
+                systemRole: user.systemRole,
                 hasSystemAccess: computeSystemAccess(user)
             },
         });

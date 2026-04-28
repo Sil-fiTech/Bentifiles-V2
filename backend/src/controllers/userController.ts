@@ -13,7 +13,7 @@ export const getProfile = async (req: Request, res: Response) => {
 
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            select: { id: true, name: true, email: true, image: true, createdAt: true }
+            select: { id: true, name: true, email: true, image: true, createdAt: true, emailVerified: true, systemRole: true }
         });
 
         if (!user) {
@@ -39,7 +39,7 @@ export const updateProfile = async (req: Request, res: Response) => {
         const user = await prisma.user.update({
             where: { id: userId },
             data: { name: name.trim() },
-            select: { id: true, name: true, email: true, image: true, createdAt: true }
+            select: { id: true, name: true, email: true, image: true, createdAt: true, emailVerified: true, systemRole: true }
         });
 
         res.json(user);
@@ -104,7 +104,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
         res.status(200).json({
             message: 'E-mail verificado com sucesso!',
             token: jwtToken,
-            user: { id: user.id, name: user.name, email: user.email }
+            user: { id: user.id, name: user.name, email: user.email, systemRole: user.systemRole }
         });
     } catch (error) {
         console.error('Verify email error:', error);

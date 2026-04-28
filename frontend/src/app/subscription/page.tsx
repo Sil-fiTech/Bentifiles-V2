@@ -321,6 +321,8 @@ export default function SubscriptionPage() {
   const StatusIcon = status.icon;
   const officeWorkspace = data.officeWorkspace;
   const officeSeatAccess = data.officeSeatAccess;
+  const hasSubscription = data.subscriptionStatus !== 'none';
+  const canShowBillingDates = Boolean(data.currentPeriodStart && data.currentPeriodEnd);
 
   return (
     <div className={styles.root}>
@@ -346,7 +348,11 @@ export default function SubscriptionPage() {
         {data.cancelAtPeriodEnd && (
           <div className={`${styles.alert} ${styles.warning}`}>
             <AlertCircle size={20} />
-            <span>Sua assinatura será encerrada em <strong>{formatDate(data.currentPeriodEnd)}</strong>. Você ainda pode reativá-la a qualquer momento.</span>
+            {data.currentPeriodEnd ? (
+              <span>Sua assinatura será encerrada em <strong>{formatDate(data.currentPeriodEnd)}</strong>. Você ainda pode reativá-la a qualquer momento.</span>
+            ) : (
+              <span>Sua assinatura está marcada para encerrar ao fim do período atual.</span>
+            )}
           </div>
         )}
 
@@ -380,19 +386,25 @@ export default function SubscriptionPage() {
               </div>
             </div>
 
-            <div className={styles.detailsGrid}>
-              <div className={styles.detailItem}>
-                <span>Ciclo de Faturamento</span>
-                <strong>{formatDate(data.currentPeriodStart)} — {formatDate(data.currentPeriodEnd)}</strong>
+            {hasSubscription && canShowBillingDates && (
+              <div className={styles.detailsGrid}>
+                <div className={styles.detailItem}>
+                  <span>Ciclo de Faturamento</span>
+                  <strong>{formatDate(data.currentPeriodStart!)} — {formatDate(data.currentPeriodEnd!)}</strong>
+                </div>
+                <div className={styles.detailItem}>
+                  <span>Próxima Cobrança</span>
+                  <strong>{data.cancelAtPeriodEnd ? 'Indisponível' : formatDate(data.currentPeriodEnd!)}</strong>
+                </div>
               </div>
-              <div className={styles.detailItem}>
-                <span>Próxima Cobrança</span>
-                <strong>{data.cancelAtPeriodEnd ? 'Indisponível' : formatDate(data.currentPeriodEnd)}</strong>
-              </div>
-            </div>
+            )}
 
             <div className={styles.cardActions}>
-              {data.cancelAtPeriodEnd ? (
+              {!hasSubscription ? (
+                <button className={styles.btnPrimary} onClick={() => router.push('/plans')}>
+                  Ver Planos
+                </button>
+              ) : data.cancelAtPeriodEnd ? (
                 <button 
                   className={styles.btnPrimary} 
                   onClick={handleReactivateSubscription}
