@@ -33,7 +33,8 @@ const PlanCard: React.FC<PlanCardProps> = ({
   interval,
 }) => {
   const [loading, setLoading] = React.useState(false);
-  const [quantity, setQuantity] = React.useState(1);
+  const minQuantity = id === 'OFFICE' ? 2 : 1;
+  const [quantity, setQuantity] = React.useState(() => minQuantity);
   const { access, loading: accessLoading } = useAccessGate();
 
   const formatPrice = (val: number | string) => {
@@ -124,8 +125,8 @@ const PlanCard: React.FC<PlanCardProps> = ({
             <button
               type="button"
               className={styles.quantityBtn}
-              onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-              disabled={quantity <= 1 || loading}
+              onClick={() => setQuantity((prev) => Math.max(minQuantity, prev - 1))}
+              disabled={quantity <= minQuantity || loading}
             >
               <Minus size={16} />
             </button>
