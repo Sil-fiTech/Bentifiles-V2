@@ -13,23 +13,6 @@ import type { Plan } from '../data/plans';
 import PricingCard from './PricingCard';
 import styles from '../landing.module.scss';
 
-/**
- * handleSubscribe - called when user clicks "Assinar plano" on any card.
- *
- * To integrate with real Stripe Checkout:
- * 1. Create a Next.js API route at /api/stripe/checkout
- * 2. That route receives { priceId } and returns a Stripe Checkout Session URL
- * 3. Redirect the user to session.url
- *
- * Example:
- *   const res = await fetch('/api/stripe/checkout', {
- *     method: 'POST',
- *     headers: { 'Content-Type': 'application/json' },
- *     body: JSON.stringify({ priceId: plan.priceId }),
- *   });
- *   const { url } = await res.json();
- *   window.location.href = url;
- */
 async function handleSubscribe(plan: Plan): Promise<void> {
   // TODO: replace this mock with a real call to /api/stripe/checkout
   console.log(`[Stripe] Initiating checkout for plan: ${plan.name} | priceId: ${plan.priceId}`);
@@ -37,14 +20,8 @@ async function handleSubscribe(plan: Plan): Promise<void> {
   // Simulate async latency (remove in production)
   await new Promise((resolve) => setTimeout(resolve, 1200));
 
-  // When ready, uncomment and configure:
-  // const res = await fetch('/api/stripe/checkout', {
-  //   method: 'POST',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify({ priceId: plan.priceId }),
-  // });
-  // const { url } = await res.json();
-  // window.location.href = url;
+  //login
+   window.location.href = `${window.location.origin}/login?mode=register`;
 }
 
 const valueProps = [
