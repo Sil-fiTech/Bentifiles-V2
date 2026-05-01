@@ -139,6 +139,24 @@ export default function SubscriptionPage() {
     }
   };
 
+  const handleLeaveOfficeMembership = async () => {
+    try {
+      if (accessLoading || !access?.authenticated) return;
+
+      setActionLoading('leave_office');
+      await api.post('/api/billing/subscription/leave', {}, {
+        headers: getAuthHeaders(access.token),
+      });
+
+      toast.success('Voce saiu da licenca OFFICE');
+      await fetchData(access.token);
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || 'Nao foi possivel sair da licenca OFFICE');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const userInitials = session?.user?.name ? session.user.name.substring(0, 2).toUpperCase() : 'US';
     useEffect(() => {
         // Only fetch data if we are authenticated
@@ -495,6 +513,16 @@ export default function SubscriptionPage() {
                 <strong>{officeSeatAccess.usedSeats} de {officeSeatAccess.totalSeats} licencas ocupadas</strong>
               </div>
             </div>
+            <div className={`${styles.cardActions} ${styles.sectionSpacer}`}>
+              <button
+                className={styles.btnDanger}
+                onClick={handleLeaveOfficeMembership}
+                disabled={!!actionLoading}
+              >
+                {actionLoading === 'leave_office' ? <RefreshCw className="animate-spin" /> : <UserMinus size={18} />}
+                Sair da licenca OFFICE
+              </button>
+            </div>
           </section>
         )}
 
@@ -551,7 +579,7 @@ export default function SubscriptionPage() {
             <div className={styles.sectionSpacer}>
               <div className={styles.cardTitle}>
                 <Users size={18} />
-                Membros ativos
+                Membros
               </div>
               <div className={styles.workspaceList}>
                 {officeWorkspace.members.map((member) => (
@@ -561,6 +589,7 @@ export default function SubscriptionPage() {
                       <div className={styles.workspaceEmail}>{member.user.email}</div>
                       <div className={styles.workspaceHint}>
                         {member.seatType === 'OWNER' ? 'Proprietario da assinatura' : 'Membro convidado'}
+                        {member.status === 'SUSPENDED' ? ' • Suspenso' : ''}
                       </div>
                     </div>
                     {member.seatType === 'MEMBER' && (

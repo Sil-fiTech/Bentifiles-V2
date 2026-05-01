@@ -46,7 +46,7 @@ export interface OfficeWorkspaceMember {
   id: string;
   userId: string;
   seatType: 'OWNER' | 'MEMBER';
-  status: 'ACTIVE' | 'REMOVED';
+  status: 'ACTIVE' | 'SUSPENDED' | 'REMOVED';
   createdAt: string;
   updatedAt: string;
   user: {

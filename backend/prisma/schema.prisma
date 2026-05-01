@@ -110,6 +110,7 @@ enum SubscriptionSeatType {
 
 enum SubscriptionSeatMemberStatus {
   ACTIVE
+  SUSPENDED
   REMOVED
 }
 

@@ -4,6 +4,7 @@ import {
   acceptOfficeInviteForUser,
   createOfficeInvite,
   getOfficeSubscriptionManagement,
+  leaveOfficeSeatForUser,
   listOfficeInvites,
   removeOfficeMember,
   revokeOfficeInvite,
@@ -116,5 +117,20 @@ export const deleteMember = async (req: AuthRequest, res: Response) => {
   } catch (error: any) {
     console.error('[OfficeSubscription] remove member error:', error);
     res.status(400).json({ message: error.message || 'Nao foi possivel remover o membro' });
+  }
+};
+
+export const leaveMembership = async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Nao autorizado' });
+    }
+
+    const result = await leaveOfficeSeatForUser(userId);
+    res.json({ ok: true, ...result });
+  } catch (error: any) {
+    console.error('[OfficeSubscription] leave membership error:', error);
+    res.status(400).json({ message: error.message || 'Nao foi possivel sair da licenca OFFICE' });
   }
 };
