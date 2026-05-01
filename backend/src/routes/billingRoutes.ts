@@ -26,6 +26,7 @@ router.get('/subscription', billingController.getSubscriptionDetails as any);
 router.post('/cancel-subscription', billingController.cancelSubscription as any);
 router.post('/reactivate-subscription', billingController.reactivateSubscription as any);
 router.get('/subscription/office', subscriptionSeatController.getOfficeSubscriptionManagementData as any);
+router.post('/subscription/leave', subscriptionSeatController.leaveMembership as any);
 router.post('/subscription/invites', subscriptionSeatController.createInvite as any);
 router.get('/subscription/invites', subscriptionSeatController.getInvites as any);
 router.post('/subscription/invites/accept', subscriptionSeatController.acceptInvite as any);

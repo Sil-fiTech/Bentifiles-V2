@@ -5,6 +5,7 @@ import { sendOfficeSubscriptionInviteEmail } from './emailService';
 
 const OFFICE_INVITE_TTL_HOURS = 72;
 const OFFICE_ACCESS_STATUSES: SubscriptionStatus[] = ['ACTIVE', 'TRIALING'];
+const OFFICE_SEAT_OCCUPIED_STATUSES: SubscriptionSeatMemberStatus[] = ['ACTIVE', 'SUSPENDED'];
 
 const isOfficeAccessActive = (status: SubscriptionStatus) => OFFICE_ACCESS_STATUSES.includes(status);
 
@@ -50,10 +51,11 @@ const syncSeatCountersTx = async (tx: Prisma.TransactionClient, subscriptionId: 
     throw new Error('Assinatura nao encontrada');
   }
 
+
   const usedSeats = await tx.subscriptionSeatMember.count({
     where: {
       subscriptionId,
-      status: 'ACTIVE',
+      status: { in: OFFICE_SEAT_OCCUPIED_STATUSES },
     },
   });
 
@@ -158,12 +160,36 @@ const ensureOwnerSeatTx = async (tx: Prisma.TransactionClient, subscriptionId: s
   });
 };
 
+const suspendActiveSeatsTx = async (tx: Prisma.TransactionClient, subscriptionId: string) => {
+  await tx.subscriptionSeatMember.updateMany({
+    where: {
+      subscriptionId,
+      status: 'ACTIVE',
+    },
+    data: {
+      status: 'SUSPENDED',
+    },
+  });
+};
+
+const unsuspendSeatsTx = async (tx: Prisma.TransactionClient, subscriptionId: string) => {
+  await tx.subscriptionSeatMember.updateMany({
+    where: {
+      subscriptionId,
+      status: 'SUSPENDED',
+    },
+    data: {
+      status: 'ACTIVE',
+    },
+  });
+};
+
 const deactivateNonOwnerSeatsTx = async (tx: Prisma.TransactionClient, subscriptionId: string) => {
   await tx.subscriptionSeatMember.updateMany({
     where: {
       subscriptionId,
       seatType: 'MEMBER',
-      status: 'ACTIVE',
+      status: { in: OFFICE_SEAT_OCCUPIED_STATUSES },
     },
     data: {
       status: 'REMOVED',
@@ -175,7 +201,7 @@ const deactivateAllSeatsTx = async (tx: Prisma.TransactionClient, subscriptionId
   await tx.subscriptionSeatMember.updateMany({
     where: {
       subscriptionId,
-      status: 'ACTIVE',
+      status: { in: OFFICE_SEAT_OCCUPIED_STATUSES },
     },
     data: {
       status: 'REMOVED',
@@ -249,11 +275,12 @@ export const syncOfficeSubscriptionFromBilling = async (params: {
     await expirePendingInvitesTx(tx, subscription.id);
 
     if (params.plan === 'OFFICE') {
-      await ensureOwnerSeatTx(tx, subscription.id, params.ownerId);
-
-      if (!isOfficeAccessActive(params.status)) {
-        await deactivateNonOwnerSeatsTx(tx, subscription.id);
-        await revokePendingInvitesTx(tx, subscription.id);
+      if (isOfficeAccessActive(params.status)) {
+        await ensureOwnerSeatTx(tx, subscription.id, params.ownerId);
+        await unsuspendSeatsTx(tx, subscription.id);
+      } else {
+        // Keep the membership links, but suspend access until the main OFFICE subscription is active again.
+        await suspendActiveSeatsTx(tx, subscription.id);
       }
     } else {
       await deactivateAllSeatsTx(tx, subscription.id);
@@ -326,7 +353,7 @@ export const getOfficeSubscriptionManagement = async (ownerId: string) => {
         },
       },
       members: {
-        where: { status: 'ACTIVE' },
+        where: { status: { in: OFFICE_SEAT_OCCUPIED_STATUSES } },
         include: {
           user: {
             select: {
@@ -376,7 +403,7 @@ export const getOfficeSubscriptionManagement = async (ownerId: string) => {
         },
       },
       members: {
-        where: { status: 'ACTIVE' },
+        where: { status: { in: OFFICE_SEAT_OCCUPIED_STATUSES } },
         include: {
           user: {
             select: {
@@ -489,7 +516,7 @@ export const createOfficeInvite = async (ownerId: string, email: string) => {
         },
       });
 
-      if (existingSeat?.status === 'ACTIVE') {
+      if (existingSeat?.status === 'ACTIVE' || existingSeat?.status === 'SUSPENDED') {
         throw new Error('Este usuario ja ocupa uma licenca desta assinatura');
       }
     }
@@ -685,6 +712,19 @@ export const acceptOfficeInviteForUser = async (inviteToken: string, userId: str
       return { ok: false as const, status: 400, message: 'O dono da assinatura ja ocupa a vaga principal' };
     }
 
+    const existingSeat = await tx.subscriptionSeatMember.findUnique({
+      where: {
+        subscriptionId_userId: {
+          subscriptionId: freshInvite.subscriptionId,
+          userId,
+        },
+      },
+    });
+
+    if (existingSeat?.status === 'ACTIVE' || existingSeat?.status === 'SUSPENDED') {
+      return { ok: false as const, status: 400, message: 'Este usuario ja ocupa uma licenca desta assinatura' };
+    }
+
     const counters = await syncSeatCountersTx(tx, freshInvite.subscriptionId);
     if (counters.availableSeats <= 0) {
       return { ok: false as const, status: 400, message: 'Nao ha mais vagas disponiveis nesta assinatura' };
@@ -727,6 +767,46 @@ export const acceptOfficeInviteForUser = async (inviteToken: string, userId: str
       memberId: seat.id,
       owner: freshInvite.subscription.owner,
       message: 'Licenca OFFICE ativada com sucesso',
+    };
+  });
+};
+
+export const leaveOfficeSeatForUser = async (userId: string) => {
+  return prisma.$transaction(async (tx) => {
+    const membership = await tx.subscriptionSeatMember.findFirst({
+      where: {
+        userId,
+        seatType: 'MEMBER',
+        status: { in: OFFICE_SEAT_OCCUPIED_STATUSES },
+        subscription: {
+          plan: 'OFFICE',
+        },
+      },
+      include: {
+        subscription: {
+          select: {
+            id: true,
+            ownerId: true,
+          },
+        },
+      },
+    });
+
+    if (!membership) {
+      throw new Error('Sua conta nao possui uma licenca OFFICE ativa ou suspensa');
+    }
+
+    const updated = await tx.subscriptionSeatMember.update({
+      where: { id: membership.id },
+      data: { status: 'REMOVED' },
+    });
+
+    await syncSeatCountersTx(tx, membership.subscriptionId);
+
+    return {
+      memberId: updated.id,
+      subscriptionId: membership.subscriptionId,
+      ownerId: membership.subscription.ownerId,
     };
   });
 };
