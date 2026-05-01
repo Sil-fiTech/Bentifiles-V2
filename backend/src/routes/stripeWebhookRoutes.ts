@@ -1,43 +1,50 @@
-import express, { Router, Request, Response } from 'express';
-import { handleStripeWebhook } from '../services/stripeWebhookService';
+import express, { Request, Response, Router } from 'express';
 import { stripe } from '../lib/stripe';
-import Stripe from 'stripe';
+import { handleStripeWebhook } from '../services/stripeWebhookService';
+import { logError, logInfo } from '../utils/logger';
 
 const router = Router();
 
-/**
- * Stripe Webhook Endpoint
- * 
- * IMPORTANT: This endpoint needs the raw body to verify the signature.
- * Use express.raw({ type: 'application/json' }) before registering this route.
- */
+// This endpoint needs the raw body to verify the Stripe signature.
 router.post('/stripe', express.raw({ type: 'application/json' }), async (req: Request, res: Response) => {
-  console.log(`[Webhook] Received POST request from ${req.ip} - URI: /webhooks/stripe`);
-  const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    const sig = req.headers['stripe-signature'];
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-  if (!sig || !webhookSecret) {
-    console.error('[Webhook] Missing signature or secret');
-    return res.status(400).send('Webhook Error: Missing signature or secret');
-  }
+    logInfo('Stripe webhook received', {
+        requestId: req.requestId,
+        ip: req.ip,
+        path: req.originalUrl,
+        hasSignature: Boolean(sig),
+    });
 
-  let event: any;
+    if (!sig || !webhookSecret) {
+        logError('Stripe webhook missing signature or secret', undefined, {
+            requestId: req.requestId,
+        });
+        return res.status(400).send('Webhook Error: Missing signature or secret');
+    }
 
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-  } catch (err: any) {
-    console.error(`[Webhook] Signature verification failed: ${err.message}`);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
+    let event: any;
 
-  // Handle the event
-  try {
-    await handleStripeWebhook(event);
-    res.json({ received: true });
-  } catch (err: any) {
-    console.error(`[Webhook] Handler error: ${err.message}`);
-    res.status(500).send(`Webhook Error: ${err.message}`);
-  }
+    try {
+        event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } catch (err: any) {
+        logError('Stripe webhook signature verification failed', err, {
+            requestId: req.requestId,
+        });
+        return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    try {
+        await handleStripeWebhook(event);
+        return res.json({ received: true });
+    } catch (err: any) {
+        logError('Stripe webhook handler failed', err, {
+            requestId: req.requestId,
+            eventType: event?.type,
+        });
+        return res.status(500).send(`Webhook Error: ${err.message}`);
+    }
 });
 
 export default router;

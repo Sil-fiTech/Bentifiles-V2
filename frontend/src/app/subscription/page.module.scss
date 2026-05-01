@@ -3,8 +3,8 @@
 
 .root {
   min-height: 100vh;
-  background: $zinc-50;
-  color: $zinc-900;
+  background: var(--page-gradient);
+  color: var(--text-primary);
   position: relative;
   overflow-x: hidden;
 
@@ -47,12 +47,12 @@
     font-weight: 900;
     line-height: 1.1;
     letter-spacing: -0.04em;
-    color: $zinc-900;
+    color: var(--text-primary);
     margin-bottom: $sp-3;
   }
 
   p {
-    color: $zinc-500;
+    color: var(--text-muted);
     font-size: 1.125rem;
     max-width: 36rem;
     line-height: 1.6;
@@ -74,6 +74,11 @@
 
   svg {
     flex-shrink: 0;
+  }
+
+  @include below-md {
+    align-items: flex-start;
+    padding: $sp-4 $sp-5;
   }
 
   &.warning {
@@ -132,7 +137,7 @@
   font-size: 1.25rem;
   font-weight: 800;
   margin-bottom: $sp-8;
-  color: $zinc-900;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: $sp-3;
@@ -149,7 +154,7 @@
   align-items: flex-end;
   margin-bottom: $sp-8;
   padding-bottom: $sp-8;
-  border-bottom: 1px solid $zinc-100;
+  border-bottom: 1px solid var(--border-subtle);
 
   @include below-md {
     flex-direction: column;
@@ -168,11 +173,17 @@
   font-family: $font-headline;
   font-size: 1.75rem;
   font-weight: 900;
-  color: $zinc-900;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: $sp-3;
   letter-spacing: -0.04em;
+
+  @include below-md {
+    font-size: 1.4rem;
+    line-height: 1.15;
+  }
 }
 
 .badge {
@@ -180,7 +191,7 @@
   font-size: 0.625rem;
   padding: $sp-1 $sp-2_5;
   border-radius: $radius-lg;
-  background: $zinc-100;
+  background: var(--surface-muted);
   display: inline-flex;
   align-items: center;
   gap: 4px;
@@ -208,16 +219,18 @@
 
 .planPriceBlock {
   text-align: right;
+  flex-shrink: 0;
 
   @include below-md {
     text-align: left;
+    width: 100%;
   }
 
   .price {
     font-family: $font-headline;
     font-size: 2.25rem;
     font-weight: 950;
-    color: $zinc-900;
+    color: var(--text-primary);
     line-height: 1;
     letter-spacing: -0.05em;
   }
@@ -225,7 +238,7 @@
   .interval {
     font-size: 0.875rem;
     font-weight: 600;
-    color: $zinc-400;
+    color: var(--text-muted);
     text-transform: lowercase;
   }
 }
@@ -245,9 +258,9 @@
   display: flex;
   flex-direction: column;
   padding: $sp-4;
-  background: $zinc-50;
+  background: var(--surface-muted);
   border-radius: $radius-xl;
-  border: 1px solid rgba($zinc-200, 0.4);
+  border: 1px solid var(--border-subtle);
 
   span {
     @include text-label-caps;
@@ -259,8 +272,9 @@
 
   strong {
     font-size: 1rem;
-    color: $zinc-800;
+    color: var(--text-primary);
     font-weight: 700;
+    overflow-wrap: anywhere;
   }
 }
 
@@ -287,7 +301,7 @@
   justify-content: center;
   gap: $sp-2;
   padding: $sp-3 $sp-6;
-  background: white;
+  background: var(--surface-card);
   color: $red-600;
   border: 1px solid rgba($red-200, 0.6);
   border-radius: $radius-xl;
@@ -297,7 +311,7 @@
   flex: 1;
 
   &:hover:not(:disabled) {
-    background: $red-50;
+    background: rgba($red-500, 0.12);
     border-color: $red-200;
   }
 }
@@ -315,6 +329,40 @@
   padding: $sp-1_5 $sp-3;
 }
 
+.inviteInput {
+  flex: 1 1 260px;
+  padding: 0.95rem 1rem;
+  border-radius: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  -webkit-text-fill-color: var(--text-primary);
+  outline: none;
+  transition: $transition-base;
+
+  &::placeholder {
+    color: var(--text-muted);
+    -webkit-text-fill-color: var(--text-muted);
+  }
+
+  &:hover,
+  &:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba($amber-400, 0.55);
+    color: var(--text-primary);
+    -webkit-text-fill-color: var(--text-primary);
+    box-shadow: 0 0 0 4px rgba($amber-500, 0.08);
+  }
+
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text-primary);
+    box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.08) inset;
+    transition: background-color 9999s ease-in-out 0s;
+  }
+}
+
 .billingInfo {
   margin-bottom: $sp-8;
 
@@ -328,9 +376,15 @@
     box-shadow: $shadow-lg;
     color: white;
 
+    @include below-md {
+      align-items: flex-start;
+      padding: $sp-4;
+    }
+
     .iconWrapper {
       width: $sp-10;
       height: $sp-10;
+      flex-shrink: 0;
       @include flex-center;
       background: rgba(255, 255, 255, 0.1);
       border-radius: $radius-lg;
@@ -339,15 +393,22 @@
     .info {
       display: flex;
       flex-direction: column;
+      min-width: 0;
 
       span {
         @include text-label-caps;
-        color: $zinc-400;
+        color: var(--text-muted);
       }
 
       strong {
         font-size: 1.125rem;
         font-weight: 700;
+        overflow-wrap: anywhere;
+
+        @include below-md {
+          font-size: 1rem;
+          line-height: 1.35;
+        }
       }
     }
   }
@@ -362,11 +423,18 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: $sp-3;
     padding: $sp-4 $sp-5;
     border-radius: $radius-xl;
-    background: white;
-    border: 1px solid $zinc-100;
+    background: var(--surface-card);
+    border: 1px solid var(--border-subtle);
     transition: $transition-base;
+
+    @include below-md {
+      align-items: stretch;
+      flex-direction: column;
+      padding: $sp-4;
+    }
 
     &:hover {
       border-color: $amber-200;
@@ -376,20 +444,36 @@
     .invoiceDetails {
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      flex: 1;
+      min-width: 0;
       gap: $sp-6;
+
+      @include below-md {
+        flex-wrap: wrap;
+        gap: $sp-2 $sp-3;
+      }
 
       .date {
         font-size: 0.875rem;
         font-weight: 600;
-        color: $zinc-500;
+        color: var(--text-muted);
         min-width: 6rem;
+
+        @include below-md {
+          min-width: unset;
+        }
       }
 
       .amount {
         font-family: $font-headline;
         font-weight: 800;
-        color: $zinc-900;
+        color: var(--text-primary);
         min-width: 6rem;
+
+        @include below-md {
+          min-width: unset;
+        }
       }
     }
   }
@@ -408,11 +492,11 @@
   @include flex-center;
   flex-direction: column;
   padding: $sp-8;
-  color: $zinc-400;
+  color: var(--text-muted);
   text-align: center;
-  background: $zinc-50;
+  background: var(--surface-muted);
   border-radius: $radius-2xl;
-  border: 2px dashed $zinc-200;
+  border: 2px dashed var(--border-subtle);
 }
 
 // Plan Comparison
@@ -429,10 +513,14 @@
       font-weight: 900;
       letter-spacing: -0.04em;
       margin-bottom: $sp-3;
+
+      @include below-md {
+        font-size: 1.75rem;
+      }
     }
 
     p {
-      color: $zinc-500;
+      color: var(--text-muted);
       font-size: 1.125rem;
       max-width: 40rem;
       margin: 0 auto;
@@ -466,7 +554,7 @@
 
   &.current {
     border: 2px solid $amber-400;
-    background: white;
+    background: var(--surface-card);
 
     .currentBadge {
       position: absolute;
@@ -487,8 +575,8 @@
     width: 3rem;
     height: 3rem;
     @include flex-center;
-    background: $zinc-100;
-    color: $zinc-900;
+    background: var(--surface-muted);
+    color: var(--text-primary);
     border-radius: $radius-xl;
     margin-bottom: $sp-6;
     transition: $transition-base;
@@ -504,17 +592,20 @@
     font-family: $font-headline;
     font-size: 1.5rem;
     font-weight: 900;
-    color: $zinc-900;
+    color: var(--text-primary);
     margin-bottom: $sp-2;
     letter-spacing: -0.02em;
   }
 
   .planOptionDesc {
     font-size: 0.9375rem;
-    color: $zinc-500;
+    color: var(--text-muted);
     margin-bottom: $sp-6;
-    min-height: 2.5rem;
     line-height: 1.5;
+
+    @include md {
+      min-height: 2.5rem;
+    }
   }
 
   .planOptionPrice {
@@ -524,14 +615,14 @@
       font-family: $font-headline;
       font-size: 2rem;
       font-weight: 900;
-      color: $zinc-900;
+      color: var(--text-primary);
       letter-spacing: -0.04em;
     }
 
     .period {
       font-size: 0.875rem;
       font-weight: 600;
-      color: $zinc-400;
+      color: var(--text-muted);
     }
   }
 
@@ -546,7 +637,7 @@
       gap: $sp-3;
       font-size: 0.875rem;
       font-weight: 600;
-      color: $zinc-600;
+      color: var(--text-muted);
       margin-bottom: $sp-4;
 
       svg {
@@ -564,7 +655,7 @@
 }
 
 .skeleton {
-  background: linear-gradient(90deg, $zinc-100 25%, $zinc-200 50%, $zinc-100 75%);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.12) 50%, rgba(255, 255, 255, 0.05) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: $radius-xl;
@@ -577,4 +668,86 @@
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+.eyebrow {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: $sp-4;
+}
+
+.sectionSpacer {
+  margin-top: $sp-6;
+}
+
+.mutedText {
+  color: $zinc-500;
+  margin-bottom: $sp-4;
+  line-height: 1.6;
+}
+
+.inviteForm {
+  margin-top: $sp-6;
+}
+
+.inviteRow {
+  display: flex;
+  gap: $sp-3;
+  flex-wrap: wrap;
+
+  @include below-md {
+    flex-direction: column;
+  }
+}
+
+.workspaceList {
+  display: grid;
+  gap: $sp-3;
+}
+
+.workspaceRow {
+  display: flex;
+  justify-content: space-between;
+  gap: $sp-4;
+  align-items: center;
+  padding: $sp-4;
+  border-radius: $radius-xl;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+
+  @include below-md {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.workspaceMeta {
+  min-width: 0;
+}
+
+.workspaceEmail {
+  color: $zinc-500;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.workspaceHint {
+  color: $zinc-400;
+  font-size: 0.85rem;
+  margin-top: $sp-1;
+}
+
+.workspaceAction {
+  width: 100%;
+
+  @include md {
+    width: auto;
+  }
+}
+
+.emptyText {
+  color: $zinc-400;
 }

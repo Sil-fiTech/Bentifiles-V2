@@ -1,5 +1,6 @@
 'use client';
 import api from '@/lib/api';
+import { getAuthHeaders, performLogout } from '@/lib/authClient';
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { toast } from 'sonner';
 import { useRouter, useParams } from 'next/navigation';
@@ -39,28 +40,25 @@ export default function ProjectSettingsPage() {
 
     useEffect(() => {
         if (status === 'loading') return;
-        const localToken = localStorage.getItem('token');
-        const activeToken = session?.user?.token || localToken;
-        if (!activeToken) {
-            router.push('/');
-            return;
-        }
-
-        const payload = JSON.parse(atob(activeToken.split('.')[1]));
-        setCurrentUser(payload);
-
-        fetchData(activeToken, payload);
+        const activeToken = session?.user?.token;
+        fetchData(activeToken);
     }, [id, status, session]);
 
-    const fetchData = async (token: string, payload: any) => {
+    const fetchData = async (token?: string | null) => {
         try {
             setLoading(true);
-            const headers = { Authorization: `Bearer ${token}` };
+            const headers = getAuthHeaders(token);
 
             // 1. Get project details
-            const projsRes = await api.get(`/api/projects`, { headers });
+            const [projsRes, profileRes] = await Promise.all([
+                api.get(`/api/projects`, { headers }),
+                api.get('/api/users/me', { headers }).catch(() => ({ data: null })),
+            ]);
             const currentProj = projsRes.data.projects.find((p: any) => p.id === id);
             setProject(currentProj);
+            if (profileRes.data?.id) {
+                setCurrentUser({ userId: profileRes.data.id, ...profileRes.data });
+            }
 
             // 2. Get members & determine role
             let amIAdmin = false;
@@ -71,7 +69,7 @@ export default function ProjectSettingsPage() {
                 setMembers(membersData);
 
                 const me = membersData.find(
-                    (m: any) => m.userId === payload?.userId
+                    (m: any) => m.userId === profileRes.data?.id
                 );
                 amIAdmin = me?.permissions?.includes('PROJECT_EDIT') || me?.role === 'ADMIN';
                 setIsAdmin(amIAdmin);
@@ -124,10 +122,10 @@ export default function ProjectSettingsPage() {
         setRequiredDocs(newIds.map(id => ({ documentTypeId: id })));
 
         try {
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = session?.user?.token;
             const res = await api.post(`/api/projects/${id}/required-documents`,
                 { documentTypeIds: newIds },
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers: getAuthHeaders(token) }
             );
 
             // Re-sincroniza totalmente com o servidor para garantia 100%
@@ -135,8 +133,8 @@ export default function ProjectSettingsPage() {
             setRequiredDocs(res.data);
         } catch (error) {
             toast.error('Falha ao atualizar configuração');
-            const token = session?.user?.token || localStorage.getItem('token');
-            if (token) fetchData(token, currentUser);
+            const token = session?.user?.token;
+            fetchData(session?.user?.token);
         }
     };
 
@@ -145,10 +143,10 @@ export default function ProjectSettingsPage() {
         if (!selectedTemplateId) return;
         try {
             setActionLoading('template');
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = session?.user?.token;
             const res = await api.post(`/api/projects/${id}/apply-template`,
                 { templateId: selectedTemplateId },
-                { headers: { Authorization: `Bearer ${token}` } }
+                { headers: getAuthHeaders(token) }
             );
 
             setRequiredDocs(res.data);
@@ -166,9 +164,9 @@ export default function ProjectSettingsPage() {
         if (!confirm('Tem certeza que deseja remover este membro do projeto?')) return;
         try {
             setActionLoading(`remove_${memberId}`);
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = session?.user?.token;
             await api.delete(`/api/projects/${id}/members/${memberId}`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: getAuthHeaders(token)
             });
             setMembers(prev => prev.filter(m => m.id !== memberId && m.userId !== memberId));
             toast.success('Membro removido com sucesso');
@@ -185,10 +183,10 @@ export default function ProjectSettingsPage() {
         if (!confirm(`Tem certeza que deseja ${actionText} este projeto? ${!isArchived ? 'Ele ficará inacessível para documentação ativa.' : 'Ele voltará a ficar ativo para documentação.'}`)) return;
         try {
             setActionLoading(isArchived ? 'unarchive' : 'archive');
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = session?.user?.token;
             const endpoint = isArchived ? `/api/projects/${id}/unarchive` : `/api/projects/${id}/archive`;
             await api.patch(endpoint, {}, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: getAuthHeaders(token)
             });
             setProject((prev: any) => ({ ...prev, status: isArchived ? 'ACTIVE' : 'ARCHIVED' }));
             toast.success(`Projeto ${isArchived ? 'desarquivado' : 'arquivado'} com sucesso`);
@@ -203,9 +201,9 @@ export default function ProjectSettingsPage() {
         if (!confirm('ATENÇÃO: A exclusão do projeto é irreversível. Deseja continuar?')) return;
         try {
             setActionLoading('delete');
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = session?.user?.token;
             await api.delete(`/api/projects/${id}`, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: getAuthHeaders(token)
             });
             toast.success('Projeto excluído com sucesso');
             router.push('/dashboard');
@@ -220,11 +218,7 @@ export default function ProjectSettingsPage() {
     const userInitials = userName.substring(0, 2).toUpperCase();
 
     const handleLogout = async () => {
-        localStorage.removeItem('token');
-        if (session) {
-            const { signOut } = await import('next-auth/react');
-            await signOut({ redirect: false });
-        }
+        await performLogout();
         router.push('/');
     };
 

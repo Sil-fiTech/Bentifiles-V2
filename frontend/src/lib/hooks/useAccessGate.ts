@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { getAccessStatus, AccessStatus } from '../billing/getAccessStatus';
+import { performLogout } from '../authClient';
 
 /**
  * useAccessGate
@@ -27,15 +28,19 @@ export const useAccessGate = () => {
 
     const checkAccess = async () => {
       try {
-        const localToken = localStorage.getItem('token');
-        const activeToken = session?.user?.token || localToken;
+        const activeToken = session?.user?.token;
 
         if (!activeToken) {
+          const cookieStatus = await getAccessStatus();
+          if (cookieStatus?.authenticated) {
+            setAccess(cookieStatus);
+            return;
+          }
+
           if (!isPublicPath) {
-            signOut({ redirect: false }).then(() => {
-                router.push('/login');
-            });
-            console.warn('[AccessGate] No active token found. Redirecting to login.');
+            await performLogout();
+            router.push('/login');
+            console.warn('[AccessGate] No active session found. Redirecting to login.');
           }
           return;
         }
@@ -44,10 +49,8 @@ export const useAccessGate = () => {
 
         if (!status || !status.authenticated) {
           if (!isPublicPath) {
-            localStorage.removeItem('token');
-            signOut({ redirect: false }).then(() => {
-                router.push('/login');
-            });
+            await performLogout();
+            router.push('/login');
             console.error('[AccessGate] Unauthenticated according to backend. Redirecting to login.');
           }
           return;

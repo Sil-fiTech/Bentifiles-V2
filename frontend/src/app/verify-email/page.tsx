@@ -10,29 +10,51 @@ function VerifyEmailContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const token = searchParams.get('token');
+    const inviteToken = searchParams.get('invite');
+    const officeInviteToken = searchParams.get('officeInvite');
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [message, setMessage] = useState('Verificando seu e-mail...');
 
     useEffect(() => {
         if (!token) {
             setStatus('error');
-            setMessage('Token de verificação inválido ou ausente.');
+            setMessage('Token de verificacao invalido ou ausente.');
             return;
         }
 
         const verifyToken = async () => {
             try {
-                const res = await api.get(`/api/users/verify-email?token=${token}`);
+                const inviteFromStorage = typeof window !== 'undefined' ? localStorage.getItem('pendingInvite') : null;
+                const officeInviteFromStorage = typeof window !== 'undefined' ? localStorage.getItem('pendingOfficeInvite') : null;
+                const effectiveInvite = inviteToken || inviteFromStorage;
+                const effectiveOfficeInvite = officeInviteToken || officeInviteFromStorage;
+                const params = new URLSearchParams({ token });
+
+                if (effectiveInvite) {
+                    params.set('invite', effectiveInvite);
+                }
+
+                if (effectiveOfficeInvite) {
+                    params.set('officeInvite', effectiveOfficeInvite);
+                }
+
+                const res = await api.get(`/api/users/verify-email?${params.toString()}`);
                 setStatus('success');
-                
+
                 if (res.data.token) {
                     localStorage.setItem('token', res.data.token);
+                    if (effectiveInvite) {
+                        localStorage.removeItem('pendingInvite');
+                    }
+                    if (effectiveOfficeInvite) {
+                        localStorage.removeItem('pendingOfficeInvite');
+                    }
                     setMessage('E-mail verificado com sucesso! Redirecionando para o painel...');
                     setTimeout(() => {
                         router.push('/dashboard');
                     }, 2000);
                 } else {
-                    setMessage(res.data.message || 'Seu e-mail foi verificado com sucesso! Você já pode fazer login e acessar a plataforma.');
+                    setMessage(res.data.message || 'Seu e-mail foi verificado com sucesso! Voce ja pode fazer login e acessar a plataforma.');
                 }
             } catch (error: any) {
                 setStatus('error');
@@ -41,18 +63,16 @@ function VerifyEmailContent() {
         };
 
         verifyToken();
-    }, [token]);
+    }, [token, inviteToken, officeInviteToken, router]);
 
     return (
         <div className={styles.root}>
-            {/* Background decoration */}
             <div className={styles.orb1} />
             <div className={styles.orb2} />
             <div className={styles.orb3} />
             <div className={styles.gridPattern} />
 
             <main className={styles.main}>
-                {/* Brand header */}
                 <div className={styles.brand}>
                     <div className={styles.logoWrapper}>
                         <img src="/favicon.ico" alt="Logo" className={styles.logoImg} />
@@ -60,7 +80,7 @@ function VerifyEmailContent() {
                     <h1 className={styles.headline}>
                         Benti<span className={styles.headlineAccent}>Files</span>
                     </h1>
-                    <p className={styles.tagline}>Validação Inteligente & Gestão de Documentos</p>
+                    <p className={styles.tagline}>Validacao Inteligente & Gestao de Documentos</p>
                 </div>
 
                 <div className={styles.card}>
@@ -88,7 +108,7 @@ function VerifyEmailContent() {
                         {status === 'success' && 'E-mail Verificado!'}
                         {status === 'error' && 'Ops, algo deu errado'}
                     </h1>
-                    
+
                     <p className={styles.text}>{message}</p>
 
                     {status === 'error' && (

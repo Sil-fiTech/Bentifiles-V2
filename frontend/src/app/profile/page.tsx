@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession, signOut } from 'next-auth/react';
+import { useSession } from 'next-auth/react';
 import { Nav } from '@/components/Nav';
 import { useAccessGate } from '@/lib/hooks/useAccessGate';
 import api from '@/lib/api';
+import { getAuthHeaders, performLogout } from '@/lib/authClient';
 import { toast } from 'sonner';
 import { Loader2, User, Mail, Shield, Save, ArrowLeft, CreditCard, ExternalLink, CheckCircle2 } from 'lucide-react';
 import styles from './page.module.scss';
@@ -33,18 +34,16 @@ export default function ProfilePage() {
     useEffect(() => {
         if (accessLoading || !access?.authenticated) return;
 
-        const token = access.token;
-        if (token) {
-            fetchProfile(token);
-        }
+        fetchProfile(access.token);
     }, [accessLoading, access]);
 
-    const fetchProfile = async (token: string) => {
+    const fetchProfile = async (token?: string | null) => {
         try {
             setLoading(true);
+            const headers = getAuthHeaders(token);
             const [profileRes, accessRes] = await Promise.all([
-                api.get('/api/users/me', { headers: { Authorization: `Bearer ${token}` } }),
-                api.get('/api/billing/access-status', { headers: { Authorization: `Bearer ${token}` } }).catch(() => null)
+                api.get('/api/users/me', { headers }),
+                api.get('/api/billing/access-status', { headers }).catch(() => null)
             ]);
             
             setProfile(profileRes.data);
@@ -58,11 +57,11 @@ export default function ProfilePage() {
     };
 
     const handleManageSubscription = async () => {
-        const token = session?.user?.token || localStorage.getItem('token');
+        const token = session?.user?.token || access?.token;
         try {
             setPortalLoading(true);
             const res = await api.post('/api/billing/create-portal-session', {}, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: getAuthHeaders(token)
             });
             if (res.data?.url) {
                 window.location.href = res.data.url;
@@ -80,11 +79,11 @@ export default function ProfilePage() {
             return;
         }
 
-        const token = session?.user?.token || localStorage.getItem('token');
+        const token = session?.user?.token || access?.token;
         try {
             setSaving(true);
             const res = await api.put('/api/users/me', { name: editName }, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: getAuthHeaders(token)
             });
 
             setProfile(res.data);
@@ -97,10 +96,7 @@ export default function ProfilePage() {
     };
 
     const handleLogout = async () => {
-        localStorage.removeItem('token');
-        if (session) {
-            await signOut({ redirect: false });
-        }
+        await performLogout();
         router.push('/');
     };
 
@@ -154,7 +150,7 @@ export default function ProfilePage() {
                                     <span>Plano: {accessData?.subscriptionPlan || 'Padrão'}</span>
                                 </div>
                                 <div className={styles.metaItem}>
-                                    <CheckCircle2 size={16} className={accessData?.hasSystemAccess ? 'text-green-500' : 'text-slate-400'} />
+                                    <CheckCircle2 size={16} className={accessData?.hasSystemAccess ? styles.successMeta : styles.inactiveMeta} />
                                     <span>Status: {accessData?.hasSystemAccess ? 'Ativo' : 'Inativo'}</span>
                                 </div>
                                 <div className={styles.metaItem}>
@@ -169,14 +165,13 @@ export default function ProfilePage() {
                               <h3 className={styles.panelTitle} style={{ fontSize: '1rem', marginBottom: '1rem' }}>
                                   <CreditCard size={18} /> Assinatura
                               </h3>
-                              <p className="text-sm text-slate-500 mb-4">
+                              <p className={styles.manageSubscriptionText}>
                                 Gerencie sua forma de pagamento, histórico de faturas e plano atual no Stripe.
                               </p>
                               <button 
                                 onClick={handleManageSubscription}
                                 disabled={portalLoading}
-                                className={styles.saveBtn}
-                                style={{ width: '100%', justifyContent: 'center', background: '#f8fafc', color: '#0f172a', border: '1px solid #e2e8f0' }}
+                                className={styles.secondaryBtn}
                               >
                                 {portalLoading ? <Loader2 size={16} className="animate-spin" /> : <ExternalLink size={16} />}
                                 Gerenciar Assinatura

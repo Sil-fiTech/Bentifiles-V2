@@ -3,9 +3,10 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { CheckCircle2, Loader2, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
-import axios from 'axios';
 import { useSession } from 'next-auth/react';
 import { getAccessStatus } from '@/lib/billing/getAccessStatus';
+import api from '@/lib/api';
+import { getAuthHeaders } from '@/lib/authClient';
 import styles from './page.module.scss';
 
 export default function SuccessPage() {
@@ -16,17 +17,17 @@ export default function SuccessPage() {
 
   const checkStatus = useCallback(async () => {
     try {
-      // Prioritize session token, then localStorage
-      const token = session?.user?.token || localStorage.getItem('token');
+      const token = session?.user?.token;
       
       if (!token) {
-        // If we are waiting for session to load, keep loading
+        const cookieStatus = await getAccessStatus();
+        if (cookieStatus?.canCreateProject) {
+          setStatus('success');
+          if (pollingRef.current) clearInterval(pollingRef.current);
+          return;
+        }
+
         if (!session) return;
-        
-        // If session loaded and still no token, just show success as fallback
-        setStatus('success');
-        if (pollingRef.current) clearInterval(pollingRef.current);
-        return;
       }
 
       const data = await getAccessStatus(token);
@@ -40,11 +41,9 @@ export default function SuccessPage() {
       } else {
         // If not ready yet, try to force a sync (every 2 checks)
         if (checkCountRef.current % 2 === 0) {
-          axios.post(
-            `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/billing/sync-subscription`,
-            {},
-            { headers: { Authorization: `Bearer ${token}` } }
-          ).catch(e => console.warn('Background sync failed', e));
+          api.post('/api/billing/sync-subscription', {}, {
+            headers: getAuthHeaders(token),
+          }).catch(e => console.warn('Background sync failed', e));
         }
       }
     } catch (error) {

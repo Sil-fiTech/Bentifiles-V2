@@ -1,4 +1,4 @@
-import axios from 'axios';
+import api from '../api';
 
 export interface AccessStatus {
   authenticated: boolean;
@@ -9,6 +9,20 @@ export interface AccessStatus {
   hasSelectedPlan: boolean;
   trialEndsAt: string | null;
   currentPeriodEnd: string | null;
+  officeSeatAccess?: {
+    subscriptionId: string;
+    owner: {
+      id: string;
+      name: string;
+      email: string;
+    };
+    seatType: string;
+    plan: string;
+    status: string;
+    totalSeats: number;
+    usedSeats: number;
+    availableSeats: number;
+  } | null;
   hasSystemAccess?: boolean; // Keep for compatibility if needed
   redirectTo?: string | null; // Keep for compatibility if needed
   token: string | null;
@@ -19,17 +33,14 @@ export interface AccessStatus {
  */
 export const getAccessStatus = async (providedToken?: string): Promise<AccessStatus | null> => {
   try {
-    const token = providedToken || (typeof window !== 'undefined' ? localStorage.getItem('token') : null);
-    if (!token) return null;
-
-    const response = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/billing/access-status`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    const token = providedToken || null;
+    const response = await api.get('/api/billing/access-status', {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    });
 
     return { ...response.data, token };
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
+    if ((error as any)?.response?.status === 401) {
         console.warn('Unauthorized access status check - token might be invalid');
     } else {
         console.error('Error fetching access status:', error);

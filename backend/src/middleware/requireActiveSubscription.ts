@@ -1,7 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from './auth';
 import prisma from '../prisma';
-import { canCreateProject } from '../services/billingAccessService';
+import { canUserCreateProjects } from '../services/officeSubscriptionService';
 
 /**
  * Middleware: requireActiveSubscription
@@ -25,7 +25,9 @@ export const requireActiveSubscription = async (req: AuthRequest, res: Response,
       return res.status(404).json({ message: 'Usuário não encontrado' });
     }
 
-    if (!canCreateProject(user)) {
+    const allowed = await canUserCreateProjects(user.id, user.subscriptionStatus);
+
+    if (!allowed) {
       return res.status(403).json({
         error: 'SUBSCRIPTION_REQUIRED',
         message: 'Você precisa de um plano ativo ou em período de teste para criar projetos.',

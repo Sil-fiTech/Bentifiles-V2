@@ -153,6 +153,12 @@ npx prisma generate
 npm run dev
 ```
 
+Worker de lembretes de assinatura:
+```bash
+cd backend
+npm run worker:subscription-reminders:dev
+```
+
 **Frontend:**
 ```bash
 cd frontend && npm install
@@ -174,6 +180,14 @@ uvicorn main:app --reload
 - **Storage**: Cloudflare R2 para armazenamento persistente de documentos.
 - **Database**: PostgreSQL hospedado via Supabase para alta disponibilidade.
 - **Proteção**: Rate limiting em rotas críticas e integração com Cloudflare Turnstile para prevenção de bots.
+
+## 📬 Worker de Lembretes
+
+Os lembretes de expiração de trial e assinatura agora rodam em um worker dedicado, desacoplado da API web.
+
+Documentação completa:
+
+- [backend/README-subscription-reminders.md](backend/README-subscription-reminders.md)
 
 ---
 

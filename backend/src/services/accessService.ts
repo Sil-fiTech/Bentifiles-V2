@@ -9,8 +9,15 @@ import { User } from '@prisma/client';
  * - return false in any other case
  */
 export const computeSystemAccess = (user: User): boolean => {
-  // Now everyone who is authenticated has basic system access.
-  return true;
+  if (user.subscriptionStatus === 'ACTIVE') {
+    return true;
+  }
+
+  if (user.subscriptionStatus === 'TRIALING' && user.subscriptionTrialEndsAt) {
+    return user.subscriptionTrialEndsAt.getTime() > Date.now();
+  }
+
+  return false;
 };
 
 /**
@@ -21,5 +28,9 @@ export const computeSystemAccess = (user: User): boolean => {
  * - Redirects are specialized for premium feature triggers instead of global gates.
  */
 export const getAccessRedirect = (user: User): string | null => {
+  if (!computeSystemAccess(user)) {
+    return '/plans';
+  }
+
   return null;
 };

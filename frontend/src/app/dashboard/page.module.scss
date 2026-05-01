@@ -10,14 +10,14 @@
   color: var(--color-on-surface);
   overflow: hidden;
   display: flex;
-  height: 100vh;
+  @include app-shell;
   width: 100%;
   position: relative;
 }
 
 .main {
   flex: 1;
-  height: 100vh;
+  @include app-shell;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -42,7 +42,7 @@
 // Loading
 // ------------------------------------------------------------------
 .loadingScreen {
-  height: 100vh;
+  @include app-shell;
   width: 100%;
   display: flex;
   align-items: center;
@@ -57,19 +57,25 @@
   @include flex-between;
   margin-bottom: $sp-6;
   align-items: flex-end;
+
+  @include below-md {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $sp-4;
+  }
 }
 
 .sectionTitle {
   font-family: $font-headline;
   font-size: 1.875rem;
   font-weight: 900;
-  color: $zinc-900;
+  color: var(--text-primary);
   letter-spacing: -0.04em;
 }
 
 .sectionSubtitle {
   font-size: 0.875rem;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-weight: 500;
   margin-top: $sp-1;
 }
@@ -98,7 +104,7 @@
 }
 
 .emptyText {
-  color: $zinc-500;
+  color: var(--text-muted);
 }
 
 .emptyBtn {
@@ -130,6 +136,10 @@
     align-items: center;
     width: auto;
   }
+
+  @include below-md {
+    align-items: stretch;
+  }
 }
 
 .filterArchivedBtn {
@@ -141,24 +151,24 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: $zinc-500;
-  background: white;
-  border: 1px solid rgba($zinc-300, 0.8);
+  color: var(--text-muted);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   padding: $sp-2 $sp-3_5;
   border-radius: $radius-full;
   transition: $transition-base;
   white-space: nowrap;
 
   &:hover {
-    color: $zinc-700;
-    border-color: $zinc-400;
-    background: $zinc-50;
+    color: var(--text-primary);
+    border-color: rgba($amber-400, 0.35);
+    background: var(--surface-hover);
   }
 
   &.active {
-    background: $zinc-100;
-    color: $zinc-500;
-    border-color: rgba($zinc-300, 0.8);
+    background: var(--surface-muted);
+    color: var(--text-primary);
+    border-color: var(--border-subtle);
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
   }
 }
@@ -167,6 +177,7 @@
   display: flex;
   align-items: center;
   margin-top: $sp-2;
+  width: 100%;
 
   @include sm {
     margin-top: 0;
@@ -180,19 +191,19 @@
   padding: $sp-2_5 $sp-4;
   font-size: 0.875rem;
   font-family: $font-body;
-  border: 1px solid rgba($zinc-300, 0.8);
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-full;
-  background: white;
+  background: var(--surface-card);
   transition: $transition-base;
   outline: none;
 
   &:focus {
-    border-color: $zinc-400;
+    border-color: rgba($amber-400, 0.35);
     box-shadow: 0 0 0 3px rgba($zinc-200, 0.4);
   }
 
   &::placeholder {
-    color: $zinc-400;
+    color: var(--text-muted);
   }
 }
 
@@ -279,9 +290,9 @@
   letter-spacing: 0.05em;
 
   &.badgeArchived {
-    background: white;
-    color: $zinc-500;
-    border: 1px solid rgba($zinc-200, 0.5);
+    background: var(--surface-card);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
   }
 }
 
@@ -305,7 +316,7 @@
 
 .projectDate {
   font-size: 0.875rem;
-  color: $zinc-500;
+  color: var(--text-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -316,14 +327,14 @@
   width: 2rem;
   height: 2rem;
   border-radius: $radius-full;
-  background: $zinc-200;
-  border: 2px solid white;
+  background: var(--surface-muted);
+  border: 2px solid var(--surface-card);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 0.625rem;
   font-weight: 700;
-  color: $zinc-700;
+  color: var(--text-primary);
 }
 
 // ------------------------------------------------------------------
@@ -339,10 +350,10 @@
 
 .tabGroup {
   display: flex;
-  background: rgba($zinc-100, 0.8);
+  background: var(--surface-muted);
   padding: $sp-2;
   border-radius: $radius-xl;
-  border: 1px solid rgba($zinc-200, 0.6);
+  border: 1px solid var(--border-subtle);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
@@ -361,22 +372,22 @@
   border-radius: $radius-xl;
   white-space: nowrap;
   transition: $transition-slow;
-  color: $zinc-500;
+  color: var(--text-muted);
 
-  &:hover { color: $zinc-700; background: $zinc-50; }
+  &:hover { color: var(--text-primary); background: var(--surface-hover); }
   &:active { transform: scale(0.98); }
 
   &.active {
-    background: white;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-    color: $zinc-900;
-    outline: 1px solid rgba($zinc-200, 0.5);
+    background: var(--surface-card);
+    box-shadow: var(--shadow-elevated);
+    color: var(--text-primary);
+    outline: 1px solid var(--border-subtle);
   }
 }
 
 .tabIcon {
   transition: color 0.3s;
-  color: $zinc-400;
+  color: var(--text-muted);
 
   .active & { color: $amber-500; }
 }
@@ -388,8 +399,8 @@
   font-size: 0.6875rem;
   font-weight: 900;
   letter-spacing: 0.05em;
-  background: $zinc-200;
-  color: $zinc-500;
+  background: var(--surface-card);
+  color: var(--text-muted);
 
   .active & {
     background: $amber-100;
@@ -437,7 +448,7 @@
 .statLabel {
   font-size: 0.75rem;
   font-weight: 700;
-  color: $zinc-400;
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
@@ -476,7 +487,7 @@
 
 .fileThumb {
   aspect-ratio: 1;
-  background: $zinc-50;
+  background: var(--surface-muted);
   border-radius: $radius-md;
   overflow: hidden;
   margin-bottom: $sp-4;
@@ -493,7 +504,7 @@
 }
 
 .fileIcon {
-  color: $zinc-300;
+  color: var(--text-muted);
   transition: color 0.15s;
 
   .fileCard:hover & { color: $amber-500; }
@@ -530,7 +541,7 @@
 .fileBy {
   font-family: $font-headline;
   font-size: 0.75rem;
-  color: $zinc-600;
+  color: var(--text-muted);
   margin-top: $sp-1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -564,7 +575,7 @@
 
 .fileSize {
   font-size: 0.625rem;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -612,6 +623,11 @@
   z-index: 50;
   border-left: 4px solid $amber-400;
 
+  @include below-sm {
+    align-items: flex-start;
+    padding: $sp-3;
+  }
+
   @include md {
     bottom: $sp-8;
     right: $sp-8;
@@ -648,7 +664,7 @@
 .progressTrack {
   width: 6rem;
   height: 0.25rem;
-  background: $zinc-700;
+  background: rgba(255, 255, 255, 0.12);
   border-radius: $radius-full;
   overflow: hidden;
 }
@@ -662,6 +678,6 @@
 .processingCount {
   font-size: 0.625rem;
   font-weight: 500;
-  color: $zinc-400;
+  color: rgba(255, 255, 255, 0.72);
   white-space: nowrap;
 }

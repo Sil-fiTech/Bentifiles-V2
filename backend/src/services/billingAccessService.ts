@@ -1,55 +1,45 @@
 import { User } from '@prisma/client';
+import { computeSystemAccess } from './accessService';
 
-/**
- * billingAccessService
- * 
- * Centralizes the logic for premium features and subscription-based permissions.
- */
-
-/**
- * canCreateProject(user)
- * 
- * Rules:
- * - true if status is ACTIVE
- * - true if status is TRIALING and not expired
- * - false otherwise
- */
-export const canCreateProject = (user: User): boolean => {
-  const status = user.subscriptionStatus;
-  
-  // Simplified rules for debugging and resilience
-  if (status === 'ACTIVE' || status === 'TRIALING') {
-    return true;
-  }
-
-  return false;
+type BillingEntitlementOverrides = {
+  canCreateProject?: boolean;
+  officeSeatAccess?: {
+    subscriptionId: string;
+    owner: {
+      id: string;
+      name: string;
+      email: string;
+    };
+    seatType: string;
+    plan: string;
+    status: string;
+    totalSeats: number;
+    usedSeats: number;
+    availableSeats: number;
+  } | null;
 };
 
-/**
- * canUsePremiumFeatures(user)
- * 
- * Placeholder for future premium feature checks (e.g. AI limits, storage packs).
- */
+export const canCreateProject = (user: User): boolean => {
+  return user.subscriptionStatus === 'ACTIVE' || user.subscriptionStatus === 'TRIALING';
+};
+
 export const canUsePremiumFeatures = (user: User): boolean => {
   return canCreateProject(user);
 };
 
-/**
- * getBillingEntitlements(user)
- * 
- * Returns a payload of all billing-related permissions for the frontend.
- */
-export const getBillingEntitlements = (user: User) => {
-  const createProject = canCreateProject(user);
-  
+export const getBillingEntitlements = (
+  user: User,
+  overrides: BillingEntitlementOverrides = {}
+) => {
   return {
-    hasSystemAccess: user.hasSystemAccess,
-    canCreateProject: createProject,
-    canManageBilling: true, // Generally true for the account holder
+    hasSystemAccess: computeSystemAccess(user) || Boolean(overrides.officeSeatAccess),
+    canCreateProject: overrides.canCreateProject ?? canCreateProject(user),
+    canManageBilling: true,
     subscriptionStatus: user.subscriptionStatus,
     subscriptionPlan: user.subscriptionPlan,
     hasSelectedPlan: user.hasSelectedPlan,
     trialEndsAt: user.subscriptionTrialEndsAt,
     currentPeriodEnd: user.subscriptionCurrentPeriodEnd,
+    officeSeatAccess: overrides.officeSeatAccess ?? null,
   };
 };

@@ -2,7 +2,10 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import prisma from '../prisma';
 import { generateVerificationToken } from '../utils/cryptoUtil';
+import { setAuthCookie } from '../utils/authCookie';
 import { sendVerificationEmail } from '../services/emailService';
+import { acceptProjectInviteForUser } from './membershipController';
+import { acceptOfficeInviteForUser } from '../services/officeSubscriptionService';
 
 export const getProfile = async (req: Request, res: Response) => {
     try {
@@ -10,7 +13,7 @@ export const getProfile = async (req: Request, res: Response) => {
 
         const user = await prisma.user.findUnique({
             where: { id: userId },
-            select: { id: true, name: true, email: true, image: true, createdAt: true }
+            select: { id: true, name: true, email: true, image: true, createdAt: true, emailVerified: true, systemRole: true }
         });
 
         if (!user) {
@@ -30,13 +33,13 @@ export const updateProfile = async (req: Request, res: Response) => {
         const { name } = req.body;
 
         if (!name || typeof name !== 'string' || name.trim().length === 0) {
-            return res.status(400).json({ message: 'Nome inválido' });
+            return res.status(400).json({ message: 'Nome invalido' });
         }
 
         const user = await prisma.user.update({
             where: { id: userId },
             data: { name: name.trim() },
-            select: { id: true, name: true, email: true, image: true, createdAt: true }
+            select: { id: true, name: true, email: true, image: true, createdAt: true, emailVerified: true, systemRole: true }
         });
 
         res.json(user);
@@ -48,10 +51,10 @@ export const updateProfile = async (req: Request, res: Response) => {
 
 export const verifyEmail = async (req: Request, res: Response) => {
     try {
-        const { token } = req.query;
+        const { token, invite, officeInvite } = req.query;
 
         if (!token || typeof token !== 'string') {
-            return res.status(400).json({ message: 'Token não fornecido ou inválido.' });
+            return res.status(400).json({ message: 'Token nao fornecido ou invalido.' });
         }
 
         const user = await prisma.user.findFirst({
@@ -64,7 +67,7 @@ export const verifyEmail = async (req: Request, res: Response) => {
         });
 
         if (!user) {
-            return res.status(400).json({ message: 'Token inválido ou expirado.' });
+            return res.status(400).json({ message: 'Token invalido ou expirado.' });
         }
 
         await prisma.user.update({
@@ -76,14 +79,32 @@ export const verifyEmail = async (req: Request, res: Response) => {
             }
         });
 
+        if (typeof invite === 'string' && invite) {
+            const inviteResult = await acceptProjectInviteForUser(invite, user.id);
+
+            if (!inviteResult.ok) {
+                return res.status(inviteResult.status).json({ message: inviteResult.message });
+            }
+        }
+
+        if (typeof officeInvite === 'string' && officeInvite) {
+            const officeInviteResult = await acceptOfficeInviteForUser(officeInvite, user.id);
+
+            if (!officeInviteResult.ok) {
+                return res.status(officeInviteResult.status).json({ message: officeInviteResult.message });
+            }
+        }
+
         const jwtToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET || 'fallback-secret', {
             expiresIn: '24h',
         });
 
+        setAuthCookie(res, jwtToken);
+
         res.status(200).json({
             message: 'E-mail verificado com sucesso!',
             token: jwtToken,
-            user: { id: user.id, name: user.name, email: user.email }
+            user: { id: user.id, name: user.name, email: user.email, systemRole: user.systemRole }
         });
     } catch (error) {
         console.error('Verify email error:', error);
@@ -93,17 +114,18 @@ export const verifyEmail = async (req: Request, res: Response) => {
 
 export const resendVerification = async (req: Request, res: Response) => {
     try {
-        const { email } = req.body;
+        const { email, inviteToken, officeInviteToken } = req.body;
 
         if (!email) {
-            return res.status(400).json({ message: 'E-mail obrigatório.' });
+            return res.status(400).json({ message: 'E-mail obrigatorio.' });
         }
 
-        const user = await prisma.user.findUnique({ where: { email } });
+        const normalizedEmail = String(email).trim().toLowerCase();
+        const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
 
         if (user && !user.emailVerified) {
             const verificationToken = generateVerificationToken();
-            const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+            const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
             await prisma.user.update({
                 where: { id: user.id },
@@ -113,10 +135,10 @@ export const resendVerification = async (req: Request, res: Response) => {
                 }
             });
 
-            sendVerificationEmail(user.email, verificationToken, user.name).catch(console.error);
+            sendVerificationEmail(user.email, verificationToken, user.name, inviteToken, officeInviteToken).catch(console.error);
         }
 
-        res.status(200).json({ message: 'Se o e-mail estiver cadastrado e não verificado, um novo link será enviado.' });
+        res.status(200).json({ message: 'Se o e-mail estiver cadastrado e nao verificado, um novo link sera enviado.' });
     } catch (error) {
         console.error('Resend verification error:', error);
         res.status(500).json({ message: 'Erro interno do servidor.' });

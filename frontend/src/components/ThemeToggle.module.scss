@@ -1,0 +1,43 @@
+@use '../styles/tokens' as *;
+@use '../styles/mixins' as *;
+
+.toggle {
+  position: fixed;
+  right: $sp-4;
+  bottom: $sp-4;
+  z-index: 90;
+  display: inline-flex;
+  align-items: center;
+  gap: $sp-2;
+  padding: $sp-2 $sp-3;
+  border-radius: $radius-full;
+  background: var(--surface-glass);
+  border: 1px solid var(--border-strong);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-floating);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  transition: $transition-base;
+
+  &:hover {
+    transform: translateY(-1px);
+    background: var(--surface-hover);
+  }
+}
+
+.iconWrap {
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: $radius-full;
+  @include flex-center;
+  background: rgba($amber-400, 0.16);
+  color: $amber-500;
+}
+
+.label {
+  font-family: $font-headline;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}

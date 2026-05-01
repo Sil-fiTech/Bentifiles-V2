@@ -3,25 +3,25 @@
 import React, { useEffect, useState } from 'react';
 import { 
   CreditCard, 
-  CalendarDays, 
   AlertTriangle, 
   CheckCircle2,
   ExternalLink,
   Zap,
-  Shield,
-  Rocket,
   Download,
   AlertCircle,
   RefreshCw,
   XCircle,
   Clock,
-  ArrowRight
+  Mail,
+  Users,
+  UserMinus
 } from 'lucide-react';
-import { SubscriptionData, PlanData } from './types';
+import { OfficeWorkspaceInvite, OfficeWorkspaceMember, PlanData, SubscriptionData } from './types';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Nav } from '@/components/Nav';
 import api from '@/lib/api';
+import { getAuthHeaders, performLogout } from '@/lib/authClient';
 import { toast } from 'sonner';
 import styles from './page.module.scss';
 import { useAccessGate } from '@/lib/hooks/useAccessGate';
@@ -107,23 +107,23 @@ export default function SubscriptionPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [billingInterval, setBillingInterval] = useState<'monthly' | 'yearly'>('monthly');
   const [creating, setCreating] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
 
   const { data: session } = useSession();
   const { access, loading: accessLoading } = useAccessGate();
   const router = useRouter();
 
   const handleLogout = async () => {
-    localStorage.removeItem('token');
-    if (session) await signOut({ redirect: false });
+    await performLogout();
     router.push('/');
   };
 
   const handleCreateProject = async () => {
     try {
       setCreating(true);
-      const token = session?.user?.token || localStorage.getItem('token');
+      const token = session?.user?.token || access?.token;
       const res = await api.post('/api/projects', { name: 'Novo Projeto' }, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders(token)
       });
       toast.success('Projeto criado');
       router.push(`/projects/${res.data.project.id}`);
@@ -144,16 +144,13 @@ export default function SubscriptionPage() {
         // Only fetch data if we are authenticated
         if (accessLoading || !access?.authenticated) return;
 
-        const token = access.token;
-        if (token) {
-            fetchData(token);
-        }
+        fetchData(access.token);
     }, [accessLoading, access, session]);
 
-    const fetchData = async (token: string) => {
+    const fetchData = async (token?: string | null) => {
       try {        
         const res = await api.get('/api/billing/subscription', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: getAuthHeaders(token)
         });
         setData(res.data);
         setBillingInterval(res.data.billingInterval || 'monthly');
@@ -165,12 +162,17 @@ export default function SubscriptionPage() {
       }
     };
 
+  const refreshSubscriptionData = async () => {
+    const token = session?.user?.token || access?.token;
+    await fetchData(token);
+  };
+
   const handlePortalRedirect = async () => {
     setActionLoading('portal');
     try {
-      const token = session?.user?.token || localStorage.getItem('token');
+      const token = session?.user?.token || access?.token;
       const res = await api.post('/api/billing/create-portal-session', {}, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders(token)
       });
       if (res.data.url) {
         window.open(res.data.url, '_blank', 'noopener,noreferrer');
@@ -187,9 +189,9 @@ export default function SubscriptionPage() {
     if (!confirm('Você realmente deseja interromper sua assinatura? Você perderá acesso aos recursos premium ao fim do ciclo.')) return;
     setActionLoading('cancel');
     try {
-      const token = session?.user?.token || localStorage.getItem('token');
+      const token = session?.user?.token || access?.token;
       await api.post('/api/billing/cancel-subscription', {}, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders(token)
       });
       toast.success('Assinatura agendada para cancelamento.');
       setData(prev => prev ? { ...prev, cancelAtPeriodEnd: true } : prev);
@@ -204,9 +206,9 @@ export default function SubscriptionPage() {
   const handleReactivateSubscription = async () => {
     setActionLoading('reactivate');
     try {
-      const token = session?.user?.token || localStorage.getItem('token');
+      const token = session?.user?.token || access?.token;
       await api.post('/api/billing/reactivate-subscription', {}, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders(token)
       });
       toast.success('Sua assinatura foi reativada com sucesso!');
       setData(prev => prev ? { ...prev, cancelAtPeriodEnd: false } : prev);
@@ -217,15 +219,76 @@ export default function SubscriptionPage() {
     }
   };
 
+  const handleCreateOfficeInvite = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const email = inviteEmail.trim();
+
+    if (!email) {
+      toast.error('Informe o e-mail do convidado.');
+      return;
+    }
+
+    setActionLoading('office_invite');
+    try {
+      const token = session?.user?.token || access?.token;
+      await api.post('/api/billing/subscription/invites', { email }, {
+        headers: getAuthHeaders(token)
+      });
+      setInviteEmail('');
+      toast.success('Convite enviado com sucesso.');
+      await refreshSubscriptionData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Nao foi possivel enviar o convite.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRemoveOfficeMember = async (member: OfficeWorkspaceMember) => {
+    if (!confirm(`Remover ${member.user.name} desta assinatura?`)) return;
+
+    setActionLoading(`remove_member_${member.id}`);
+    try {
+      const token = session?.user?.token || access?.token;
+      await api.delete(`/api/billing/subscription/members/${member.id}`, {
+        headers: getAuthHeaders(token)
+      });
+      toast.success('Membro removido e vaga liberada.');
+      await refreshSubscriptionData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Nao foi possivel remover o membro.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleRevokeOfficeInvite = async (invite: OfficeWorkspaceInvite) => {
+    if (!confirm(`Revogar o convite enviado para ${invite.email}?`)) return;
+
+    setActionLoading(`revoke_invite_${invite.id}`);
+    try {
+      const token = session?.user?.token || access?.token;
+      await api.delete(`/api/billing/subscription/invites/${invite.id}`, {
+        headers: getAuthHeaders(token)
+      });
+      toast.success('Convite revogado.');
+      await refreshSubscriptionData();
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Nao foi possivel revogar o convite.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleCheckoutRedirect = async (planId: string) => {
     setActionLoading('checkout_' + planId);
     try {
-      const token = session?.user?.token || localStorage.getItem('token');
+      const token = session?.user?.token || access?.token;
       const res = await api.post('/api/billing/create-checkout-session', {
           plan: planId,
           interval: billingInterval,
       }, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: getAuthHeaders(token)
       });
       if (res.data.url) {
         window.location.href = res.data.url;
@@ -255,8 +318,11 @@ export default function SubscriptionPage() {
   if (!data) return null;
 
   const status = getStatusConfig(data.subscriptionStatus);
-  console.log(data)
   const StatusIcon = status.icon;
+  const officeWorkspace = data.officeWorkspace;
+  const officeSeatAccess = data.officeSeatAccess;
+  const hasSubscription = data.subscriptionStatus !== 'none';
+  const canShowBillingDates = Boolean(data.currentPeriodStart && data.currentPeriodEnd);
 
   return (
     <div className={styles.root}>
@@ -282,7 +348,11 @@ export default function SubscriptionPage() {
         {data.cancelAtPeriodEnd && (
           <div className={`${styles.alert} ${styles.warning}`}>
             <AlertCircle size={20} />
-            <span>Sua assinatura será encerrada em <strong>{formatDate(data.currentPeriodEnd)}</strong>. Você ainda pode reativá-la a qualquer momento.</span>
+            {data.currentPeriodEnd ? (
+              <span>Sua assinatura será encerrada em <strong>{formatDate(data.currentPeriodEnd)}</strong>. Você ainda pode reativá-la a qualquer momento.</span>
+            ) : (
+              <span>Sua assinatura está marcada para encerrar ao fim do período atual.</span>
+            )}
           </div>
         )}
 
@@ -316,19 +386,25 @@ export default function SubscriptionPage() {
               </div>
             </div>
 
-            <div className={styles.detailsGrid}>
-              <div className={styles.detailItem}>
-                <span>Ciclo de Faturamento</span>
-                <strong>{formatDate(data.currentPeriodStart)} — {formatDate(data.currentPeriodEnd)}</strong>
+            {hasSubscription && canShowBillingDates && (
+              <div className={styles.detailsGrid}>
+                <div className={styles.detailItem}>
+                  <span>Ciclo de Faturamento</span>
+                  <strong>{formatDate(data.currentPeriodStart!)} — {formatDate(data.currentPeriodEnd!)}</strong>
+                </div>
+                <div className={styles.detailItem}>
+                  <span>Próxima Cobrança</span>
+                  <strong>{data.cancelAtPeriodEnd ? 'Indisponível' : formatDate(data.currentPeriodEnd!)}</strong>
+                </div>
               </div>
-              <div className={styles.detailItem}>
-                <span>Próxima Cobrança</span>
-                <strong>{data.cancelAtPeriodEnd ? 'Indisponível' : formatDate(data.currentPeriodEnd)}</strong>
-              </div>
-            </div>
+            )}
 
             <div className={styles.cardActions}>
-              {data.cancelAtPeriodEnd ? (
+              {!hasSubscription ? (
+                <button className={styles.btnPrimary} onClick={() => router.push('/plans')}>
+                  Ver Planos
+                </button>
+              ) : data.cancelAtPeriodEnd ? (
                 <button 
                   className={styles.btnPrimary} 
                   onClick={handleReactivateSubscription}
@@ -370,7 +446,7 @@ export default function SubscriptionPage() {
               </div>
             </div>
 
-            <h3 style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--zinc-400)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1rem' }}>Histórico Recente</h3>
+            <h3 className={styles.eyebrow}>Histórico Recente</h3>
             
             <div className={styles.invoiceList}>
               {data.invoices.map(invoice => (
@@ -387,7 +463,7 @@ export default function SubscriptionPage() {
               ))}
             </div>
 
-            <div className={styles.cardActions} style={{ marginTop: '2rem' }}>
+            <div className={`${styles.cardActions} ${styles.sectionSpacer}`}>
               <button 
                 className={styles.btnSecondary} 
                 onClick={handlePortalRedirect}
@@ -399,6 +475,142 @@ export default function SubscriptionPage() {
             </div>
           </section>
         </div>
+
+        {officeSeatAccess && !officeWorkspace && (
+          <section className={`${styles.card} ${styles.sectionSpacer}`}>
+            <div className={styles.cardTitle}>
+              <Users size={22} />
+              Minha Licenca OFFICE
+            </div>
+            <p className={styles.mutedText}>
+              Sua conta esta vinculada a assinatura OFFICE de <strong>{officeSeatAccess.owner.name}</strong>.
+            </p>
+            <div className={styles.detailsGrid}>
+              <div className={styles.detailItem}>
+                <span>Assinatura dona</span>
+                <strong>{officeSeatAccess.owner.email}</strong>
+              </div>
+              <div className={styles.detailItem}>
+                <span>Uso da equipe</span>
+                <strong>{officeSeatAccess.usedSeats} de {officeSeatAccess.totalSeats} licencas ocupadas</strong>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {officeWorkspace && (
+          <section className={`${styles.card} ${styles.sectionSpacer}`}>
+            <div className={styles.cardTitle}>
+              <Users size={22} />
+              Gestão de Licencas OFFICE
+            </div>
+
+            <div className={styles.detailsGrid}>
+              <div className={styles.detailItem}>
+                <span>Total de licencas</span>
+                <strong>{officeWorkspace.totalSeats}</strong>
+              </div>
+              <div className={styles.detailItem}>
+                <span>Licencas usadas</span>
+                <strong>{officeWorkspace.usedSeats}</strong>
+              </div>
+              <div className={styles.detailItem}>
+                <span>Licencas disponiveis</span>
+                <strong>{officeWorkspace.availableSeats}</strong>
+              </div>
+              <div className={styles.detailItem}>
+                <span>Regra do plano</span>
+                <strong>O comprador ocupa 1 vaga automaticamente</strong>
+              </div>
+            </div>
+
+            <form onSubmit={handleCreateOfficeInvite} className={styles.inviteForm}>
+              <div className={styles.cardTitle}>
+                <Mail size={18} />
+                Convidar por e-mail
+              </div>
+              <div className={styles.inviteRow}>
+                <input
+                  className={styles.inviteInput}
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(event) => setInviteEmail(event.target.value)}
+                  placeholder="nome@empresa.com"
+                />
+                <button
+                  type="submit"
+                  className={styles.btnPrimary}
+                  disabled={actionLoading === 'office_invite' || officeWorkspace.availableSeats <= 0}
+                >
+                  {actionLoading === 'office_invite' ? <RefreshCw className="animate-spin" /> : <Mail size={18} />}
+                  Enviar convite
+                </button>
+              </div>
+            </form>
+
+            <div className={styles.sectionSpacer}>
+              <div className={styles.cardTitle}>
+                <Users size={18} />
+                Membros ativos
+              </div>
+              <div className={styles.workspaceList}>
+                {officeWorkspace.members.map((member) => (
+                  <div key={member.id} className={styles.workspaceRow}>
+                    <div className={styles.workspaceMeta}>
+                      <strong>{member.user.name}</strong>
+                      <div className={styles.workspaceEmail}>{member.user.email}</div>
+                      <div className={styles.workspaceHint}>
+                        {member.seatType === 'OWNER' ? 'Proprietario da assinatura' : 'Membro convidado'}
+                      </div>
+                    </div>
+                    {member.seatType === 'MEMBER' && (
+                      <button
+                        className={`${styles.btnDanger} ${styles.workspaceAction}`}
+                        onClick={() => handleRemoveOfficeMember(member)}
+                        disabled={actionLoading === `remove_member_${member.id}`}
+                      >
+                        {actionLoading === `remove_member_${member.id}` ? <RefreshCw className="animate-spin" /> : <UserMinus size={16} />}
+                        Remover
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.sectionSpacer}>
+              <div className={styles.cardTitle}>
+                <Mail size={18} />
+                Convites enviados
+              </div>
+              <div className={styles.workspaceList}>
+                {officeWorkspace.invites.length === 0 && (
+                  <p className={styles.emptyText}>Nenhum convite enviado ainda.</p>
+                )}
+                {officeWorkspace.invites.map((invite) => (
+                  <div key={invite.id} className={styles.workspaceRow}>
+                    <div className={styles.workspaceMeta}>
+                      <strong>{invite.email}</strong>
+                      <div className={styles.workspaceEmail}>
+                        Status: {invite.status} • Expira em {formatDate(invite.expiresAt)}
+                      </div>
+                    </div>
+                    {invite.status === 'PENDING' && (
+                      <button
+                        className={`${styles.btnSecondary} ${styles.workspaceAction}`}
+                        onClick={() => handleRevokeOfficeInvite(invite)}
+                        disabled={actionLoading === `revoke_invite_${invite.id}`}
+                      >
+                        {actionLoading === `revoke_invite_${invite.id}` ? <RefreshCw className="animate-spin" /> : <XCircle size={16} />}
+                        Revogar
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
 
       </main>

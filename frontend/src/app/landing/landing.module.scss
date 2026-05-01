@@ -158,19 +158,19 @@
 
 .headerBtnSecondary {
   cursor: pointer;
-  border: 1px solid $zinc-200;
-  background: white;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
   font-family: $font-headline;
   font-size: 0.9rem;
   font-weight: 700;
-  color: $zinc-700;
+  color: var(--text-primary);
   padding: $sp-2_5 $sp-5;
   border-radius: $radius-lg;
   transition: $transition-base;
 
   &:hover {
-    background: $zinc-50;
-    border-color: $zinc-300;
+    background: var(--surface-hover);
+    border-color: rgba($amber-400, 0.35);
   }
 }
 
@@ -203,11 +203,11 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  border: 1px solid $zinc-200;
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-md;
-  background: white;
+  background: var(--surface-card);
   cursor: pointer;
-  color: $zinc-700;
+  color: var(--text-primary);
 
   @include lg {
     display: none;
@@ -508,8 +508,8 @@
 
 // Dashboard mockup
 .dashboardMockup {
-  background: white;
-  border: 1px solid rgba($zinc-200, 0.8);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-2xl;
   box-shadow: 0 40px 80px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba($zinc-200, 0.4);
   overflow: hidden;
@@ -679,8 +679,8 @@
 // Floating cards
 @mixin floating-card {
   position: absolute;
-  background: white;
-  border: 1px solid rgba($zinc-200, 0.9);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-xl;
   padding: $sp-3 $sp-4;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
@@ -781,7 +781,7 @@
 // ============================================================
 .benefits {
   padding: 6rem 0;
-  background: white;
+  background: var(--surface-card);
   border-top: 1px solid rgba($zinc-100, 0.8);
 }
 
@@ -823,7 +823,7 @@
   &:hover {
     transform: translateY(-4px);
     box-shadow: $shadow-xl;
-    background: white;
+    background: var(--surface-card);
     border-color: rgba($zinc-200, 0.5);
 
     &::before {
@@ -883,8 +883,8 @@
 
 .stepCard {
   position: relative;
-  background: white;
-  border: 1px solid rgba($zinc-200, 0.7);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-2xl;
   padding: $sp-8 $sp-6;
   text-align: center;
@@ -954,7 +954,7 @@
 // ============================================================
 .features {
   padding: 6rem 0;
-  background: white;
+  background: var(--surface-card);
   border-top: 1px solid rgba($zinc-100, 0.8);
 }
 
@@ -982,7 +982,7 @@
   &:hover {
     transform: translateY(-3px);
     box-shadow: $shadow-lg;
-    background: white;
+    background: var(--surface-card);
   }
 }
 
@@ -1129,8 +1129,8 @@
 }
 
 .faqItem {
-  background: white;
-  border: 1px solid rgba($zinc-200, 0.8);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-xl;
   overflow: hidden;
   transition: $transition-base;
@@ -1411,6 +1411,37 @@
   }
 }
 
+.footerLegal {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: $sp-1;
+  justify-content: center;
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  padding-left: $sp-4;
+
+  @include md {
+    justify-content: flex-end;
+    margin-left: auto;
+  }
+}
+
+.footerLegalLink {
+  display: block;
+  padding: $sp-2 $sp-3;
+  border-radius: $radius-md;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.35);
+  text-decoration: none;
+  transition: $transition-base;
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.04);
+  }
+}
+
 .footerBottom {
   max-width: 1200px;
   margin: 0 auto;
@@ -1489,8 +1520,8 @@
 // ── Plan card base ──────────────────────────────────────────
 .pricingCard {
   position: relative;
-  background: white;
-  border: 1px solid rgba($zinc-200, 0.7);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-2xl;
   padding: $sp-8 $sp-8;
   box-shadow: $shadow-md;
@@ -1508,7 +1539,7 @@
 
 // ── Highlighted (Profissional) ───────────────────────────────
 .pricingCardHighlighted {
-  background: white;
+  background: var(--surface-card);
   border: 2px solid $amber-400;
   box-shadow: 0 12px 48px -8px rgba($amber-500, 0.28), $shadow-lg;
 
@@ -1809,7 +1840,7 @@
 // ============================================================
 .pricingValueProps {
   padding: 5rem 0;
-  background: white;
+  background: var(--surface-card);
   border-top: 1px solid rgba($zinc-100, 0.8);
 }
 
@@ -1838,7 +1869,7 @@
   transition: $transition-slow;
 
   &:hover {
-    background: white;
+    background: var(--surface-card);
     border-color: $zinc-200;
     box-shadow: $shadow-md;
     transform: translateY(-2px);

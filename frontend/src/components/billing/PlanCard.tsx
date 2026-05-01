@@ -1,11 +1,13 @@
 'use client';
 
 import React from 'react';
+import { AxiosError } from 'axios';
 import { Minus, Plus } from 'lucide-react';
 import { toast } from 'sonner';
-import axios, { AxiosError } from 'axios';
-import styles from './PlanCard.module.scss';
+import api from '@/lib/api';
+import { getAuthHeaders } from '@/lib/authClient';
 import { useAccessGate } from '@/lib/hooks/useAccessGate';
+import styles from './PlanCard.module.scss';
 
 interface PlanCardProps {
   id: string;
@@ -31,8 +33,8 @@ const PlanCard: React.FC<PlanCardProps> = ({
   interval,
 }) => {
   const [loading, setLoading] = React.useState(false);
-  const [quantity, setQuantity] = React.useState(1);
-
+  const minQuantity = id === 'OFFICE' ? 2 : 1;
+  const [quantity, setQuantity] = React.useState(() => minQuantity);
   const { access, loading: accessLoading } = useAccessGate();
 
   const formatPrice = (val: number | string) => {
@@ -52,25 +54,20 @@ const PlanCard: React.FC<PlanCardProps> = ({
     try {
       setLoading(true);
 
-      if (accessLoading || !access?.authenticated) return;
-
-      const token = access.token;
-      if (!token) {
-        toast.error('Você precisa estar logado para escolher um plano.');
-        window.location.href = '/login';
+      if (accessLoading || !access?.authenticated) {
         return;
       }
 
-      const response = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000'}/api/billing/create-checkout-session`,
+      const response = await api.post(
+        '/api/billing/create-checkout-session',
         { plan: id, interval, quantity },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: getAuthHeaders(access.token) }
       );
 
       if (response.data?.url) {
         window.location.href = response.data.url;
       } else {
-        throw new Error('URL de checkout não retornada');
+        throw new Error('URL de checkout nao retornada');
       }
     } catch (error) {
       const axiosError = error as AxiosError<{ message?: string }>;
@@ -97,7 +94,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
         </div>
         {!isEnterprise && (
           <div className={styles.trial}>
-            <p className={styles.trialText}>10 dias grátis</p>
+            <p className={styles.trialText}>10 dias gratis</p>
           </div>
         )}
       </div>
@@ -109,7 +106,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
         <span className={styles.priceValue}>{formatPrice(price)}</span>
         {!isEnterprise && (
           <span className={styles.pricePeriod}>
-            / {id === 'OFFICE' ? 'usuário / ' : ''}{interval === 'monthly' ? 'mês' : 'ano'}
+            / {id === 'OFFICE' ? 'usuario / ' : ''}{interval === 'monthly' ? 'mes' : 'ano'}
           </span>
         )}
       </div>
@@ -123,13 +120,13 @@ const PlanCard: React.FC<PlanCardProps> = ({
 
       {id === 'OFFICE' && (
         <div className={styles.quantitySelector}>
-          <span className={styles.quantityLabel}>Número de usuários</span>
+          <span className={styles.quantityLabel}>Numero de usuarios</span>
           <div className={styles.quantityControls}>
             <button
               type="button"
               className={styles.quantityBtn}
-              onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
-              disabled={quantity <= 1 || loading}
+              onClick={() => setQuantity((prev) => Math.max(minQuantity, prev - 1))}
+              disabled={quantity <= minQuantity || loading}
             >
               <Minus size={16} />
             </button>
@@ -137,7 +134,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
             <button
               type="button"
               className={styles.quantityBtn}
-              onClick={() => setQuantity(prev => prev + 1)}
+              onClick={() => setQuantity((prev) => prev + 1)}
               disabled={loading}
             >
               <Plus size={16} />
@@ -152,12 +149,12 @@ const PlanCard: React.FC<PlanCardProps> = ({
         disabled={loading}
         className={styles.subscribeBtn}
       >
-        {loading ? 'Processando...' : (isEnterprise ? 'Entre em contato' : 'Começar teste grátis')}
+        {loading ? 'Processando...' : (isEnterprise ? 'Entre em contato' : 'Comecar teste gratis')}
       </button>
 
       {!isEnterprise && (
         <p className={styles.footer}>
-          Cancele a qualquer momento. Nenhuma cobrança será feita nos primeiros 10 dias.
+          Cancele a qualquer momento. Nenhuma cobranca sera feita nos primeiros 10 dias.
         </p>
       )}
     </div>

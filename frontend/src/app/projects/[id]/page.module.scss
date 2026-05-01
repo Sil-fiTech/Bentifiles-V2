@@ -66,13 +66,13 @@
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: $zinc-500;
+  color: var(--text-muted);
   margin-bottom: $sp-2;
 }
 
 .breadcrumbLink {
   @include btn-reset;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.1em;
@@ -80,7 +80,7 @@
   cursor: pointer;
   transition: $transition-fast;
 
-  &:hover { color: $zinc-900; }
+  &:hover { color: var(--text-primary); }
 }
 
 .breadcrumbActive {
@@ -98,7 +98,7 @@
   font-size: clamp(1.875rem, 4vw, 2.25rem);
   font-weight: 900;
   letter-spacing: -0.04em;
-  color: $zinc-900;
+  color: var(--text-primary);
 }
 
 .titleInput {
@@ -106,27 +106,27 @@
   font-size: clamp(1.5rem, 3vw, 1.875rem);
   font-weight: 900;
   letter-spacing: -0.03em;
-  color: $zinc-900;
-  background: white;
+  color: var(--text-primary);
+  background: var(--surface-card);
   border: 1px solid $amber-400;
   border-radius: $radius-md;
   padding: $sp-1 $sp-3;
   outline: none;
   width: 100%;
   max-width: 300px;
-  box-shadow: $shadow-sm;
+  box-shadow: var(--shadow-elevated);
 }
 
 .editBtn {
   @include btn-reset;
-  color: $zinc-400;
+  color: var(--text-muted);
   padding: $sp-1_5;
   border-radius: $radius-md;
   transition: $transition-base;
 
   &:hover {
     color: $amber-500;
-    background: $zinc-50;
+    background: var(--surface-hover);
   }
 }
 
@@ -138,8 +138,8 @@
 
 .cancelNameBtn {
   @extend .editBtn;
-  color: $zinc-400;
-  &:hover { color: $zinc-700; background: $zinc-100; }
+  color: var(--text-muted);
+  &:hover { color: var(--text-primary); background: var(--surface-hover); }
 }
 
 .headerMeta {
@@ -162,9 +162,9 @@
   border-radius: $radius-full;
 
   &.archived {
-    background: $zinc-100;
-    color: $zinc-500;
-    border: 1px solid $zinc-200;
+    background: var(--surface-muted);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
   }
 }
 
@@ -188,7 +188,7 @@
 
 .updatedAt {
   font-size: 0.75rem;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-weight: 500;
   font-style: italic;
 }
@@ -206,16 +206,16 @@
   align-items: center;
   gap: $sp-2;
   padding: $sp-2_5 $sp-5;
-  background: $zinc-200;
-  color: $zinc-900;
+  background: var(--surface-muted);
+  color: var(--text-primary);
   font-family: $font-headline;
   font-weight: 700;
   font-size: 0.875rem;
   border-radius: $radius-xl;
-  box-shadow: $shadow-sm;
+  box-shadow: var(--shadow-elevated);
   transition: $transition-base;
 
-  &:hover { background: $zinc-300; }
+  &:hover { background: var(--surface-hover); }
   &:active { transform: scale(0.98); }
 }
 
@@ -268,7 +268,7 @@
   font-family: $font-headline;
   font-size: 2.25rem;
   font-weight: 900;
-  color: $zinc-900;
+  color: var(--text-primary);
   letter-spacing: -0.04em;
 
   .dark & { color: $amber-400; }
@@ -279,7 +279,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: $zinc-400;
+  color: var(--text-muted);
   margin-top: $sp-1;
   transition: color 0.15s;
 
@@ -319,18 +319,18 @@
   font-size: 1.875rem;
   font-weight: 900;
   letter-spacing: -0.04em;
-  color: $zinc-900;
+  color: var(--text-primary);
 }
 
 .searchBox {
   display: flex;
   align-items: center;
   gap: $sp-2;
-  background: white;
-  border: 1px solid rgba($zinc-200, 0.6);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   padding: $sp-2 $sp-4;
   border-radius: $radius-md;
-  box-shadow: $shadow-sm;
+  box-shadow: var(--shadow-elevated);
   transition: $transition-base;
 
   &:focus-within {
@@ -346,11 +346,11 @@
   font-size: 0.875rem;
   font-weight: 500;
   width: 100%;
-  color: $zinc-900;
+  color: var(--text-primary);
 
   @include sm { width: 12rem; }
 
-  &::placeholder { color: $zinc-400; }
+  &::placeholder { color: var(--text-muted); }
 }
 
 // ------------------------------------------------------------------
@@ -376,28 +376,29 @@
   font-size: 1.125rem;
   font-weight: 700;
   font-family: $font-headline;
-  color: $zinc-900;
+  color: var(--text-primary);
 }
 
 .memberEmptyText {
   font-size: 0.875rem;
-  color: $zinc-500;
+  color: var(--text-muted);
 }
 
 .memberCard {
-  background: white;
+  background: var(--surface-card);
   border-radius: $radius-xl;
   overflow: hidden;
   transition: border-color 0.2s, box-shadow 0.2s;
 
   &.expanded {
-    border: 1px solid rgba($zinc-200, 0.6);
-    box-shadow: $shadow-md;
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-elevated);
+    overflow: visible;
   }
 
   &:not(.expanded) {
-    border: 1px solid rgba($zinc-200, 0.6);
-    box-shadow: $shadow-sm;
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--shadow-elevated);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -418,7 +419,7 @@
   transition: background-color 0.15s;
 
   @media (hover: hover) and (pointer: fine) {
-    &:hover { background: $zinc-50; }
+    &:hover { background: var(--surface-hover); }
   }
 
   @include md { padding: $sp-6 $sp-8; flex-direction: row; align-items: center; }
@@ -452,7 +453,7 @@
   font-size: clamp(1rem, 2vw, 1.25rem);
   font-weight: 900;
   letter-spacing: -0.02em;
-  color: $zinc-900;
+  color: var(--text-primary);
   display: flex;
   align-items: center;
   gap: $sp-2;
@@ -460,7 +461,7 @@
 
 .memberEmail {
   font-size: 0.875rem;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-weight: 500;
 }
 
@@ -481,25 +482,25 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: $zinc-400;
+  color: var(--text-muted);
 }
 
 .progressStat {
   font-size: 0.875rem;
   font-family: $font-headline;
   font-weight: 700;
-  color: $zinc-900;
+  color: var(--text-primary);
 }
 
 .progressStatMuted {
-  color: $zinc-500;
+  color: var(--text-muted);
   font-weight: 400;
 }
 
 .progressTrack {
   width: 100%;
   height: 0.5rem;
-  background: $zinc-100;
+  background: var(--surface-muted);
   border-radius: $radius-full;
   overflow: hidden;
 }
@@ -518,7 +519,7 @@
   display: flex;
   align-items: center;
   gap: $sp-2;
-  color: $zinc-400;
+  color: var(--text-muted);
   font-family: $font-headline;
   font-weight: 700;
   padding: $sp-1_5 $sp-3;
@@ -532,7 +533,7 @@
 
   &:hover {
     color: $amber-500;
-    background: $amber-50;
+    background: rgba($amber-400, 0.12);
   }
 }
 
@@ -546,16 +547,16 @@
 // Document rows (expanded section)
 // ------------------------------------------------------------------
 .docSection {
-  background: rgba($zinc-50, 0.3);
+  background: rgba(255, 255, 255, 0.02);
   padding: $sp-4 $sp-4 $sp-6;
-  border-top: 1px solid rgba($zinc-200, 0.6);
+  border-top: 1px solid var(--border-subtle);
 
   @include md { padding: $sp-4 $sp-8 $sp-6; }
 }
 
 .docEmpty {
   padding: $sp-4 0;
-  color: $zinc-500;
+  color: var(--text-muted);
   font-size: 0.875rem;
   font-style: italic;
 }
@@ -569,8 +570,8 @@
 .docRow {
   padding: $sp-3 $sp-4;
   border-radius: $radius-xl;
-  border: 1px solid rgba($zinc-200, 0.6);
-  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
   display: flex;
   flex-direction: column;
   gap: $sp-4;
@@ -580,7 +581,7 @@
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
-      background: white;
+      background: var(--surface-hover);
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
     }
   }
@@ -609,10 +610,10 @@
   @include md { margin-top: 0; }
 
   &.filled {
-    background: white;
-    border: 1px solid $zinc-200;
-    color: $zinc-600;
-    box-shadow: $shadow-sm;
+    background: var(--surface-card);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    box-shadow: var(--shadow-elevated);
   }
 
   &.empty {
@@ -626,7 +627,7 @@
   font-size: 0.875rem;
   font-family: $font-headline;
   font-weight: 700;
-  color: $zinc-900;
+  color: var(--text-primary);
   line-height: 1.3;
   overflow-wrap: break-word;
   word-wrap: break-word;
@@ -638,7 +639,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: $zinc-400;
+  color: var(--text-muted);
   margin-top: $sp-1;
   line-clamp: 1;
 }
@@ -697,13 +698,13 @@
   font-size: 0.6875rem;
   font-family: $font-headline;
   font-weight: 700;
-  color: $zinc-700;
-  background: white;
-  border: 1px solid $zinc-200;
+  color: var(--text-primary);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   padding: $sp-3 $sp-4; // Increased padding for 44px min-height target
   min-height: 44px;
   border-radius: $radius-md;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--shadow-elevated);
   transition: $transition-base;
 
   @include md {
@@ -719,6 +720,179 @@
   }
 
   &:active { transform: scale(0.98); }
+}
+
+.downloadSplit,
+.downloadSplitHeader {
+  position: relative;
+  display: inline-flex;
+  align-items: stretch;
+  flex-shrink: 0;
+  border-radius: $radius-md;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+
+  &[data-open="true"] {
+    z-index: 60;
+  }
+}
+
+.downloadSplitHeader {
+  border-radius: $radius-xl;
+  box-shadow: $shadow-sm;
+}
+
+.downloadPrimaryBtn,
+.downloadToggleBtn {
+  @include btn-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: $font-headline;
+  font-weight: 700;
+  transition: $transition-base;
+}
+
+.downloadPrimaryBtn {
+  gap: $sp-1_5;
+  font-size: 0.6875rem;
+  color: var(--text-primary);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-right: 0;
+  padding: $sp-3 $sp-3;
+  min-height: 44px;
+  border-radius: $radius-md 0 0 $radius-md;
+
+  @include md {
+    padding: $sp-2 $sp-3;
+    min-height: auto;
+  }
+
+  .downloadSplitHeader & {
+    gap: $sp-2;
+    padding: $sp-2_5 $sp-4;
+    min-height: auto;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    background: var(--surface-muted);
+    border-color: transparent;
+    border-radius: $radius-xl 0 0 $radius-xl;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: $amber-600;
+      border-color: $amber-400;
+    }
+
+    .downloadSplitHeader &:hover {
+      color: var(--text-primary);
+      background: var(--surface-hover);
+      border-color: transparent;
+    }
+  }
+}
+
+.downloadToggleBtn {
+  width: 2.25rem;
+  color: var(--text-muted);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 0 $radius-md $radius-md 0;
+
+  svg {
+    transition: transform 0.18s ease;
+  }
+
+  &.active {
+    color: $amber-700;
+    border-color: $amber-400;
+    background: $amber-50;
+
+    svg { transform: rotate(180deg); }
+  }
+
+  .downloadSplitHeader & {
+    color: var(--text-primary);
+    background: var(--surface-muted);
+    border-color: transparent;
+    box-shadow: inset 1px 0 0 rgba($zinc-900, 0.08);
+    border-radius: 0 $radius-xl $radius-xl 0;
+  }
+
+  .downloadSplitHeader &.active {
+    color: $amber-950;
+    background: $amber-300;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      color: $amber-700;
+      background: $amber-50;
+      border-color: $amber-400;
+    }
+
+    .downloadSplitHeader &:hover {
+      color: $zinc-900;
+      background: $zinc-300;
+      border-color: transparent;
+    }
+  }
+}
+
+.downloadMenu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + $sp-2);
+  z-index: 40;
+  min-width: 13rem;
+  padding: $sp-2;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: $radius-xl;
+  box-shadow: 0 18px 45px rgba($zinc-900, 0.16);
+  animation: downloadMenuIn 0.16s ease-out;
+}
+
+.downloadMenuItem {
+  @include btn-reset;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $sp-0_5;
+  padding: $sp-3;
+  border-radius: $radius-lg;
+  text-align: left;
+  transition: $transition-fast;
+
+  &:hover {
+    background: $amber-50;
+  }
+}
+
+.downloadMenuTitle {
+  font-family: $font-headline;
+  font-size: 0.8125rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.downloadMenuHint {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+@keyframes downloadMenuIn {
+  from {
+    opacity: 0;
+    transform: translateY(-0.25rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .docApproveBtn {
@@ -869,8 +1043,8 @@
   position: fixed;
   bottom: 0;
   width: 100%;
-  background: white;
-  border-top: 1px solid rgba($zinc-200, 0.6);
+  background: var(--surface-card);
+  border-top: 1px solid var(--border-subtle);
   height: 4rem;
   align-items: center;
   justify-content: space-around;
@@ -887,7 +1061,7 @@
   flex-direction: column;
   align-items: center;
   gap: $sp-1;
-  color: $zinc-400;
+  color: var(--text-muted);
   padding: $sp-2;
   transition: $transition-base;
 
@@ -915,8 +1089,291 @@
   transform: translateY(-1rem);
   box-shadow: $shadow-lg;
   color: $amber-950;
-  border: 4px solid white;
+  border: 4px solid var(--surface-card);
   transition: $transition-base;
 
   &:active { transform: translateY(-1rem) scale(0.95); }
+}
+
+// ------------------------------------------------------------------
+// Invite modal
+// ------------------------------------------------------------------
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $sp-4;
+  background: rgba($zinc-900, 0.48);
+}
+
+.inviteModal {
+  width: min(100%, 42rem);
+  max-height: calc(100vh - 2rem);
+  overflow: auto;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: $radius-xl;
+  box-shadow: 0 24px 70px rgba($zinc-900, 0.24);
+}
+
+.inviteModalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $sp-4;
+  padding: $sp-6;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.inviteModalTitle {
+  font-family: $font-headline;
+  font-size: 1.375rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.inviteModalSubtitle {
+  margin-top: $sp-1;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.modalIconBtn,
+.inviteMiniBtn {
+  @include btn-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  border-radius: $radius-md;
+  color: var(--text-muted);
+  background: var(--surface-muted);
+  border: 1px solid var(--border-subtle);
+  transition: $transition-base;
+
+  &:hover:not(:disabled) {
+    color: var(--text-primary);
+    background: var(--surface-hover);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+.inviteModalBody {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-5;
+  padding: $sp-6;
+}
+
+.inviteSection {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+}
+
+.inviteSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $sp-3;
+}
+
+.inviteSectionTitle {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.inviteLinkBox {
+  @include btn-reset;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $sp-3;
+  min-height: 3.25rem;
+  padding: $sp-3 $sp-4;
+  border-radius: $radius-md;
+  border: 1px dashed $amber-300;
+  background: $amber-50;
+  color: var(--text-primary);
+  text-align: left;
+  transition: $transition-base;
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  svg {
+    flex-shrink: 0;
+    color: $amber-700;
+  }
+
+  &:hover:not(:disabled) {
+    border-color: $amber-500;
+    background: rgba($amber-100, 0.8);
+  }
+
+  &:disabled {
+    cursor: wait;
+    color: var(--text-muted);
+  }
+}
+
+.inviteEmailRow {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+
+  @include sm {
+    flex-direction: row;
+  }
+}
+
+.inviteEmailInput {
+  min-width: 0;
+  flex: 1;
+  min-height: 2.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: $radius-md;
+  padding: 0 $sp-4;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  outline: none;
+  transition: $transition-base;
+
+  &:focus {
+    border-color: $amber-400;
+    box-shadow: 0 0 0 3px rgba($amber-400, 0.18);
+  }
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+}
+
+.inviteSendBtn {
+  @include btn-reset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $sp-2;
+  min-height: 2.75rem;
+  padding: 0 $sp-5;
+  border-radius: $radius-md;
+  background: $amber-400;
+  color: $amber-950;
+  font-family: $font-headline;
+  font-size: 0.875rem;
+  font-weight: 800;
+  transition: $transition-base;
+
+  &:hover:not(:disabled) {
+    background: $amber-500;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+}
+
+.inviteStatusList {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-2;
+}
+
+.inviteEmptyText {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: $sp-4;
+  border: 1px solid var(--border-subtle);
+  border-radius: $radius-md;
+  background: var(--surface-muted);
+}
+
+.inviteStatusItem {
+  display: flex;
+  flex-direction: column;
+  gap: $sp-3;
+  padding: $sp-4;
+  border: 1px solid var(--border-subtle);
+  border-radius: $radius-md;
+  background: var(--surface-card);
+
+  @include sm {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.inviteStatusEmail {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 800;
+  overflow-wrap: anywhere;
+}
+
+.inviteStatusDate {
+  margin-top: $sp-1;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.inviteStatusBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  padding: $sp-1_5 $sp-3;
+  border-radius: $radius-full;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+
+  @include sm {
+    align-self: auto;
+  }
+}
+
+.inviteStatusAccepted {
+  background: #ecfdf5;
+  color: #047857;
+}
+
+.inviteStatusExpired {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.inviteStatusSent {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.inviteStatusCreated {
+  background: var(--surface-muted);
+  color: var(--text-muted);
 }

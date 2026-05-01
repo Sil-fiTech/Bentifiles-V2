@@ -1,7 +1,8 @@
 'use client';
 
 import api from '@/lib/api';
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { getAuthHeaders, performLogout } from '@/lib/authClient';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'sonner';
 import { useRouter, useParams } from 'next/navigation';
@@ -14,12 +15,38 @@ import {
     UploadCloud, ArrowLeft, Shield, AlertTriangle, CheckCircle, XCircle,
     Download, LayoutGrid,
     Folder,
-    Settings
+    Settings, Copy, Mail, X, RefreshCw
 } from 'lucide-react';
 import { Nav } from '@/components/Nav';
 import { useAccessGate } from '@/lib/hooks/useAccessGate';
 import JSZip from 'jszip';
 import styles from './page.module.scss';
+
+type DownloadFormat = 'pdf' | 'original';
+
+const getFilenameExtension = (value?: string | null) => {
+    if (!value) return '';
+    const lastDotIndex = value.lastIndexOf('.');
+    return lastDotIndex > -1 ? value.slice(lastDotIndex) : '';
+};
+
+const replaceFilenameExtension = (value: string, nextExtension: string) => {
+    const lastDotIndex = value.lastIndexOf('.');
+    const baseName = lastDotIndex > -1 ? value.slice(0, lastDotIndex) : value;
+    return `${baseName}${nextExtension}`;
+};
+type InviteStatus = 'CREATED' | 'EMAIL_SENT' | 'EXPIRED' | 'ACCEPTED';
+
+type ProjectInvite = {
+    id: string;
+    token: string;
+    link?: string;
+    email?: string | null;
+    expiresAt: string;
+    emailSentAt?: string | null;
+    acceptedAt?: string | null;
+    status: InviteStatus;
+};
 
 export default function ProjectPage() {
     const { id } = useParams();
@@ -40,26 +67,48 @@ export default function ProjectPage() {
     const [currentUser, setCurrentUser] = useState<any>(null);
     const [isEditingName, setIsEditingName] = useState(false);
     const [newName, setNewName] = useState('');
+    const [openDownloadMenu, setOpenDownloadMenu] = useState<string | null>(null);
+    const [inviteModalOpen, setInviteModalOpen] = useState(false);
+    const [activeInvite, setActiveInvite] = useState<ProjectInvite | null>(null);
+    const [invites, setInvites] = useState<ProjectInvite[]>([]);
+    const [inviteEmail, setInviteEmail] = useState('');
+    const [inviteLoading, setInviteLoading] = useState(false);
+    const [sendingInvite, setSendingInvite] = useState(false);
 
     const { data: session, status } = useSession();
-    console.log(session);
     
 
     useEffect(() => {
         // Only fetch data if we are authenticated
         if (accessLoading || !access?.authenticated) return;
 
-        const token = access.token;
-        if (token && id) {
-            fetchData(token);
+        if (id) {
+            fetchData(access.token);
         }
     }, [id, accessLoading, access]);
 
-    const fetchData = async (token: string) => {
+    useEffect(() => {
+        if (!openDownloadMenu) return;
+
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as HTMLElement | null;
+            if (!target?.closest('[data-download-menu-root="true"]')) {
+                setOpenDownloadMenu(null);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, [openDownloadMenu]);
+
+    const fetchData = async (token?: string | null) => {
         try {
             setLoading(true);
-            const headers = { Authorization: `Bearer ${token}` };
-            const response = await api.get(`/api/projects/${id}/details`, { headers });
+            const headers = getAuthHeaders(token);
+            const [response, profileResponse] = await Promise.all([
+                api.get(`/api/projects/${id}/details`, { headers }),
+                api.get('/api/users/me', { headers }).catch(() => ({ data: null })),
+            ]);
             const { project, files, members, requiredDocuments, clientDocuments, currentUserPermissions } = response.data;
             setProject(project);
             setFiles(files);
@@ -68,10 +117,18 @@ export default function ProjectPage() {
             setClientDocs(clientDocuments);
             setCurrentUserPermissions(currentUserPermissions);
 
-            try {
-                const payload = JSON.parse(atob((token || '').split('.')[1]));
-                setCurrentUser(payload);
-            } catch (e) { }
+            if (profileResponse.data?.id) {
+                setCurrentUser({
+                    userId: profileResponse.data.id,
+                    name: profileResponse.data.name,
+                    email: profileResponse.data.email,
+                });
+            } else {
+                try {
+                    const payload = JSON.parse(atob((token || '').split('.')[1]));
+                    setCurrentUser(payload);
+                } catch (e) { }
+            }
         } catch (error) {
             console.log(error);
             toast.error('Falha ao carregar projeto');
@@ -84,27 +141,119 @@ export default function ProjectPage() {
     const hasPermission = (permission: string) => currentUserPermissions.includes(permission);
     const isAdmin = currentUserPermissions.includes('PROJECT_EDIT');
     const toggleUserExpand = (userId: string) => setExpandedUsers(prev => ({ ...prev, [userId]: !prev[userId] }));
+    const getAuthToken = () => session?.user?.token || access?.token;
 
-    const generateInvite = async () => {
-        if (project?.status === 'ARCHIVED') { toast.error('Projeto arquivado. Não é possível gerar convites.'); return; }
-        try {
-            const token = session?.user?.token || localStorage.getItem('token');
-            const res = await api.post(`/api/projects/${id}/invites`, {}, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const link = `${window.location.origin}/login?invite=${res.data.invite.token}`;
-            navigator.clipboard.writeText(link);
-            toast.success('Link de convite copiado!');
-        } catch { toast.error('Falha ao gerar convite'); }
+    const buildInviteLink = (invite: ProjectInvite | null) => {
+        if (!invite) return '';
+        return `${window.location.origin}/login?invite=${invite.token}`;
     };
+
+    const fetchInvites = async () => {
+        try {
+            const token = getAuthToken();
+            const res = await api.get(`/api/projects/${id}/invites`, {
+                headers: getAuthHeaders(token)
+            });
+            setInvites(res.data.invites || []);
+        } catch {
+            toast.error('Falha ao carregar convites');
+        }
+    };
+
+    const createInvite = async () => {
+        const token = getAuthToken();
+        const res = await api.post(`/api/projects/${id}/invites`, {}, {
+            headers: getAuthHeaders(token)
+        });
+        const invite = res.data.invite as ProjectInvite;
+        setActiveInvite(invite);
+        setInvites(prev => [invite, ...prev.filter(item => item.id !== invite.id)]);
+        return invite;
+    };
+
+    const openInviteModal = async () => {
+        if (project?.status === 'ARCHIVED') { toast.error('Projeto arquivado. Não é possível gerar convites.'); return; }
+        setInviteModalOpen(true);
+        setInviteLoading(true);
+        try {
+            await fetchInvites();
+            await createInvite();
+        } catch {
+            toast.error('Falha ao preparar convite');
+        } finally {
+            setInviteLoading(false);
+        }
+    };
+
+    const copyInviteLink = async () => {
+        if (!activeInvite) return;
+        try {
+            await navigator.clipboard.writeText(buildInviteLink(activeInvite));
+            toast.success('Link de convite copiado!');
+        } catch {
+            toast.error('Falha ao copiar link');
+        }
+    };
+
+    const sendInviteByEmail = async (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!activeInvite) return;
+        if (!inviteEmail.trim()) {
+            toast.error('Informe o e-mail do cliente');
+            return;
+        }
+
+        setSendingInvite(true);
+        try {
+            const token = getAuthToken();
+            const res = await api.post(`/api/projects/${id}/invites/${activeInvite.id}/email`, {
+                email: inviteEmail.trim()
+            }, {
+                headers: getAuthHeaders(token)
+            });
+            const updatedInvite = res.data.invite as ProjectInvite;
+            setActiveInvite(updatedInvite);
+            setInvites(prev => [updatedInvite, ...prev.filter(item => item.id !== updatedInvite.id)]);
+            setInviteEmail('');
+            toast.success('Convite enviado por e-mail!');
+        } catch (error: any) {
+            toast.error(error.response?.data?.message || 'Falha ao enviar convite por e-mail');
+        } finally {
+            setSendingInvite(false);
+        }
+    };
+
+    const refreshInvite = async () => {
+        setInviteLoading(true);
+        try {
+            await fetchInvites();
+            await createInvite();
+            toast.success('Novo link de convite criado');
+        } catch {
+            toast.error('Falha ao renovar convite');
+        } finally {
+            setInviteLoading(false);
+        }
+    };
+
+    const getInviteStatusMeta = (status: InviteStatus) => {
+        switch (status) {
+            case 'ACCEPTED': return { label: 'Convite aceito', className: styles.inviteStatusAccepted };
+            case 'EXPIRED': return { label: 'Convite expirado', className: styles.inviteStatusExpired };
+            case 'EMAIL_SENT': return { label: 'Email enviado', className: styles.inviteStatusSent };
+            default: return { label: 'Link criado', className: styles.inviteStatusCreated };
+        }
+    };
+
+    const generateInvite = openInviteModal;
 
     const handleRename = async () => {
         if (project?.status === 'ARCHIVED') { toast.error('Projeto arquivado.'); setIsEditingName(false); return; }
         if (!newName.trim() || newName === project?.name) { setIsEditingName(false); return; }
         try {
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = getAuthToken();
             const res = await api.patch(`/api/projects/${id}`, { name: newName }, {
-                headers: { Authorization: `Bearer ${token}` }
+                headers: getAuthHeaders(token)
             });
             toast.success('Projeto renomeado com sucesso!');
             setProject((prev: any) => ({ ...prev, name: res.data.name || newName }));
@@ -123,7 +272,7 @@ export default function ProjectPage() {
         setUploadProgress(prev => ({ ...prev, [uploadKey]: 0 }));
 
         const file = acceptedFiles[0];
-        const token = session?.user?.token || localStorage.getItem('token');
+        const token = getAuthToken();
         const toastId = toast.loading(`Enviando ${file.name}...`);
 
         try {
@@ -132,7 +281,7 @@ export default function ProjectPage() {
             formData.append('projectId', id as string);
 
             const uploadRes = await api.post('/api/files/upload', formData, {
-                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'multipart/form-data' },
+                headers: { ...getAuthHeaders(token), 'Content-Type': 'multipart/form-data' },
                 onUploadProgress: (progressEvent) => {
                     const pct = Math.round((progressEvent.loaded * 100) / (progressEvent.total || file.size));
                     setUploadProgress(prev => ({ ...prev, [uploadKey]: pct }));
@@ -148,7 +297,7 @@ export default function ProjectPage() {
                 ownerUserId: ownerId,
                 fileId: dbFile.id,
                 status: docStatus
-            }, { headers: { Authorization: `Bearer ${token}` } });
+            }, { headers: getAuthHeaders(token) });
 
             setClientDocs(prev => [clientDocRes.data, ...prev.filter(d => !(d.documentTypeId === docTypeId && d.ownerUserId === ownerId))]);
             toast.success('Documento enviado com sucesso!', { id: toastId });
@@ -162,9 +311,9 @@ export default function ProjectPage() {
 
     const handleViewFile = async (url: string) => {
         try {
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = getAuthToken();
             toast.loading('Iniciando visualização', { id: 'loading-file' });
-            const response = await api.get(`/api/files/base64`, { params: { url }, headers: { Authorization: `Bearer ${token}` } });
+            const response = await api.get(`/api/files/base64`, { params: { url }, headers: getAuthHeaders(token) });
             toast.dismiss('loading-file');
             const { base64, mimeType } = response.data;
             const byteCharacters = atob(base64);
@@ -177,23 +326,28 @@ export default function ProjectPage() {
 
     const updateDocStatus = async (docId: string, statusText: string, reason?: string) => {
         try {
-            const token = session?.user?.token || localStorage.getItem('token');
+            const token = getAuthToken();
             const res = await api.patch(`/api/documents/${docId}/status`, {
                 status: statusText, rejectionReason: reason, projectId: id
-            }, { headers: { Authorization: `Bearer ${token}` } });
+            }, { headers: getAuthHeaders(token) });
             setClientDocs(prev => prev.map(d => d.id === docId ? res.data : d));
             toast.success('Status atualizado');
         } catch { toast.error('Falha ao atualizar'); }
     };
 
-    const handleDownloadFile = async (doc: any) => {
+    const handleDownloadFile = async (doc: any, format: DownloadFormat = 'pdf') => {
         try {
             const userSlug = doc.ownerUser.name.trim().replace(/\s+/g, '_');
             const typeSlug = doc.documentType.name.trim().replace(/\s+/g, '_');
-            const filename = `${userSlug}_${typeSlug}`;
-            const token = session?.user?.token || localStorage.getItem('token');
-            const response = await api.get(`/api/files/base64`, { params: { url: doc.file.url }, headers: { Authorization: `Bearer ${token}` } });
-            const { base64, mimeType } = response.data;
+            const fallbackFilenameBase = `${userSlug}_${typeSlug}`;
+            const token = getAuthToken();
+            const response = await api.get(`/api/files/base64`, {
+                params: { url: doc.file.url, format },
+                headers: getAuthHeaders(token)
+            });
+            const { base64, mimeType, filename } = response.data;
+            const fallbackExtension = format === 'pdf' ? '.pdf' : getFilenameExtension(doc.file.originalName);
+            const resolvedExtension = getFilenameExtension(filename) || fallbackExtension;
             const byteCharacters = atob(base64);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
@@ -201,7 +355,7 @@ export default function ProjectPage() {
             const urlObject = window.URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = urlObject;
-            link.download = filename;
+            link.download = `${fallbackFilenameBase}${resolvedExtension}`;
             document.body.appendChild(link);
             link.click();
             link.remove();
@@ -209,7 +363,7 @@ export default function ProjectPage() {
         } catch { toast.error('Falha ao baixar arquivo'); }
     };
 
-    const handleDownloadAll = async () => {
+    const handleDownloadAll = async (format: DownloadFormat = 'pdf') => {
         if (!clientDocs || clientDocs.length === 0) {
             toast.error('Nenhum arquivo disponível para download');
             return;
@@ -217,11 +371,11 @@ export default function ProjectPage() {
 
         const toastId = toast.loading('Preparando arquivos para download...');
         try {
-            const token = session?.user?.token || localStorage.getItem('token');
-            const headers = { Authorization: `Bearer ${token}` };
+            const token = getAuthToken();
+            const headers = getAuthHeaders(token);
 
             // Fetch all project files in a single request
-            const response = await api.get(`/api/files/project/${id}/base64`, { headers });
+            const response = await api.get(`/api/files/project/${id}/base64`, { params: { format }, headers });
             const { files: projectFiles } = response.data;
 
             if (!projectFiles || projectFiles.length === 0) {
@@ -233,7 +387,11 @@ export default function ProjectPage() {
             toast.loading(`Compactando ${projectFiles.length} arquivos...`, { id: toastId });
 
             for (const fileData of projectFiles) {
-                const { base64, originalName, metadata } = fileData;
+                const { base64, originalName, downloadName, metadata } = fileData;
+                const resolvedExtension = getFilenameExtension(downloadName) || getFilenameExtension(originalName);
+                const normalizedOriginalName = resolvedExtension
+                    ? replaceFilenameExtension(originalName, resolvedExtension)
+                    : originalName;
                 
                 const byteCharacters = atob(base64);
                 const byteNumbers = new Array(byteCharacters.length);
@@ -245,7 +403,7 @@ export default function ProjectPage() {
                 // Organizar nome do arquivo no ZIP
                 const userSlug = metadata.userName.trim().replace(/\s+/g, '_');
                 const typeSlug = metadata.documentType.trim().replace(/\s+/g, '_');
-                const fileName = `${typeSlug}_${userSlug}_${originalName}`;
+                const fileName = `${typeSlug}_${userSlug}_${normalizedOriginalName}`;
 
                 zip.file(fileName, byteArray);
             }
@@ -311,12 +469,7 @@ export default function ProjectPage() {
                     projectName={project?.name}
                     userInitials={userInitials}
                     onLogout={async () => {
-                        localStorage.removeItem('token');
-                        router.push('/');
-                        if (session) {
-                            const { signOut } = await import('next-auth/react');
-                            await signOut({ redirect: false });
-                        }
+                        await performLogout();
                         router.push('/');
                     }}
                 />
@@ -385,12 +538,15 @@ export default function ProjectPage() {
                                 >
                                     <Settings size={16} /> Configurações do projeto
                                 </button>
-                                <button
-                                    onClick={() => handleDownloadAll()}
-                                    className={styles.inviteBtn}
-                                >
-                                    <Download size={16} /> Download ZIP
-                                </button>
+                                <DownloadFormatButton
+                                    menuId="project-zip"
+                                    defaultLabel="ZIP em PDF"
+                                    openMenuId={openDownloadMenu}
+                                    setOpenMenuId={setOpenDownloadMenu}
+                                    onDownload={(format) => handleDownloadAll(format)}
+                                    moduleStyles={styles}
+                                    variant="header"
+                                />
                             </div>
                         )}
                     </header>
@@ -550,9 +706,14 @@ export default function ProjectPage() {
                                                                                 <button onClick={() => handleViewFile(doc.file.url)} className={styles.docActionBtn}>
                                                                                     <Eye size={14} /> Ver
                                                                                 </button>
-                                                                                <button onClick={() => handleDownloadFile(doc)} className={styles.docActionBtn}>
-                                                                                    <Download size={14} /> Baixar
-                                                                                </button>
+                                                                                <DownloadFormatButton
+                                                                                    menuId={`doc-${doc.id}`}
+                                                                                    defaultLabel="Baixar PDF"
+                                                                                    openMenuId={openDownloadMenu}
+                                                                                    setOpenMenuId={setOpenDownloadMenu}
+                                                                                    onDownload={(format) => handleDownloadFile(doc, format)}
+                                                                                    moduleStyles={styles}
+                                                                                />
 
                                                                                 {isAdmin && doc.status === 'pending' && (
                                                                                     <>
@@ -611,6 +772,107 @@ export default function ProjectPage() {
                 )}
             </main>
 
+            {inviteModalOpen && (
+                <div className={styles.modalOverlay} role="dialog" aria-modal="true" aria-labelledby="invite-modal-title">
+                    <div className={styles.inviteModal}>
+                        <div className={styles.inviteModalHeader}>
+                            <div>
+                                <h2 id="invite-modal-title" className={styles.inviteModalTitle}>Convidar cliente</h2>
+                                <p className={styles.inviteModalSubtitle}>{project?.name}</p>
+                            </div>
+                            <button
+                                type="button"
+                                className={styles.modalIconBtn}
+                                onClick={() => setInviteModalOpen(false)}
+                                aria-label="Fechar modal"
+                            >
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <div className={styles.inviteModalBody}>
+                            <section className={styles.inviteSection}>
+                                <div className={styles.inviteSectionHeader}>
+                                    <span className={styles.inviteSectionTitle}>Link de convite do projeto</span>
+                                    <button
+                                        type="button"
+                                        className={styles.inviteMiniBtn}
+                                        onClick={refreshInvite}
+                                        disabled={inviteLoading}
+                                        title="Gerar novo link"
+                                    >
+                                        {inviteLoading ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                                    </button>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className={styles.inviteLinkBox}
+                                    onClick={copyInviteLink}
+                                    disabled={!activeInvite || inviteLoading}
+                                    title="Copiar link"
+                                >
+                                    <span>{activeInvite ? buildInviteLink(activeInvite) : 'Preparando link...'}</span>
+                                    <Copy size={16} />
+                                </button>
+                            </section>
+
+                            <form className={styles.inviteSection} onSubmit={sendInviteByEmail}>
+                                <label className={styles.inviteSectionTitle} htmlFor="invite-email">E-mail do cliente</label>
+                                <div className={styles.inviteEmailRow}>
+                                    <input
+                                        id="invite-email"
+                                        className={styles.inviteEmailInput}
+                                        type="email"
+                                        placeholder="cliente@empresa.com"
+                                        value={inviteEmail}
+                                        onChange={(event) => setInviteEmail(event.target.value)}
+                                        disabled={!activeInvite || sendingInvite || inviteLoading}
+                                    />
+                                    <button
+                                        type="submit"
+                                        className={styles.inviteSendBtn}
+                                        disabled={!activeInvite || sendingInvite || inviteLoading}
+                                    >
+                                        {sendingInvite ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
+                                        Enviar
+                                    </button>
+                                </div>
+                            </form>
+
+                            <section className={styles.inviteSection}>
+                                <div className={styles.inviteSectionHeader}>
+                                    <span className={styles.inviteSectionTitle}>Status dos convites</span>
+                                </div>
+
+                                <div className={styles.inviteStatusList}>
+                                    {invites.filter(invite => invite.email).length === 0 ? (
+                                        <p className={styles.inviteEmptyText}>Nenhum convite por e-mail enviado ainda.</p>
+                                    ) : (
+                                        invites.filter(invite => invite.email).map(invite => {
+                                            const statusMeta = getInviteStatusMeta(invite.status);
+                                            return (
+                                                <div className={styles.inviteStatusItem} key={invite.id}>
+                                                    <div>
+                                                        <p className={styles.inviteStatusEmail}>{invite.email}</p>
+                                                        <p className={styles.inviteStatusDate}>
+                                                            Expira em {new Date(invite.expiresAt).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                                        </p>
+                                                    </div>
+                                                    <span className={`${styles.inviteStatusBadge} ${statusMeta.className}`}>
+                                                        {statusMeta.label}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })
+                                    )}
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Mobile Bottom Nav */}
             <nav className={styles.mobileNav}>
                 <button onClick={() => router.push('/dashboard')} className={styles.mobileNavBtn}>
@@ -641,6 +903,68 @@ export default function ProjectPage() {
     );
 }
 
+function DownloadFormatButton({
+    menuId,
+    defaultLabel,
+    openMenuId,
+    setOpenMenuId,
+    onDownload,
+    moduleStyles,
+    variant = 'document',
+}: {
+    menuId: string;
+    defaultLabel: string;
+    openMenuId: string | null;
+    setOpenMenuId: (menuId: string | null) => void;
+    onDownload: (format: DownloadFormat) => void;
+    moduleStyles: Record<string, string>;
+    variant?: 'document' | 'header';
+}) {
+    const isOpen = openMenuId === menuId;
+    const rootClassName = variant === 'header' ? moduleStyles.downloadSplitHeader : moduleStyles.downloadSplit;
+
+    const chooseFormat = (format: DownloadFormat) => {
+        setOpenMenuId(null);
+        onDownload(format);
+    };
+
+    return (
+        <div className={rootClassName} data-download-menu-root="true" data-open={isOpen}>
+            <button
+                type="button"
+                className={moduleStyles.downloadPrimaryBtn}
+                onClick={() => chooseFormat('pdf')}
+                title="Baixar como PDF"
+            >
+                <Download size={variant === 'header' ? 16 : 14} />
+                {defaultLabel}
+            </button>
+            <button
+                type="button"
+                className={`${moduleStyles.downloadToggleBtn} ${isOpen ? moduleStyles.active : ''}`}
+                onClick={() => setOpenMenuId(isOpen ? null : menuId)}
+                aria-expanded={isOpen}
+                aria-label="Escolher formato do download"
+            >
+                <ChevronDown size={14} />
+            </button>
+
+            {isOpen && (
+                <div className={moduleStyles.downloadMenu}>
+                    <button type="button" onClick={() => chooseFormat('pdf')} className={moduleStyles.downloadMenuItem}>
+                        <span className={moduleStyles.downloadMenuTitle}>PDF</span>
+                        <span className={moduleStyles.downloadMenuHint}>Padrao do sistema</span>
+                    </button>
+                    <button type="button" onClick={() => chooseFormat('original')} className={moduleStyles.downloadMenuItem}>
+                        <span className={moduleStyles.downloadMenuTitle}>Original</span>
+                        <span className={moduleStyles.downloadMenuHint}>Sem conversao</span>
+                    </button>
+                </div>
+            )}
+        </div>
+    );
+}
+
 // DropzoneUploader now receives moduleStyles as prop
 function DropzoneUploader({
     onUpload, isUploading, label = 'Upload', progress, moduleStyles
@@ -649,7 +973,7 @@ function DropzoneUploader({
     isUploading: boolean;
     label?: string;
     progress?: number;
-    moduleStyles: any;
+    moduleStyles: Record<string, string>;
 }) {
     const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
         onDrop: onUpload,

@@ -32,16 +32,23 @@
 @mixin md  { @media (min-width: #{$bp-md})  { @content; } }
 @mixin lg  { @media (min-width: #{$bp-lg})  { @content; } }
 @mixin xl  { @media (min-width: #{$bp-xl})  { @content; } }
+@mixin below-sm { @media (max-width: #{$bp-sm - 1px}) { @content; } }
 @mixin below-md { @media (max-width: #{$bp-md}) { @content; } }
+@mixin below-lg { @media (max-width: #{$bp-lg - 1px}) { @content; } }
+
+@mixin app-shell {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
 
 // ----------------------------------------------------------
 // Card / Glass
 // ----------------------------------------------------------
 @mixin card-base {
-  background: white;
-  border: 1px solid rgba($zinc-200, 0.6);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-xl;
-  box-shadow: $shadow-sm;
+  box-shadow: var(--shadow-elevated);
 }
 
 @mixin glass-panel {
@@ -54,12 +61,12 @@
 }
 
 @mixin glass-card-light {
-  background: rgba(255, 255, 255, 0.7);
+  background: var(--surface-glass);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid white;
+  border: 1px solid var(--border-strong);
   border-radius: $radius-3xl;
-  box-shadow: $shadow-xl;
+  box-shadow: var(--shadow-floating);
 }
 
 // ----------------------------------------------------------
@@ -110,16 +117,17 @@
   align-items: center;
   gap: $sp-2;
   padding: $sp-2 $sp-4;
-  background: $zinc-100;
-  color: $zinc-700;
+  background: var(--surface-muted);
+  color: var(--text-primary);
   border-radius: $radius-md;
   font-family: $font-headline;
   font-weight: 700;
   font-size: 0.875rem;
   transition: $transition-base;
+  border: 1px solid var(--border-subtle);
 
   &:hover:not(:disabled) {
-    background: $zinc-200;
+    background: var(--surface-hover);
   }
 
   &:active:not(:disabled) {
@@ -133,15 +141,15 @@
   align-items: center;
   gap: $sp-2;
   padding: $sp-2 $sp-3;
-  color: $zinc-500;
+  color: var(--text-muted);
   border-radius: $radius-md;
   font-weight: 700;
   font-size: 0.875rem;
   transition: $transition-base;
 
   &:hover {
-    color: $zinc-900;
-    background: $zinc-50;
+    color: var(--text-primary);
+    background: var(--surface-hover);
   }
 }
 
@@ -151,21 +159,21 @@
 @mixin input-base {
   width: 100%;
   padding: $sp-4 $sp-5;
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba($zinc-200, 0.8);
+  background: var(--input-bg);
+  border: 1px solid var(--border-subtle);
   border-radius: $radius-xl;
-  color: $zinc-900;
+  color: var(--text-primary);
   font-size: 0.9375rem;
   font-weight: 500;
   outline: none;
   transition: $transition-base;
-  box-shadow: $shadow-sm;
+  box-shadow: var(--shadow-elevated);
 
-  &::placeholder { color: $zinc-400; }
+  &::placeholder { color: var(--text-muted); }
 
   &:focus {
     border-color: $amber-400;
-    background: white;
+    background: var(--input-focus-bg);
     box-shadow: 0 0 0 4px rgba($amber-500, 0.1);
   }
 }
@@ -178,14 +186,14 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: $zinc-600;
+  color: var(--text-muted);
 }
 
 @mixin text-stat {
   font-family: $font-headline;
   font-size: 1.875rem;
   font-weight: 900;
-  color: $zinc-900;
+  color: var(--text-primary);
   letter-spacing: -0.04em;
 }
 

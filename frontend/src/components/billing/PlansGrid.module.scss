@@ -9,6 +9,11 @@
   margin: 0 auto;
   padding: 0 $sp-4;
 
+  @include below-sm {
+    gap: $sp-8;
+    padding: 0;
+  }
+
   @include md {
     grid-template-columns: repeat(3, 1fr);
   }
@@ -25,12 +30,17 @@
 .toggleWrapper {
   display: flex;
   align-items: center;
-  background: white;
+  background: var(--surface-card);
   padding: $sp-1;
   border-radius: $radius-full;
-  border: 1px solid rgba($zinc-200, 0.8);
-  box-shadow: $shadow-sm;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-elevated);
   position: relative;
+
+  @include below-sm {
+    width: 100%;
+    max-width: 22rem;
+  }
 }
 
 .toggleOption {
@@ -39,10 +49,17 @@
   border-radius: $radius-full;
   font-size: 0.875rem;
   font-weight: 700;
-  color: $zinc-500;
+  color: var(--text-muted);
   transition: $transition-base;
   z-index: 10;
   position: relative;
+  min-width: 8rem;
+
+  @include below-sm {
+    flex: 1;
+    min-width: 0;
+    padding: $sp-2_5 $sp-4;
+  }
 
   &.active {
     color: white;
@@ -55,7 +72,7 @@
   bottom: $sp-1;
   left: $sp-1;
   width: calc(50% - #{$sp-1});
-  background: $zinc-900;
+  background: var(--surface-muted);
   border-radius: $radius-full;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 

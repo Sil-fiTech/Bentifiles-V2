@@ -40,9 +40,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+package-lock.json
+
 
 /src/generated/prisma
 
 /dev.db*
-
-TODO.md
+*.md
+dist/
+tests/

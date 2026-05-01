@@ -5,17 +5,18 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import api from '@/lib/api';
 import { useSession } from 'next-auth/react';
+import { performLogout } from '@/lib/authClient';
 import {
     LayoutGrid,
     Folder,
     Search,
     Bell,
-    Settings,
     Plus,
     Loader2,
     ChevronDown,
     User,
     CreditCard,
+    Shield,
     LogOut,
     Menu,
     X
@@ -47,8 +48,9 @@ export function Nav({
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [navUserName, setNavUserName] = useState('');
+    const [navSystemRole, setNavSystemRole] = useState<string | null>(null);
     const profileRef = useRef<HTMLDivElement>(null);
-    const { data: session, status } = useSession();
+    const { data: session, status: sessionStatus } = useSession();
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
             if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
@@ -63,24 +65,38 @@ export function Nav({
 
     useEffect(() => {
         const fetchProfile = async () => {
-            const localToken = localStorage.getItem('token');
-            const activeToken = session?.user?.token || localToken;
-            if (!activeToken) return;
-
             try {
-                const profileRes = await api.get('/api/users/me', { headers: { Authorization: `Bearer ${activeToken}` } });
+                const activeToken = session?.user?.token;
+                const profileRes = await api.get('/api/users/me', {
+                    headers: activeToken ? { Authorization: `Bearer ${activeToken}` } : undefined,
+                });
                 if (profileRes.data?.name) {
                     setNavUserName(profileRes.data.name);
+                }
+                if (profileRes.data?.systemRole) {
+                    setNavSystemRole(profileRes.data.systemRole);
                 }
             } catch (error) {
                 console.error('Failed to fetch profile in Nav', error);
             }
         };
         fetchProfile();
-    }, [session]);
+    }, [session?.user?.token]);
+
+    const handleLogout = async () => {
+        if (onLogout) {
+            onLogout();
+            return;
+        }
+
+        await performLogout();
+        router.push('/');
+    };
 
     // Determinar as iniciais dando preferência à API, depois à sessão, depois às props e finalmente 'US'
     const nameToUse = navUserName || session?.user?.name;
+    const systemRoleToUse = navSystemRole || session?.user?.systemRole || null;
+    const isSuperAdmin = systemRoleToUse === 'SUPER_ADMIN';
     const finalInitials = nameToUse ? nameToUse.substring(0, 2).toUpperCase() : (userInitials || 'US');
     return (
         <header className={`${styles.header} ${isSticky ? styles.sticky : ''} ${className || ''}`}>
@@ -147,6 +163,15 @@ export function Nav({
                                 </button> */}
                             </>
                         )}
+                        {isSuperAdmin && (
+                            <button
+                                className={styles.navBtn}
+                                onClick={() => router.push('/admin/users')}
+                                title="Administração do sistema"
+                            >
+                                <Shield size={16} /> Admin
+                            </button>
+                        )}
                     </nav>
                 </div>
 
@@ -196,7 +221,7 @@ export function Nav({
                                     </button>
                                     <div className={styles.dropdownDivider} />
                                     <button
-                                        onClick={onLogout}
+                                        onClick={() => void handleLogout()}
                                         className={styles.dropdownItemDanger}
                                     >
                                         <LogOut size={16} />
@@ -252,6 +277,18 @@ export function Nav({
                                 >
                                     <Folder size={16} /> Tipos & Templates
                                 </button>
+
+                                {isSuperAdmin && (
+                                    <button
+                                        className={styles.mobileNavBtn}
+                                        onClick={() => {
+                                            setIsMobileMenuOpen(false);
+                                            router.push('/admin/users');
+                                        }}
+                                    >
+                                        <Shield size={16} /> Admin
+                                    </button>
+                                )}
                             </>
                         ) : (
                             <>
@@ -277,6 +314,18 @@ export function Nav({
                                 >
                                     <Folder size={16} /> Tipos & Templates
                                 </button>
+
+                                {isSuperAdmin && (
+                                    <button
+                                        className={styles.mobileNavBtn}
+                                        onClick={() => {
+                                            setIsMobileMenuOpen(false);
+                                            router.push('/admin/users');
+                                        }}
+                                    >
+                                        <Shield size={16} /> Admin
+                                    </button>
+                                )}
                             </>
                         )}
 
@@ -326,7 +375,7 @@ export function Nav({
                         <button
                             onClick={() => {
                                 setIsMobileMenuOpen(false);
-                                if (onLogout) onLogout();
+                                void handleLogout();
                             }}
                             className={styles.mobileNavBtnDanger}
                         >

@@ -1,5 +1,7 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+
+import { logError, logInfo } from '../utils/logger';
 
 export interface AuthRequest extends Request {
     user?: {
@@ -10,25 +12,44 @@ export interface AuthRequest extends Request {
 }
 
 export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
-    const authHeader = req.headers['authorization'];
-    console.log(`[Auth] Verifying token for request to ${req.path}`);
-    const token = authHeader && authHeader.split(' ')[1];
+    const authHeader = req.headers.authorization;
+    const bearerToken = authHeader && authHeader.split(' ')[1];
+    const cookieToken = req.cookies?.token;
+    const token = bearerToken || cookieToken;
 
     if (!token) {
-        return res.status(401).json({ message: 'Token não fornecido' });
+        return res.status(401).json({ message: 'Token nao fornecido' });
     }
 
     if (!process.env.JWT_SECRET) {
-        console.error('CRITICAL: JWT_SECRET is not defined in environment variables');
-        return res.status(500).json({ message: 'Erro interno do servidor (Configuração de Segurança Ausente)' });
+        logError('JWT secret is not configured', undefined, {
+            requestId: req.requestId,
+            path: req.path,
+        });
+        return res.status(500).json({ message: 'Erro interno do servidor (configuracao de seguranca ausente)' });
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err: jwt.VerifyErrors | null, decoded: string | jwt.JwtPayload | undefined) => {
         if (err) {
-            console.log("[Auth] Token verification failed:", err.message);
-            return res.status(403).json({ message: 'Token inválido ou expirado' });
+            logInfo('Token verification failed', {
+                requestId: req.requestId,
+                path: req.path,
+                reason: err.message,
+            });
+            return res.status(403).json({ message: 'Token invalido ou expirado' });
         }
-        console.log(`[Auth] User authenticated: ${decoded && typeof decoded === 'object' ? (decoded as any).userId : 'unknown'}`);
+
+        const authenticatedUserId =
+            decoded && typeof decoded === 'object'
+                ? (decoded as { userId?: string }).userId || 'unknown'
+                : 'unknown';
+
+        logInfo('User authenticated', {
+            requestId: req.requestId,
+            path: req.path,
+            userId: authenticatedUserId,
+        });
+
         req.user = decoded as { userId: string };
         next();
     });
