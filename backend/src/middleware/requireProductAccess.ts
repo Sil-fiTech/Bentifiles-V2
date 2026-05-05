@@ -5,9 +5,12 @@ import { computeSystemAccess, getAccessRedirect } from '../services/accessServic
 
 /**
  * Middleware: requireProductAccess
- * 
+ *
  * Assumes the user is already authenticated (req.user is set).
  * Checks if the user has a valid subscription or trial access.
+ *
+ * Exception: FREE users can access project-scoped routes (e.g. file upload)
+ * as long as they are members of the referenced project.
  */
 export const requireProductAccess = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const userId = req.user?.userId;
@@ -25,32 +28,50 @@ export const requireProductAccess = async (req: AuthRequest, res: Response, next
       return res.status(404).json({ message: 'Usuário não encontrado' });
     }
 
-    // Determine current access status
     const hasAccess = computeSystemAccess(user);
     const redirectTo = getAccessRedirect({ ...user, hasSystemAccess: hasAccess });
 
     if (!hasAccess) {
-      // If no access, determine why and return semantic error
+      const projectId =
+        (req.params?.id as string | undefined) ||
+        (req.params?.projectId as string | undefined) ||
+        (req.body?.projectId as string | undefined) ||
+        (req.query?.projectId as string | undefined);
+
+      if (projectId) {
+        const membership = await prisma.projectMembership.findUnique({
+          where: {
+            projectId_userId: {
+              projectId,
+              userId,
+            },
+          },
+        });
+
+        if (membership) {
+          return next();
+        }
+      }
+
       if (!user.hasSelectedPlan) {
         return res.status(403).json({
           error: 'PLAN_REQUIRED',
           message: 'Você precisa escolher um plano para acessar o Bentifiles.',
-          redirectTo: redirectTo || '/plans'
-        });
-      } else {
-        return res.status(403).json({
-          error: 'SUBSCRIPTION_INACTIVE',
-          message: 'Sua assinatura não está ativa no momento.',
-          redirectTo: redirectTo || '/plans'
+          redirectTo: redirectTo || '/plans',
         });
       }
+
+      return res.status(403).json({
+        error: 'SUBSCRIPTION_INACTIVE',
+        message: 'Sua assinatura não está ativa no momento.',
+        redirectTo: redirectTo || '/plans',
+      });
     }
 
-    // In sync with DB? If not, update it
     if (user.hasSystemAccess !== hasAccess) {
       await prisma.user.update({
         where: { id: userId },
-        data: { hasSystemAccess: hasAccess }
+        data: { hasSystemAccess: hasAccess },
       });
     }
 
@@ -60,3 +81,4 @@ export const requireProductAccess = async (req: AuthRequest, res: Response, next
     res.status(500).json({ message: 'Erro interno na verificação de acesso' });
   }
 };
+
