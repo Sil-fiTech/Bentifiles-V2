@@ -10,7 +10,9 @@ import { validateFileSignature } from '../middleware/fileSignatureValidator';
 
 const router = Router();
 
-router.post('/upload', authenticateToken, requireProductAccess as any, upload.single('file'), validateFileSignature as any, checkProjectNotArchived as any, checkRole(['ADMIN', 'USER', 'PROJECT_EDIT', 'DOCUMENT_UPLOAD']) as any, uploadFile as any);
+// Note: for multipart/form-data uploads, `projectId` is only available in `req.body`
+// after `multer` runs. `requireProductAccess` needs `projectId` to allow FREE members.
+router.post('/upload', authenticateToken, upload.single('file'), requireProductAccess as any, validateFileSignature as any, checkProjectNotArchived as any, checkRole(['ADMIN', 'USER', 'PROJECT_EDIT', 'DOCUMENT_UPLOAD']) as any, uploadFile as any);
 router.get('/', authenticateToken, requireProductAccess as any, getFiles);
 router.get('/base64', authenticateToken, requireProductAccess as any, getFileBase64);
 router.get('/project/:projectId/base64', authenticateToken, requireProductAccess as any, getProjectFilesBase64 as any);
