@@ -29,13 +29,13 @@ export default function HeroSection() {
           </div>
 
           <h1 className={styles.heroTitle}>
-            Garanta imagens{' '}
+            Garanta documentos{' '}
             <span className={styles.heroTitleAccent}>legíveis</span>
             {' '}antes que elas travem sua operação
           </h1>
 
           <p className={styles.heroSubtitle}>
-            O Bentifiles valida automaticamente a legibilidade das imagens, gerencia os uploads e centraliza os arquivos em um só lugar.
+            O Bentifiles valida automaticamente a legibilidade dos documentos, gerencia os uploads e centraliza os arquivos em um só lugar.
             Além disso, renomeia cada documento para manter o fluxo organizado e sem retrabalho.
           </p>
 

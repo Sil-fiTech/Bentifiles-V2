@@ -38,7 +38,7 @@ const benefits = [
   {
     icon: Search,
     title: 'Validação automática',
-    desc: 'As imagens recebidas passam por validação automática de legibilidade antes de seguirem no fluxo operacional.',
+    desc: 'Os documentos recebidos passam por validação automática de legibilidade antes de seguirem no fluxo operacional.',
     color: '#ef4444',
   },
   {
