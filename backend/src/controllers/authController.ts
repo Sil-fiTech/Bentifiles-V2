@@ -98,7 +98,7 @@ const verifyTurnstile = async (token: string, remoteip?: string): Promise<Turnst
 
 export const register = async (req: Request, res: Response) => {
     try {
-        const { name, email, password, turnstileToken, inviteToken, officeInviteToken } = req.body;
+        const { name, email, password, turnstileToken, inviteToken, officeInviteToken, affiliateRef } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({ message: 'Campos obrigatorios ausentes' });
@@ -138,7 +138,7 @@ export const register = async (req: Request, res: Response) => {
             },
         });
 
-        sendVerificationEmail(user.email, verificationToken, user.name, inviteToken, officeInviteToken).catch(console.error);
+        sendVerificationEmail(user.email, verificationToken, user.name, inviteToken, officeInviteToken, affiliateRef).catch(console.error);
         notifySignupCreated({
             userId: user.id,
             email: user.email,

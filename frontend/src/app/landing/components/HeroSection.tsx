@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { ArrowRight, ChevronRight, FolderOpen, FileText, LayoutGrid, Users } from 'lucide-react';
+import { withRefParam } from '@/lib/affiliate/refLink';
 import styles from '../landing.module.scss';
 
 export default function HeroSection() {
@@ -42,7 +43,7 @@ export default function HeroSection() {
           <div className={styles.heroCtas}>
             <button
               className={styles.heroCtaPrimary}
-              onClick={() => router.push('/login?mode=register')}
+              onClick={() => router.push(withRefParam('/login?mode=register'))}
               id="hero-cta-primary"
             >
               Começar agora

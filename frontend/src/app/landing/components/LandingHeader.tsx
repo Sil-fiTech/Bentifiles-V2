@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
+import { withRefParam } from '@/lib/affiliate/refLink';
 import styles from '../landing.module.scss';
 
 const navLinks = [
@@ -71,7 +72,7 @@ export default function LandingHeader() {
           </button>
           <button
             className={styles.headerBtnPrimary}
-            onClick={() => router.push('/login?mode=register')}
+            onClick={() => router.push(withRefParam('/login?mode=register'))}
             id="header-btn-cta"
           >
             Começar agora
@@ -113,7 +114,7 @@ export default function LandingHeader() {
             </button>
             <button
               className={styles.headerBtnPrimary}
-              onClick={() => { setMobileOpen(false); router.push('/login?mode=register'); }}
+              onClick={() => { setMobileOpen(false); router.push(withRefParam('/login?mode=register')); }}
             >
               Começar agora
             </button>
