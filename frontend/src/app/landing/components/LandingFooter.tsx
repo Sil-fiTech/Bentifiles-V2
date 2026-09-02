@@ -67,6 +67,23 @@ export default function LandingFooter() {
         <span className={styles.footerCopy}>
           © {year} Bentifiles. Todos os direitos reservados.
         </span>
+        <a
+          href="https://www.silfi-tech.net/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={styles.footerSilfi}
+          aria-label="Um produto sil-fi tech"
+        >
+          <span className={styles.footerSilfiText}>Um produto</span>
+          <picture>
+            <source media="(min-width: 768px)" srcSet="/logoSilfi1.png" />
+            <img
+              src="/logoSilfi2.png"
+              alt="sil-fi tech"
+              className={styles.footerSilfiLogo}
+            />
+          </picture>
+        </a>
       </div>
     </footer>
   );
