@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { toast } from 'sonner';
@@ -206,6 +207,14 @@ export default function AdminUsersPage() {
               <h1 className={styles.title}>Administração do sistema</h1>
               <p className={styles.subtitle}>Gerencie usuários e permissões globais (fora dos projetos).</p>
             </div>
+            <nav className={styles.sectionTabs}>
+              <Link href="/admin/users" className={`${styles.sectionTab} ${styles.sectionTabActive}`}>
+                Usuários
+              </Link>
+              <Link href="/admin/affiliates" className={styles.sectionTab}>
+                Afiliados
+              </Link>
+            </nav>
           </header>
 
           <div className={styles.alert}>

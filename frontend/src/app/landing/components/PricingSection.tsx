@@ -21,7 +21,9 @@ async function handleSubscribe(plan: Plan): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 1200));
 
   //login
-   window.location.href = `${window.location.origin}/login?mode=register`;
+  const ref = new URLSearchParams(window.location.search).get('ref');
+  const refParam = ref && ref.trim() ? `&ref=${encodeURIComponent(ref.trim())}` : '';
+  window.location.href = `${window.location.origin}/login?mode=register${refParam}`;
 }
 
 const valueProps = [

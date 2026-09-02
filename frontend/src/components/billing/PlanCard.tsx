@@ -58,9 +58,12 @@ const PlanCard: React.FC<PlanCardProps> = ({
         return;
       }
 
+      const affiliateRef =
+        typeof window !== 'undefined' ? localStorage.getItem('pendingAffiliateRef') : null;
+
       const response = await api.post(
         '/api/billing/create-checkout-session',
-        { plan: id, interval, quantity },
+        { plan: id, interval, quantity, affiliateRef },
         { headers: getAuthHeaders(access.token) }
       );
 

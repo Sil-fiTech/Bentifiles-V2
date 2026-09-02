@@ -302,9 +302,12 @@ export default function SubscriptionPage() {
     setActionLoading('checkout_' + planId);
     try {
       const token = session?.user?.token || access?.token;
+      const affiliateRef =
+        typeof window !== 'undefined' ? localStorage.getItem('pendingAffiliateRef') : null;
       const res = await api.post('/api/billing/create-checkout-session', {
           plan: planId,
           interval: billingInterval,
+          affiliateRef,
       }, {
         headers: getAuthHeaders(token)
       });

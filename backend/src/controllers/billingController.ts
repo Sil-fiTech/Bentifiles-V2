@@ -7,7 +7,7 @@ import prisma from '../prisma';
 export const createCheckoutSession = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
-    const { plan, interval = 'monthly', quantity = 1 } = req.body;
+    const { plan, interval = 'monthly', quantity = 1, affiliateRef = null } = req.body;
 
     if (!userId) {
       return res.status(401).json({ message: 'Não autorizado' });
@@ -27,7 +27,13 @@ export const createCheckoutSession = async (req: AuthRequest, res: Response) => 
       return res.status(400).json({ message: 'Apenas o plano OFFICE suporta multiplas licencas' });
     }
 
-    const url = await billingService.createCheckoutSession(userId, plan, interval, normalizedQuantity);
+    const url = await billingService.createCheckoutSession(
+      userId,
+      plan,
+      interval,
+      normalizedQuantity,
+      typeof affiliateRef === 'string' ? affiliateRef : null,
+    );
     res.json({ url });
   } catch (error: any) {
     console.error('[Billing] Checkout error:', error);

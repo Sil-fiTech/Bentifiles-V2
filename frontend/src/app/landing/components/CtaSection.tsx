@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { ArrowRight, LogIn } from 'lucide-react';
+import { withRefParam } from '@/lib/affiliate/refLink';
 import styles from '../landing.module.scss';
 
 export default function CtaSection() {
@@ -25,7 +26,7 @@ export default function CtaSection() {
         <div className={styles.ctaButtons}>
           <button
             className={styles.ctaBtnPrimary}
-            onClick={() => router.push('/login?mode=register')}
+            onClick={() => router.push(withRefParam('/login?mode=register'))}
             id="cta-btn-register"
           >
             Começar agora
