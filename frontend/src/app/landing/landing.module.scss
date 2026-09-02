@@ -1443,11 +1443,20 @@
 }
 
 .footerBottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $sp-4;
   max-width: 1200px;
   margin: 0 auto;
   padding: $sp-5 $sp-6;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   text-align: center;
+
+  @include md {
+    flex-direction: row;
+    justify-content: space-between;
+  }
 
   @include lg {
     padding: $sp-5 $sp-8;
@@ -1457,6 +1466,42 @@
 .footerCopy {
   font-size: 0.8125rem;
   color: rgba(255, 255, 255, 0.25);
+}
+
+.footerSilfi {
+  display: inline-flex;
+  align-items: center;
+  gap: $sp-2;
+  padding: $sp-2 $sp-3;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  text-decoration: none;
+  transition: background 0.15s ease, transform 0.15s ease;
+
+  &:hover {
+    background: #fff;
+    transform: translateY(-1px);
+  }
+
+  picture {
+    display: flex;
+  }
+}
+
+.footerSilfiText {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: $zinc-600;
+}
+
+.footerSilfiLogo {
+  display: block;
+  height: 30px; // stacked logo (logoSilfi2) on mobile
+  width: auto;
+
+  @include md {
+    height: 16px; // horizontal logo (logoSilfi1) on tablet/desktop
+  }
 }
 
 // ============================================================
