@@ -42,6 +42,8 @@ services:
     environment:
       - SUBSCRIPTION_REMINDER_WORKER_MODE=loop
       - SUBSCRIPTION_REMINDER_WORKER_POLL_MS=60000
+      - SUBSCRIPTION_REMINDER_WORKER_MAX_BACKOFF_MS=900000
+      - SUBSCRIPTION_REMINDER_WORKER_ALERT_COOLDOWN_MS=900000
     env_file:
       - ./backend/.env
     restart: unless-stopped
