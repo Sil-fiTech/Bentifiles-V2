@@ -24,7 +24,7 @@
   min-height: 100vh;
   background: var(--paper);
   color: var(--ink);
-  font-family: var(--font-body), system-ui, sans-serif;
+  font-family: var(--font-instrument), system-ui, sans-serif;
   font-size: 1.0625rem;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -98,7 +98,7 @@
   padding: 0.95rem 1.4rem;
   border: 2px solid var(--ink);
   border-radius: 3px;
-  font-family: var(--font-body), system-ui, sans-serif;
+  font-family: var(--font-instrument), system-ui, sans-serif;
   font-weight: 700;
   font-size: 1rem;
   text-decoration: none;
