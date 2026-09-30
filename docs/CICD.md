@@ -9,7 +9,7 @@
 ## Ambientes na VPS
 | Ambiente | Diretorio | Branch | Portas front/back/ia | Dominio |
 |---|---|---|---|---|
-| prod | `/root/Bentifiles-V2` | `main` | 3000/4000/8000 | bentifiles.tech |
+| prod | `/root/Bentifiles-V2` | `main` | 3000/4000/8000 | bentifiles.com |
 | dev | `/root/devBentifiles` | `dev` | 3001/4001/8001 | devbentifiles.tech |
 
 O `docker-compose.yml` usa variaveis com padrao de producao. O dev define em `/root/devBentifiles/.env`:
