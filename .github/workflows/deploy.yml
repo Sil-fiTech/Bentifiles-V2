@@ -46,8 +46,7 @@ jobs:
           PORT: ${{ secrets.VPS_PORT }}
         run: |
           install -m 700 -d ~/.ssh
-          printf '%s
-' "$SSH_KEY" > ~/.ssh/id_deploy
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy
           chmod 600 ~/.ssh/id_deploy
           ssh-keyscan -p "${PORT:-22}" -H "$HOST" >> ~/.ssh/known_hosts
 
@@ -55,8 +54,15 @@ jobs:
         env:
           HOST: ${{ secrets.VPS_HOST }}
           PORT: ${{ secrets.VPS_PORT }}
-          USER_: ${{ secrets.VPS_USER }}
+          SSH_USER: ${{ secrets.VPS_USER }}
           APP_DIR: ${{ secrets.VPS_APP_DIR }}
           REF: ${{ steps.ref.outputs.value }}
         run: |
-          ssh -i ~/.ssh/id_deploy -p "${PORT:-22}" "$USER_@$HOST"             "cd $(printf '%q' "$APP_DIR") && git fetch --all --prune && git checkout -q --detach $(printf '%q' "$REF") && bash scripts/deploy.sh $(printf '%q' "$REF")"
+          # Script remoto via stdin; APP_DIR e REF entram como argumentos (sem interpolacao no shell).
+          ssh -i ~/.ssh/id_deploy -p "${PORT:-22}" "$SSH_USER@$HOST" bash -s -- "$APP_DIR" "$REF" <<'REMOTE'
+          set -euo pipefail
+          cd "$1"
+          git fetch --all --prune
+          git checkout -q --detach "$2"
+          bash scripts/deploy.sh "$2"
+          REMOTE
