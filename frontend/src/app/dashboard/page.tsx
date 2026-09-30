@@ -407,7 +407,7 @@ export default function Dashboard() {
                                 <p className={styles.emptyText}>
                                     {isReviewTab
                                         ? 'Não há documentos pendentes para avaliação no momento.'
-                                        : 'Você não possui arquivos validados ainda.'}
+                                        : 'Você ainda não tem arquivos validados. Abra um projeto, convide um cliente e peça o primeiro documento.'}
                                 </p>
                             </div>
                         ) : (

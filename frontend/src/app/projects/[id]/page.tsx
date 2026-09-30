@@ -148,15 +148,18 @@ export default function ProjectPage() {
         return `${window.location.origin}/login?invite=${invite.token}`;
     };
 
-    const fetchInvites = async () => {
+    const fetchInvites = async (): Promise<ProjectInvite[]> => {
         try {
             const token = getAuthToken();
             const res = await api.get(`/api/projects/${id}/invites`, {
                 headers: getAuthHeaders(token)
             });
-            setInvites(res.data.invites || []);
+            const list: ProjectInvite[] = res.data.invites || [];
+            setInvites(list);
+            return list;
         } catch {
             toast.error('Falha ao carregar convites');
+            return [];
         }
     };
 
@@ -176,8 +179,19 @@ export default function ProjectPage() {
         setInviteModalOpen(true);
         setInviteLoading(true);
         try {
-            await fetchInvites();
-            await createInvite();
+            const list = await fetchInvites();
+            // Reaproveita o link ainda válido para não invalidar um link já copiado ou enviado.
+            // Um novo link só é criado se não houver nenhum, ou pelo botão "Gerar novo link".
+            const reusable = list.find(invite =>
+                !invite.email &&
+                invite.status === 'CREATED' &&
+                new Date(invite.expiresAt).getTime() > Date.now()
+            );
+            if (reusable) {
+                setActiveInvite(reusable);
+            } else {
+                await createInvite();
+            }
         } catch {
             toast.error('Falha ao preparar convite');
         } finally {
@@ -240,7 +254,7 @@ export default function ProjectPage() {
         switch (status) {
             case 'ACCEPTED': return { label: 'Convite aceito', className: styles.inviteStatusAccepted };
             case 'EXPIRED': return { label: 'Convite expirado', className: styles.inviteStatusExpired };
-            case 'EMAIL_SENT': return { label: 'Email enviado', className: styles.inviteStatusSent };
+            case 'EMAIL_SENT': return { label: 'E-mail enviado', className: styles.inviteStatusSent };
             default: return { label: 'Link criado', className: styles.inviteStatusCreated };
         }
     };
@@ -448,7 +462,8 @@ export default function ProjectPage() {
     const pendingDocs = clientDocs.filter(d => d.status === 'pending').length;
     const targetDocs = nonAdminMembers.length * totalRequiredPerUser;
     const approvedDocs = clientDocs.filter(d => d.status === 'approved' && nonAdminMembers.some(m => m.userId === d.ownerUserId)).length;
-    const completionRate = targetDocs > 0 ? Math.round((approvedDocs / targetDocs) * 100) : 100;
+    const hasProgressTarget = targetDocs > 0;
+    const completionRate = hasProgressTarget ? Math.round((approvedDocs / targetDocs) * 100) : 0;
     const timeAgo = project?.updatedAt ? new Date(project.updatedAt).toLocaleDateString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : 'Recentemente';
     const membersToDisplay = isAdmin
         ? members.filter(m => !m.permissions?.includes('PROJECT_EDIT'))
@@ -577,8 +592,10 @@ export default function ProjectPage() {
                         <div className={`${styles.metricCard} ${styles.dark}`}>
                             <div className={styles.progressRingWrapper}>
                                 <div>
-                                    <p className={styles.metricValue}>{completionRate}%</p>
-                                    <p className={styles.metricLabel}>Progresso Geral</p>
+                                    <p className={styles.metricValue}>{hasProgressTarget ? `${completionRate}%` : '—'}</p>
+                                    <p className={styles.metricLabel}>
+                                        {hasProgressTarget ? 'Progresso Geral' : 'Sem documentos solicitados'}
+                                    </p>
                                 </div>
                                 <div className={styles.progressRingViz}>
                                     <svg className="w-24 h-24 -rotate-90" width={96} height={96}>
@@ -764,9 +781,9 @@ export default function ProjectPage() {
                 {/* FAB */}
                 {isAdmin && (
                     <div className={styles.fab}>
-                        <button onClick={generateInvite} className={styles.fabBtn}>
+                        <button onClick={generateInvite} className={styles.fabBtn} aria-label="Convidar cliente">
                             <Plus size={28} />
-                            <span className={styles.fabTooltip}>Convidar Usuário</span>
+                            <span className={styles.fabTooltip}>Convidar cliente</span>
                         </button>
                     </div>
                 )}
@@ -885,7 +902,7 @@ export default function ProjectPage() {
                 </button>
 
                 {isAdmin && (
-                    <button onClick={generateInvite} className={styles.mobileNavFab}>
+                    <button onClick={generateInvite} className={styles.mobileNavFab} aria-label="Convidar cliente">
                         <Plus size={20} />
                     </button>
                 )}

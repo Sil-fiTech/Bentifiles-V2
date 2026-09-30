@@ -40,6 +40,16 @@ const formatDate = (isoStr: string) => {
   }).format(new Date(isoStr));
 };
 
+const getInviteStatusLabel = (status: string) => {
+  switch (status) {
+    case 'PENDING': return 'Pendente';
+    case 'ACCEPTED': return 'Aceito';
+    case 'REVOKED': return 'Revogado';
+    case 'EXPIRED': return 'Expirado';
+    default: return status;
+  }
+};
+
 const getStatusConfig = (status: string) => {
   switch (status) {
     case 'active':
@@ -411,14 +421,23 @@ export default function SubscriptionPage() {
                   <strong>{formatDate(data.currentPeriodStart!)} — {formatDate(data.currentPeriodEnd!)}</strong>
                 </div>
                 <div className={styles.detailItem}>
-                  <span>Próxima Cobrança</span>
-                  <strong>{data.cancelAtPeriodEnd ? 'Indisponível' : formatDate(data.currentPeriodEnd!)}</strong>
+                  {data.subscriptionStatus === 'canceled' ? (
+                    <>
+                      <span>Encerrada em</span>
+                      <strong>{formatDate(data.currentPeriodEnd!)}</strong>
+                    </>
+                  ) : (
+                    <>
+                      <span>Próxima Cobrança</span>
+                      <strong>{data.cancelAtPeriodEnd ? 'Indisponível' : formatDate(data.currentPeriodEnd!)}</strong>
+                    </>
+                  )}
                 </div>
               </div>
             )}
 
             <div className={styles.cardActions}>
-              {!hasSubscription ? (
+              {!hasSubscription || data.subscriptionStatus === 'canceled' ? (
                 <button className={styles.btnPrimary} onClick={() => router.push('/plans')}>
                   Ver Planos
                 </button>
@@ -588,7 +607,7 @@ export default function SubscriptionPage() {
                       <strong>{member.user.name}</strong>
                       <div className={styles.workspaceEmail}>{member.user.email}</div>
                       <div className={styles.workspaceHint}>
-                        {member.seatType === 'OWNER' ? 'Proprietario da assinatura' : 'Membro convidado'}
+                        {member.seatType === 'OWNER' ? 'Proprietário da assinatura' : 'Membro convidado'}
                         {member.status === 'SUSPENDED' ? ' • Suspenso' : ''}
                       </div>
                     </div>
@@ -621,7 +640,7 @@ export default function SubscriptionPage() {
                     <div className={styles.workspaceMeta}>
                       <strong>{invite.email}</strong>
                       <div className={styles.workspaceEmail}>
-                        Status: {invite.status} • Expira em {formatDate(invite.expiresAt)}
+                        Status: {getInviteStatusLabel(invite.status)} • Expira em {formatDate(invite.expiresAt)}
                       </div>
                     </div>
                     {invite.status === 'PENDING' && (
