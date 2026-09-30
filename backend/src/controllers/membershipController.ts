@@ -110,7 +110,7 @@ export const acceptProjectInviteForUser = async (inviteToken: string, userId: st
         return {
             ok: true as const,
             projectId: validInvite.projectId,
-            message: 'Usuario ja e membro deste projeto'
+            message: 'Usuário já é membro deste projeto'
         };
     }
 

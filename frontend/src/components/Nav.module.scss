@@ -202,6 +202,18 @@
   margin-top: 0.25rem;
 }
 
+// Rótulo que diferencia o projeto aberto do botão "Novo Projeto",
+// mesmo quando o projeto se chama "Novo Projeto".
+.projectLabel {
+  margin-right: 0.4rem;
+  font-family: $font-headline;
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-secondary, #71717a);
+}
+
 // ------------------------------------------------------------------
 // Right section: search + actions
 // ------------------------------------------------------------------

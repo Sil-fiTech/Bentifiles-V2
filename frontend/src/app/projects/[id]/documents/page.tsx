@@ -488,7 +488,7 @@ export default function ProjectSettingsPage() {
                                                     </div>
                                                     <div className={styles.memberActions}>
                                                         <span className={`${styles.roleBadge} ${uRole === 'ADMIN' ? styles.roleAdmin : styles.roleMember}`}>
-                                                            {uRole}
+                                                            {uRole === 'ADMIN' ? 'Administrador' : uRole === 'MEMBER' ? 'Membro' : uRole}
                                                         </span>
                                                         {isAdmin && !isMe && project?.status !== 'ARCHIVED' && (
                                                             <button

@@ -145,7 +145,8 @@ export function Nav({
                         ) : (
                             <>
 
-                                <span className={styles.projectName}>
+                                <span className={styles.projectName} aria-current="page">
+                                    <span className={styles.projectLabel}>Projeto</span>
                                     {projectName || 'Projeto Atual'}
                                 </span>
 
@@ -187,7 +188,7 @@ export function Nav({
                     </div>
 
                     <div className={styles.actions}>
-                        <button className={styles.iconBtn}>
+                        <button className={styles.iconBtn} aria-label="Notificações">
                             <Bell size={18} />
                             {hasActiveProcessing && <span className={styles.notifDot} />}
                         </button>
