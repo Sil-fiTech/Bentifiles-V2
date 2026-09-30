@@ -3,7 +3,8 @@ import { plans } from '../data/plans';
 import ui from '../landing.module.scss';
 import styles from './PricingSection.module.scss';
 
-const SALES_URL = 'https://www.silfi-tech.net/';
+const SALES_EMAIL = 'contato@silfi-tech.net';
+const SALES_URL = `mailto:${SALES_EMAIL}?subject=${encodeURIComponent('Plano Empresarial Bentifiles')}`;
 
 export default function PricingSection() {
   return (
