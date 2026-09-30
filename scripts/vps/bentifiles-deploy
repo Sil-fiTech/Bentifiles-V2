@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Instalar em /usr/local/bin/bentifiles-deploy (root:root 0755).
+# Usado como forced command da chave SSH do GitHub Actions: so executa deploy.sh, nada mais.
+# Comando enviado pelo cliente: "<prod|dev> [sha]"
+set -euo pipefail
+read -r ENV_NAME SHA <<<"${SSH_ORIGINAL_COMMAND:-}"
+case "$ENV_NAME" in
+  prod) DIR=/root/Bentifiles-V2; BRANCH=main ;;
+  dev)  DIR=/root/devBentifiles;  BRANCH=dev ;;
+  *) echo "ambiente invalido: '$ENV_NAME' (use prod|dev)"; exit 2 ;;
+esac
+if [ -n "${SHA:-}" ] && ! [[ "$SHA" =~ ^[0-9a-f]{7,40}$ ]]; then echo "sha invalido"; exit 2; fi
+exec 9>"/var/lock/bentifiles-deploy-$ENV_NAME.lock"; flock -n 9 || { echo "deploy em andamento"; exit 3; }
+cd "$DIR"
+exec bash scripts/deploy.sh "$BRANCH" ${SHA:+"$SHA"}

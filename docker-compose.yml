@@ -3,9 +3,9 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: bentifiles-frontend
+    container_name: ${CONTAINER_PREFIX:-}bentifiles-frontend
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     environment:
       - INTERNAL_API_URL=http://backend:4000
       - AUTH_TRUST_HOST=true
@@ -21,9 +21,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: bentifiles-backend
+    container_name: ${CONTAINER_PREFIX:-}bentifiles-backend
     ports:
-      - "4000:4000"
+      - "${BACKEND_PORT:-4000}:4000"
     env_file:
       - ./backend/.env
 
@@ -37,7 +37,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: bentifiles-subscription-reminder-worker
+    container_name: ${CONTAINER_PREFIX:-}bentifiles-subscription-reminder-worker
     command: ["npm", "run", "worker:subscription-reminders"]
     environment:
       - SUBSCRIPTION_REMINDER_WORKER_MODE=loop
@@ -56,9 +56,9 @@ services:
     build:
       context: ./microservice
       dockerfile: Dockerfile
-    container_name: bentifiles-python-microservice
+    container_name: ${CONTAINER_PREFIX:-}bentifiles-python-microservice
     ports:
-      - "8000:8000"
+      - "${MICROSERVICE_PORT:-8000}:8000"
     environment:
       - PORT=8000
     restart: unless-stopped
