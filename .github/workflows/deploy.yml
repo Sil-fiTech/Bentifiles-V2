@@ -1,20 +1,21 @@
 name: Deploy
 
-# Deploy automatico na VPS apos CI verde na main. Tambem manual (com ref opcional, ex: rollback).
+# main -> producao, dev -> ambiente dev (mesma VPS). Dispara apos CI verde; tambem manual.
 on:
   workflow_run:
     workflows: [CI]
     types: [completed]
-    branches: [main]
+    branches: [main, dev]
   workflow_dispatch:
     inputs:
-      ref:
-        description: "Commit SHA ou branch/tag para deploy (vazio = main)"
+      target:
+        description: "Ambiente"
+        type: choice
+        options: [dev, prod]
+        default: dev
+      sha:
+        description: "Commit SHA (vazio = ponta da branch; serve para rollback)"
         required: false
-
-concurrency:
-  group: deploy-production
-  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -23,20 +24,26 @@ jobs:
   deploy:
     name: Deploy to VPS
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-    environment: production
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push') }}
+    concurrency:
+      group: deploy-${{ github.event_name == 'workflow_dispatch' && inputs.target || (github.event.workflow_run.head_branch == 'main' && 'prod' || 'dev') }}
+      cancel-in-progress: false
     steps:
-      - name: Resolve ref
-        id: ref
+      - name: Resolve target
+        id: t
         env:
           EVENT: ${{ github.event_name }}
-          INPUT_REF: ${{ inputs.ref }}
+          INPUT_TARGET: ${{ inputs.target }}
+          INPUT_SHA: ${{ inputs.sha }}
+          RUN_BRANCH: ${{ github.event.workflow_run.head_branch }}
           RUN_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           if [ "$EVENT" = "workflow_dispatch" ]; then
-            echo "value=${INPUT_REF:-main}" >> "$GITHUB_OUTPUT"
+            echo "env=$INPUT_TARGET" >> "$GITHUB_OUTPUT"
+            echo "sha=$INPUT_SHA" >> "$GITHUB_OUTPUT"
           else
-            echo "value=$RUN_SHA" >> "$GITHUB_OUTPUT"
+            [ "$RUN_BRANCH" = "main" ] && echo "env=prod" >> "$GITHUB_OUTPUT" || echo "env=dev" >> "$GITHUB_OUTPUT"
+            echo "sha=$RUN_SHA" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Setup SSH
@@ -55,14 +62,8 @@ jobs:
           HOST: ${{ secrets.VPS_HOST }}
           PORT: ${{ secrets.VPS_PORT }}
           SSH_USER: ${{ secrets.VPS_USER }}
-          APP_DIR: ${{ secrets.VPS_APP_DIR }}
-          REF: ${{ steps.ref.outputs.value }}
+          TARGET: ${{ steps.t.outputs.env }}
+          SHA: ${{ steps.t.outputs.sha }}
         run: |
-          # Script remoto via stdin; APP_DIR e REF entram como argumentos (sem interpolacao no shell).
-          ssh -i ~/.ssh/id_deploy -p "${PORT:-22}" "$SSH_USER@$HOST" bash -s -- "$APP_DIR" "$REF" <<'REMOTE'
-          set -euo pipefail
-          cd "$1"
-          git fetch --all --prune
-          git checkout -q --detach "$2"
-          bash scripts/deploy.sh "$2"
-          REMOTE
+          # A chave so executa /usr/local/bin/bentifiles-deploy (forced command na VPS).
+          ssh -i ~/.ssh/id_deploy -p "${PORT:-22}" "$SSH_USER@$HOST" "$TARGET $SHA"
