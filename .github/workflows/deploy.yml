@@ -1,0 +1,62 @@
+name: Deploy
+
+# Deploy automatico na VPS apos CI verde na main. Tambem manual (com ref opcional, ex: rollback).
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Commit SHA ou branch/tag para deploy (vazio = main)"
+        required: false
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    environment: production
+    steps:
+      - name: Resolve ref
+        id: ref
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_REF: ${{ inputs.ref }}
+          RUN_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            echo "value=${INPUT_REF:-main}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=$RUN_SHA" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST: ${{ secrets.VPS_HOST }}
+          PORT: ${{ secrets.VPS_PORT }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s
+' "$SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -p "${PORT:-22}" -H "$HOST" >> ~/.ssh/known_hosts
+
+      - name: Deploy
+        env:
+          HOST: ${{ secrets.VPS_HOST }}
+          PORT: ${{ secrets.VPS_PORT }}
+          USER_: ${{ secrets.VPS_USER }}
+          APP_DIR: ${{ secrets.VPS_APP_DIR }}
+          REF: ${{ steps.ref.outputs.value }}
+        run: |
+          ssh -i ~/.ssh/id_deploy -p "${PORT:-22}" "$USER_@$HOST"             "cd $(printf '%q' "$APP_DIR") && git fetch --all --prune && git checkout -q --detach $(printf '%q' "$REF") && bash scripts/deploy.sh $(printf '%q' "$REF")"
