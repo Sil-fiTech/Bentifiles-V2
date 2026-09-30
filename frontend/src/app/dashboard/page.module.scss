@@ -155,7 +155,7 @@
   background: var(--surface-card);
   border: 1px solid var(--border-subtle);
   padding: $sp-2 $sp-3_5;
-  border-radius: $radius-full;
+  border-radius: $radius-md;
   transition: $transition-base;
   white-space: nowrap;
 
@@ -192,14 +192,14 @@
   font-size: 0.875rem;
   font-family: $font-body;
   border: 1px solid var(--border-subtle);
-  border-radius: $radius-full;
+  border-radius: $radius-md;
   background: var(--surface-card);
   transition: $transition-base;
   outline: none;
 
   &:focus {
-    border-color: rgba($amber-400, 0.35);
-    box-shadow: 0 0 0 3px rgba($zinc-200, 0.4);
+    border-color: var(--text-primary);
+    box-shadow: 0 0 0 2px $amber-400;
   }
 
   &::placeholder {
@@ -282,10 +282,12 @@
   left: $sp-4;
   background: var(--color-tertiary-container);
   color: var(--color-on-tertiary-container);
+  font-family: $font-mono;
   font-size: 0.625rem;
-  font-weight: 700;
+  font-weight: 500;
+  letter-spacing: 0.08em;
   padding: $sp-1 $sp-2;
-  border-radius: $radius-full;
+  border-radius: $radius-sm;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 
@@ -395,7 +397,7 @@
 .tabBadge {
   margin-left: $sp-1_5;
   padding: $sp-0_5 $sp-2_5;
-  border-radius: $radius-full;
+  border-radius: $radius-sm;
   font-size: 0.6875rem;
   font-weight: 900;
   letter-spacing: 0.05em;
@@ -593,9 +595,11 @@
   display: inline-flex;
   align-items: center;
   padding: $sp-1 $sp-3;
-  border-radius: $radius-full;
+  border-radius: $radius-sm;
+  font-family: $font-mono;
   font-size: 0.625rem;
-  font-weight: 700;
+  font-weight: 500;
+  letter-spacing: 0.08em;
 }
 
 .statusDot {
@@ -665,7 +669,7 @@
   width: 6rem;
   height: 0.25rem;
   background: rgba(255, 255, 255, 0.12);
-  border-radius: $radius-full;
+  border-radius: 0;
   overflow: hidden;
 }
 

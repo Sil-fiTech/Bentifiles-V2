@@ -106,10 +106,10 @@ export function Nav({
                     <div className={styles.logoGroup}>
                         <div className={styles.logoIcon}>
                             <Image
-                                src="/favicon.ico"
-                                alt="Logo"
-                                width={48}
-                                height={48}
+                                src="/brand/bentifiles-mark.png"
+                                alt="Bentifiles"
+                                width={164}
+                                height={164}
                                 onClick={() => router.push('/dashboard')}
                                 className={styles.logoImg}
                             />

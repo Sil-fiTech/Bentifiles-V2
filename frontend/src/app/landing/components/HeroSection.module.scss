@@ -1,0 +1,181 @@
+.hero {
+  padding-block: clamp(48px, 8vw, 104px) clamp(56px, 8vw, 112px);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: clamp(32px, 6vw, 88px);
+  align-items: center;
+}
+
+.copy h1 {
+  font-size: clamp(2.7rem, 5.6vw, 5rem);
+  margin-block: 1.25rem 1.75rem;
+
+  mark {
+    background: linear-gradient(transparent 56%, var(--amber) 56% 90%, transparent 90%);
+    color: inherit;
+    padding-inline: 0.04em;
+  }
+}
+
+.lead {
+  max-width: 34rem;
+  font-size: clamp(1.05rem, 1.6vw, 1.22rem);
+  color: var(--ink-2);
+}
+
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.9rem;
+  margin-top: 2.25rem;
+}
+
+.facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.6rem;
+  margin-top: 2.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--line);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.78rem;
+  color: var(--muted);
+
+  li::before {
+    content: '';
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 0.55rem;
+    background: var(--amber);
+    border: 1.5px solid var(--ink);
+    transform: translateY(-1px);
+  }
+}
+
+// a folha: cantos retos, levemente torta
+.board {
+  position: relative;
+  padding-top: 5.6rem;
+  transform: rotate(1.4deg);
+}
+
+.bird {
+  position: absolute;
+  top: 0.4rem;
+  right: 2rem;
+  z-index: 2;
+}
+
+.sheet {
+  background: #fff;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  box-shadow: 8px 8px 0 var(--amber);
+
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.1rem;
+    border-bottom: 1px solid var(--line);
+
+    strong {
+      display: block;
+      font-size: 1rem;
+      line-height: 1.25;
+    }
+
+    > div > span {
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+  }
+}
+
+.sheetHead {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.8rem 1.1rem;
+  background: var(--ink);
+  color: var(--amber);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sheetFoot {
+  padding: 0.7rem 1.1rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+
+.stamp {
+  flex: none;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-weight: 500;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.3rem 0.55rem;
+  border: 2px solid currentColor;
+  border-radius: 2px;
+}
+
+.stampOk {
+  color: var(--ok);
+  transform: rotate(-3deg);
+  animation: thunk 0.45s 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.3) backwards;
+}
+
+.stampBad {
+  color: var(--err);
+  transform: rotate(2deg);
+  animation: thunk 0.45s 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.3) backwards;
+}
+
+.stampWait {
+  color: var(--muted);
+  border-style: dashed;
+}
+
+.stampCheck {
+  color: var(--amber-deep);
+  background: var(--amber-soft);
+  border-color: var(--amber-deep);
+}
+
+@keyframes thunk {
+  from {
+    opacity: 0;
+    transform: scale(1.7) rotate(-8deg);
+  }
+}
+
+@media (max-width: 860px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .board {
+    max-width: 30rem;
+    margin-inline: auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .facts {
+    flex-direction: column;
+  }
+
+  .cta a {
+    flex: 1 1 100%;
+  }
+}
