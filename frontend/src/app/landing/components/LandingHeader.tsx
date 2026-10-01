@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Logo from './Logo';
+import RegisterLink from './RegisterLink';
 import ui from '../landing.module.scss';
 import styles from './LandingHeader.module.scss';
 
@@ -29,9 +30,9 @@ export default function LandingHeader() {
           <Link className={styles.enter} href="/login">
             Entrar
           </Link>
-          <Link className={`${ui.btn} ${ui.btnAmber} ${styles.cta}`} href="/login?mode=register">
+          <RegisterLink className={`${ui.btn} ${ui.btnAmber} ${styles.cta}`}>
             Criar conta
-          </Link>
+          </RegisterLink>
         </div>
       </div>
     </header>

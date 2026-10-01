@@ -1,0 +1,163 @@
+@use '../../styles/mixins' as *;
+@use '../../styles/tokens' as *;
+
+.wrap { width: 100%; }
+
+.tabs {
+  display: flex;
+  gap: $sp-2;
+  margin-bottom: $sp-4;
+  flex-wrap: wrap;
+}
+
+.tab {
+  height: 38px;
+  padding: 0 $sp-4;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.tabActive {
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+  color: var(--text-primary);
+}
+
+.resultsMeta {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: $sp-3;
+}
+
+.state {
+  padding: $sp-5;
+  border-radius: $radius-lg;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+  display: flex;
+  align-items: center;
+  gap: $sp-3;
+}
+
+.stateError {
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border-subtle));
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface-card));
+  color: var(--text-primary);
+}
+
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.tableWrap {
+  width: 100%;
+  overflow: auto;
+  border-radius: $radius-xl;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+
+  @include below-md { display: none; }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    text-align: left;
+    padding: $sp-4;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    font-weight: 800;
+  }
+
+  td:first-child, th:first-child { white-space: normal; }
+  tr:last-child td { border-bottom: none; }
+}
+
+.name { font-weight: 800; color: var(--text-primary); }
+.muted { color: var(--text-muted); font-weight: 600; }
+
+.badge {
+  display: inline-flex;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+.badgeTrial { background: color-mix(in srgb, var(--warning) 15%, transparent); border-color: color-mix(in srgb, var(--warning) 32%, transparent); }
+.badgeActive { background: color-mix(in srgb, #16a34a 15%, transparent); border-color: color-mix(in srgb, #16a34a 32%, transparent); }
+.badgeNeutral { background: var(--input-bg); }
+
+.mobileCards {
+  display: none;
+  gap: $sp-4;
+
+  @include below-md { display: grid; }
+}
+
+.mCard {
+  border-radius: $radius-xl;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+  padding: $sp-5;
+}
+
+.mCardName { font-weight: 900; color: var(--text-primary); font-size: 1.05rem; }
+.mCardEmail { margin-top: $sp-1; color: var(--text-muted); font-weight: 600; word-break: break-word; }
+
+.mCardGrid {
+  margin-top: $sp-4;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $sp-4;
+}
+
+.mLabel {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: $sp-1;
+}
+.mValue { font-weight: 800; color: var(--text-primary); }
+
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  gap: $sp-3;
+  margin-top: $sp-5;
+
+  @include below-md { justify-content: space-between; }
+}
+
+.pageBtn {
+  height: 40px;
+  border-radius: $radius-lg;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  padding: 0 $sp-4;
+  display: inline-flex;
+  align-items: center;
+  gap: $sp-2;
+  font-weight: 800;
+  cursor: pointer;
+}
+.pageBtn:disabled { opacity: 0.5; cursor: not-allowed; }

@@ -84,6 +84,9 @@ model User {
 
   adminAuditLogsAsActor  AdminAuditLog[] @relation("AdminAuditActor")
   adminAuditLogsAsTarget AdminAuditLog[] @relation("AdminAuditTarget")
+
+  affiliate          Affiliate?          @relation("UserAffiliate")
+  affiliateReferrals AffiliateReferral[] @relation("ReferredUserReferrals")
 }
 
 enum SubscriptionStatus {
@@ -410,6 +413,45 @@ model TemplateDocumentType {
   order       Int      @default(0)
 
   createdAt DateTime @default(now())
+}
+
+enum AffiliateStatus {
+  ACTIVE
+  DISABLED
+}
+
+model Affiliate {
+  id                     String          @id @default(uuid())
+  userId                 String          @unique
+  user                   User            @relation("UserAffiliate", fields: [userId], references: [id], onDelete: Cascade)
+  code                   String          @unique
+  stripeCouponId         String?
+  stripePromotionCodeId  String?         @unique
+  discountPercent        Int             @default(10)
+  discountDurationMonths Int             @default(2)
+  status                 AffiliateStatus @default(ACTIVE)
+  referrals              AffiliateReferral[]
+  createdAt              DateTime        @default(now())
+  updatedAt              DateTime        @updatedAt
+}
+
+model AffiliateReferral {
+  id                   String    @id @default(uuid())
+  affiliateId          String
+  affiliate            Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  referredUserId       String
+  referredUser         User      @relation("ReferredUserReferrals", fields: [referredUserId], references: [id], onDelete: Cascade)
+  viaLink              Boolean   @default(false)
+  couponRedeemed       Boolean   @default(false)
+  couponRedeemedAt     DateTime?
+  firstPaidAt          DateTime?
+  stripeSubscriptionId String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@unique([affiliateId, referredUserId])
+  @@index([affiliateId])
+  @@index([referredUserId])
 }
 
 model AdminAuditLog {

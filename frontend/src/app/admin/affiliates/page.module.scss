@@ -1,0 +1,317 @@
+@use '../../../styles/mixins' as *;
+@use '../../../styles/tokens' as *;
+
+.root {
+  background: var(--page-gradient);
+  font-family: $font-body;
+  color: var(--color-on-surface);
+  overflow: hidden;
+  display: flex;
+  @include app-shell;
+  width: 100%;
+  position: relative;
+}
+
+.main {
+  flex: 1;
+  @include app-shell;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent;
+  overflow-y: auto;
+  position: relative;
+  width: 100%;
+  @include custom-scrollbar;
+}
+
+.canvas {
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: $sp-6 $sp-4 $sp-16;
+
+  @include md { padding: $sp-8 $sp-6 $sp-16; }
+  @include lg { padding: $sp-8 $sp-8 $sp-16; }
+}
+
+.header {
+  @include flex-between;
+  align-items: flex-end;
+  gap: $sp-4;
+  margin-bottom: $sp-5;
+
+  @include below-md {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.sectionTabs {
+  display: flex;
+  gap: $sp-2;
+  flex-wrap: wrap;
+}
+
+.sectionTab {
+  height: 38px;
+  padding: 0 $sp-4;
+  border-radius: 999px;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-muted);
+  font-weight: 800;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.sectionTabActive {
+  background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+  color: var(--text-primary);
+}
+
+.title {
+  font-family: $font-headline;
+  font-size: 1.875rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  letter-spacing: -0.04em;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-top: $sp-1;
+}
+
+.controls {
+  display: flex;
+  gap: $sp-4;
+  align-items: center;
+  margin-bottom: $sp-4;
+
+  @include below-md { flex-direction: column; align-items: stretch; }
+}
+
+.searchBox {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: $sp-2;
+  padding: $sp-3 $sp-4;
+  border-radius: $radius-lg;
+  background: var(--input-bg);
+  border: 1px solid var(--border-subtle);
+}
+
+.searchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.resultsMeta {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-bottom: $sp-3;
+}
+
+.loading,
+.empty,
+.error,
+.denied {
+  padding: $sp-5;
+  border-radius: $radius-lg;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+  display: flex;
+  align-items: center;
+  gap: $sp-3;
+}
+
+.error {
+  border-color: color-mix(in srgb, var(--danger) 35%, var(--border-subtle));
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface-card));
+  color: var(--text-primary);
+}
+
+.denied {
+  border-color: color-mix(in srgb, var(--danger) 28%, transparent);
+  background: color-mix(in srgb, var(--danger) 10%, transparent);
+}
+
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.tableWrap {
+  width: 100%;
+  overflow: auto;
+  border-radius: $radius-xl;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+
+  @include below-md { display: none; }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+
+  th, td {
+    text-align: left;
+    padding: $sp-4;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  th {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    font-weight: 800;
+  }
+
+  tr:last-child td { border-bottom: none; }
+}
+
+.name { font-weight: 800; color: var(--text-primary); }
+.muted { color: var(--text-muted); font-weight: 600; }
+.code {
+  font-family: $font-headline;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: var(--text-primary);
+}
+
+.detailsBtn {
+  height: 34px;
+  padding: 0 $sp-3;
+  border-radius: $radius-md;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 800;
+  cursor: pointer;
+}
+.detailsBtn:hover { background: var(--surface-hover); }
+
+.mobileCards {
+  display: none;
+  gap: $sp-4;
+  margin-top: $sp-4;
+
+  @include below-md { display: grid; }
+}
+
+.mCard {
+  border-radius: $radius-xl;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+  padding: $sp-5;
+}
+
+.mCardName { font-weight: 900; color: var(--text-primary); font-size: 1.05rem; }
+.mCardEmail { margin-top: $sp-1; color: var(--text-muted); font-weight: 600; word-break: break-word; }
+
+.mCardGrid {
+  margin-top: $sp-4;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $sp-4;
+}
+
+.mLabel {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: $sp-1;
+}
+.mValue { font-weight: 800; color: var(--text-primary); }
+
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  gap: $sp-3;
+  margin-top: $sp-5;
+
+  @include below-md { justify-content: space-between; }
+}
+
+.pageBtn {
+  height: 40px;
+  border-radius: $radius-lg;
+  border: 1px solid var(--border-subtle);
+  background: var(--surface-card);
+  color: var(--text-primary);
+  padding: 0 $sp-4;
+  display: inline-flex;
+  align-items: center;
+  gap: $sp-2;
+  font-weight: 800;
+  cursor: pointer;
+}
+.pageBtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: color-mix(in srgb, #000 60%, transparent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: $sp-4;
+  z-index: 50;
+}
+
+.modal {
+  width: 100%;
+  max-width: 920px;
+  max-height: 88vh;
+  overflow: auto;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: $radius-xl;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+  @include custom-scrollbar;
+}
+
+.modalHeader {
+  padding: $sp-5;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: $sp-3;
+  border-bottom: 1px solid var(--border-subtle);
+  position: sticky;
+  top: 0;
+  background: var(--surface-card);
+}
+
+.modalTitle { font-weight: 900; font-size: 1.15rem; color: var(--text-primary); }
+.modalSubtitle { margin-top: $sp-1; color: var(--text-muted); font-size: 0.9rem; }
+
+.modalClose {
+  height: 34px;
+  width: 34px;
+  border-radius: $radius-md;
+  border: 1px solid var(--border-subtle);
+  background: transparent;
+  color: var(--text-primary);
+  font-weight: 900;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modalBody { padding: $sp-5; }

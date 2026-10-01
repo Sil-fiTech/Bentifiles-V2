@@ -59,7 +59,8 @@ const escapeHtml = (value: string) => value
 export const buildVerificationUrl = (
     token: string,
     inviteToken?: string | null,
-    officeInviteToken?: string | null
+    officeInviteToken?: string | null,
+    affiliateRef?: string | null
 ) => {
     const frontendUrl = getFrontendUrl();
     const verifyUrl = new URL('/verify-email', frontendUrl);
@@ -71,6 +72,10 @@ export const buildVerificationUrl = (
 
     if (officeInviteToken) {
         verifyUrl.searchParams.set('officeInvite', officeInviteToken);
+    }
+
+    if (affiliateRef) {
+        verifyUrl.searchParams.set('ref', affiliateRef);
     }
 
     return verifyUrl.toString();
@@ -165,11 +170,12 @@ export const sendVerificationEmail = async (
     token: string,
     name: string,
     inviteToken?: string | null,
-    officeInviteToken?: string | null
+    officeInviteToken?: string | null,
+    affiliateRef?: string | null
 ) => {
     try {
         const frontendUrl = getFrontendUrl();
-        const verifyUrl = buildVerificationUrl(token, inviteToken, officeInviteToken);
+        const verifyUrl = buildVerificationUrl(token, inviteToken, officeInviteToken, affiliateRef);
         const safeName = escapeHtml(name);
 
         const html = `

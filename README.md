@@ -176,6 +176,56 @@ uvicorn main:app --reload
 
 ---
 
+## 🌐 Ambientes
+
+| Ambiente | URL | Branch | Deploy |
+|---|---|---|---|
+| **Produção** | https://bentifiles.com | `main` | automático após CI verde |
+| **Desenvolvimento** | https://devbentifiles.tech | `dev` | automático após CI verde |
+
+Os dois ambientes rodam na mesma VPS, atrás de nginx, em stacks Docker Compose separados:
+
+| | Produção | Desenvolvimento |
+|---|---|---|
+| Diretório na VPS | `/root/Bentifiles-V2` | `/root/devBentifiles` |
+| Frontend / Backend / IA (portas locais) | 3000 / 4000 / 8000 | 3001 / 4001 / 8001 |
+
+---
+
+## 🔄 CI/CD
+
+Pipeline em GitHub Actions (`.github/workflows/`):
+
+```mermaid
+graph LR
+    A[push / PR] --> B[CI]
+    B -->|main| C[Deploy prod]
+    B -->|dev| D[Deploy dev]
+    C --> E[VPS via SSH]
+    D --> E
+```
+
+**CI** (`ci.yml`): roda em todo PR e em push para `main`, `dev` e `dev-V2`.
+- Backend: `prisma generate` e `tsc`.
+- Frontend: lint (não bloqueante por enquanto) e `next build`.
+- Microserviço: smoke test do `/analyze` (`test_api.py`).
+- `docker build` dos 3 serviços.
+
+**Deploy** (`deploy.yml`): depois de um CI verde em push, `main` publica em produção e `dev` no ambiente de desenvolvimento. O GitHub conecta na VPS com uma chave SSH restrita, que só executa o script `bentifiles-deploy prod|dev`. O script faz `git merge --ff-only`, `docker compose up -d --build`, verifica a saúde dos 3 serviços e, se falhar, volta ao último commit saudável.
+
+### Fluxo de trabalho
+1. Abra uma branch a partir de `dev` e um PR para `dev`. O CI precisa passar.
+2. Merge em `dev` publica em https://devbentifiles.tech para validação.
+3. PR de `dev` para `main`. O merge publica em https://bentifiles.com.
+
+### Deploy manual e rollback
+Actions, **Deploy**, **Run workflow**: escolha o ambiente (`dev` ou `prod`) e, opcionalmente, um `sha`. Informar um commit anterior serve como rollback.
+
+### Configuração
+Setup da VPS, chave SSH e secrets em [docs/CICD.md](docs/CICD.md).
+
+---
+
 ## 🔒 Segurança e Infraestrutura
 - **Storage**: Cloudflare R2 para armazenamento persistente de documentos.
 - **Database**: PostgreSQL hospedado via Supabase para alta disponibilidade.

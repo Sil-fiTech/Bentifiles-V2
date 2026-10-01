@@ -12,6 +12,7 @@ import {
   syncOfficeSubscriptionFromBilling,
 } from './officeSubscriptionService';
 import { syncReminderDispatchesForUser } from './subscriptionReminderService';
+import { recordCouponRedemption, resolveAffiliateForCheckout } from './affiliateService';
 
 const getSubscriptionQuantity = (subscription: any) => {
   const itemQuantity = subscription.items?.data?.[0]?.quantity;
@@ -23,7 +24,8 @@ export const createCheckoutSession = async (
   userId: string,
   plan: SubscriptionPlan,
   interval: 'monthly' | 'yearly' = 'monthly',
-  quantity: number = 1
+  quantity: number = 1,
+  affiliateRef?: string | null
 ) => {
   const user = await prisma.user.findUnique({
     where: { id: userId },
@@ -82,6 +84,18 @@ export const createCheckoutSession = async (
   }
 
 
+  // Stripe rejects `discounts` and `allow_promotion_codes` together. When the buyer
+  // arrived through an affiliate link we pre-apply that affiliate's promotion code
+  // AND stamp the affiliate id on the subscription metadata (so attribution never
+  // depends on parsing the discount later); otherwise we leave the manual "add
+  // promo code" box enabled on Stripe checkout.
+  const affiliateForCheckout = await resolveAffiliateForCheckout(affiliateRef);
+  console.log('[Affiliate] checkout affiliate resolution', {
+    userId,
+    affiliateRef: affiliateRef || null,
+    resolved: affiliateForCheckout,
+  });
+
   const session = await stripe.checkout.sessions.create({
     customer: customerId,
     client_reference_id: userId,
@@ -94,9 +108,12 @@ export const createCheckoutSession = async (
         userId,
         plan,
         selectedSeats: String(normalizedQuantity),
+        ...(affiliateForCheckout ? { affiliateId: affiliateForCheckout.affiliateId } : {}),
       },
     },
-    allow_promotion_codes: true,
+    ...(affiliateForCheckout
+      ? { discounts: [{ promotion_code: affiliateForCheckout.promotionCodeId }] }
+      : { allow_promotion_codes: true }),
     success_url: process.env.STRIPE_SUCCESS_URL || 'http://localhost:3000/billing/success',
     cancel_url: process.env.STRIPE_CANCEL_URL || 'http://localhost:3000/billing/cancel',
     metadata: {
@@ -192,6 +209,8 @@ export const syncUserSubscriptionFromStripe = async (params: {
   });
 
   await syncReminderDispatchesForUser(user.id);
+
+  await recordCouponRedemption({ subscription, userId: user.id });
 
   await syncOfficeSubscriptionFromBilling({
     ownerId: user.id,

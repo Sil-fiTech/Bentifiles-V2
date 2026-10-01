@@ -1,6 +1,6 @@
-import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import Logo from './Logo';
+import RegisterLink from './RegisterLink';
 import ui from '../landing.module.scss';
 import styles from './HeroSection.module.scss';
 
@@ -35,10 +35,10 @@ export default function HeroSection() {
             qualidade de cada arquivo antes de abrir. Chega de caçar anexo no WhatsApp e no e-mail.
           </p>
           <div className={styles.cta}>
-            <Link className={`${ui.btn} ${ui.btnAmber}`} href="/login?mode=register">
+            <RegisterLink className={`${ui.btn} ${ui.btnAmber}`}>
               Criar conta
               <ArrowRight size={18} strokeWidth={2.4} aria-hidden="true" />
-            </Link>
+            </RegisterLink>
             <a className={`${ui.btn} ${ui.btnGhost}`} href="#validacao">
               Ver a validação
             </a>
