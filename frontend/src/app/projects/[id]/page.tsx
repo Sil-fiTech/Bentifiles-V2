@@ -481,6 +481,7 @@ export default function ProjectPage() {
             <main className={styles.main}>
                 <Nav
                     context="project"
+                    tourId="project"
                     projectName={project?.name}
                     userInitials={userInitials}
                     onLogout={async () => {
@@ -543,13 +544,14 @@ export default function ProjectPage() {
                         {isAdmin && (
                             <div className={styles.headerActions}>
                                 {project?.status !== 'ARCHIVED' && (
-                                    <button onClick={generateInvite} className={styles.inviteBtn}>
+                                    <button onClick={generateInvite} className={styles.inviteBtn} data-tour="invite">
                                         <Share size={16} /> Convite
                                     </button>
                                 )}
                                 <button
                                     onClick={() => router.push(`/projects/${id}/documents`)}
                                     className={styles.inviteBtn}
+                                    data-tour="settings"
                                 >
                                     <Settings size={16} /> Configurações do projeto
                                 </button>
@@ -567,7 +569,7 @@ export default function ProjectPage() {
                     </header>
 
                     {/* Metrics */}
-                    <section className={styles.metricsGrid}>
+                    <section className={styles.metricsGrid} data-tour="metrics">
                         <div className={styles.metricCard}>
                             <Users className={styles.metricIcon} size={24} />
                             <div>
@@ -613,7 +615,7 @@ export default function ProjectPage() {
                     </section>
 
                     {/* Team checklist */}
-                    <div className={styles.teamHeader}>
+                    <div className={styles.teamHeader} data-tour="checklist">
                         <h2 className={styles.teamTitle}>
                             {isAdmin ? 'Checklist da Equipe' : 'Meus Documentos'}
                         </h2>
@@ -640,7 +642,7 @@ export default function ProjectPage() {
                             </div>
                         )}
 
-                        {filteredMembers.map((member: any) => {
+                        {filteredMembers.map((member: any, memberIndex: number) => {
                             const isExpanded = expandedUsers[member.userId] ?? true;
                             const userDocs = clientDocs.filter(d => d.ownerUserId === member.userId);
                             const userApproved = userDocs.filter(d => d.status === 'approved').length;
@@ -691,14 +693,14 @@ export default function ProjectPage() {
                                                 <p className={styles.docEmpty}>Nenhum documento obrigatório configurado para este projeto.</p>
                                             ) : (
                                                 <div className={styles.docList}>
-                                                    {requiredDocs.map(rd => {
+                                                    {requiredDocs.map((rd, docIndex) => {
                                                         const doc = userDocs.find(cd => cd.documentTypeId === rd.documentTypeId);
                                                         const statusStyle = getStatusStyle(doc?.status || 'missing');
                                                         const isUploading = uploadingDocType === `${rd.documentTypeId}-${member.userId}`;
                                                         const progress = uploadProgress[`${rd.documentTypeId}-${member.userId}`];
 
                                                         return (
-                                                            <div key={rd.id} className={styles.docRow}>
+                                                            <div key={rd.id} className={styles.docRow} data-tour={memberIndex === 0 && docIndex === 0 ? 'doc-row' : undefined}>
                                                                 <div className={styles.docLeft}>
                                                                     <div className={`${styles.docTypeIcon} ${doc ? styles.filled : styles.empty}`}>
                                                                         {doc ? <FileIcon size={18} /> : <AlertTriangle size={18} />}

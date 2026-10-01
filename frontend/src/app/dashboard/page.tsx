@@ -13,7 +13,6 @@ import {
     Folder, Zap, CheckCircle2, XCircle, FileIcon, Loader2, Archive
 } from 'lucide-react';
 import styles from './page.module.scss';
-import { profile } from 'console';
 
 interface Project {
     id: string;
@@ -233,7 +232,7 @@ export default function Dashboard() {
             <main className={styles.main}>
                 <Nav
                     userInitials={userInitials}
-                    hasActiveProcessing={hasActiveProcessing}
+                    tourId="dashboard"
                     creating={creating}
                     onCreateProject={handleCreateProject}
                     onLogout={handleLogout}
@@ -271,7 +270,7 @@ export default function Dashboard() {
                         </div>
 
                         {projects.length === 0 ? (
-                            <div className={styles.emptyState}>
+                            <div className={styles.emptyState} data-tour="projects">
                                 <p className={styles.emptyText}>Você não possui nenhum projeto ainda.</p>
                                 <button onClick={handleCreateProject} className={styles.emptyBtn}>
                                     Criar o primeiro projeto
@@ -282,7 +281,7 @@ export default function Dashboard() {
                                 <p className={styles.emptyText}>Nenhum projeto corresponde à pesquisa.</p>
                             </div>
                         ) : (
-                            <div className={styles.projectsRow}>
+                            <div className={styles.projectsRow} data-tour="projects">
                                 {filteredProjects.map((project) => (
                                     <div
                                         key={project.id}
@@ -298,7 +297,7 @@ export default function Dashboard() {
                                             <div className={styles.projectInfo}>
                                                 <h3 className={styles.projectName} title={project.name}>{project.name}</h3>
                                                 <p className={styles.projectDate}>
-                                                    Última mod.: {new Date(project.createdAt).toLocaleDateString()}
+                                                    Criado em {new Date(project.createdAt).toLocaleDateString()}
                                                 </p>
                                                 {/* <div style={{ display: 'flex', marginLeft: '-0.5rem' }}>
                                                     <div className={styles.projectAvatar}>{userInitials}</div>
@@ -327,7 +326,7 @@ export default function Dashboard() {
                             </div>
 
                             {/* Tabs */}
-                            <div className={styles.tabsWrapper}>
+                            <div className={styles.tabsWrapper} data-tour="tabs">
                                 <div className={styles.tabGroup}>
                                     <button
                                         onClick={() => setActiveTab('my-docs')}
@@ -355,18 +354,18 @@ export default function Dashboard() {
                         </div>
 
                         {/* Stats cards */}
-                        <div className={styles.statsGrid}>
+                        <div className={styles.statsGrid} data-tour="stats">
                             <div className={styles.statCard}>
                                 <div className={styles.statHeader}>
                                     <div className={`${styles.statIcon} ${styles.neutral}`}>
                                         <Zap size={16} />
                                     </div>
                                     <span className={styles.statLabel}>
-                                        {isReviewTab ? 'Aguardando Avaliação' : 'Total Uploads'}
+                                        {isReviewTab ? 'Aguardando avaliação' : 'Total de envios'}
                                     </span>
                                 </div>
                                 <p className={styles.statValue}>
-                                    {isReviewTab ? pendingFiles.length : files.length}
+                                    {isReviewTab ? pendingFiles.length : dashboardStats.total}
                                 </p>
                             </div>
                             {!isReviewTab && (
@@ -403,7 +402,7 @@ export default function Dashboard() {
 
                         {/* Files */}
                         {displayedFiles.length === 0 ? (
-                            <div className={styles.emptyState}>
+                            <div className={styles.emptyState} data-tour="files">
                                 <p className={styles.emptyText}>
                                     {isReviewTab
                                         ? 'Não há documentos pendentes para avaliação no momento.'
@@ -411,7 +410,7 @@ export default function Dashboard() {
                                 </p>
                             </div>
                         ) : (
-                            <div className={styles.fileGrid}>
+                            <div className={styles.fileGrid} data-tour="files">
                                 {displayedFiles.map((file) => {
                                     const result = file.verificationResults?.[0];
                                     const clientDoc = file.clientDocuments?.[0];
@@ -525,7 +524,7 @@ export default function Dashboard() {
 
                 {/* Floating processing bar */}
                 {hasActiveProcessing && (
-                    <div className={styles.processingBar}>
+                    <div className={styles.processingBar} data-tour="processing">
                         <div className={styles.processingIconWrapper}>
                             <Zap style={{ color: '#fbbf24' }} size={20} fill="currentColor" />
                         </div>
