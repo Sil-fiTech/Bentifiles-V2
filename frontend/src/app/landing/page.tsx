@@ -1,33 +1,33 @@
 import type { Metadata } from 'next';
 import LandingHeader from './components/LandingHeader';
 import HeroSection from './components/HeroSection';
-import BenefitsSection from './components/BenefitsSection';
-import HowItWorksSection from './components/HowItWorksSection';
-import FeaturesSection from './components/FeaturesSection';
-import ImpactSection from './components/ImpactSection';
-import FaqSection from './components/FaqSection';
+import ValidationSection from './components/ValidationSection';
+import StepsSection from './components/StepsSection';
+import ResourcesSection from './components/ResourcesSection';
 import PricingSection from './components/PricingSection';
-import CtaSection from './components/CtaSection';
+import FaqSection from './components/FaqSection';
+import ClosingSection from './components/ClosingSection';
 import LandingFooter from './components/LandingFooter';
 
 export const metadata: Metadata = {
-  title: 'Bentifiles — Centralize, Organize e Padronize seus Documentos',
+  title: 'Bentifiles: solicite documentos, valide a legibilidade e aprove',
   description:
-    'O Bentifiles é uma plataforma de gestão de documentos, projetos e templates. Reduza o retrabalho e mantenha sua equipe alinhada com organização inteligente.',
+    'Solicite documentos aos seus clientes, acompanhe os envios em tempo real e valide automaticamente a legibilidade de cada arquivo. 10 dias de teste no plano Individual.',
 };
 
 export default function LandingPage() {
   return (
     <>
       <LandingHeader />
-      <HeroSection />
-      <BenefitsSection />
-      <HowItWorksSection />
-      <FeaturesSection />
-      <ImpactSection />
-      <FaqSection />
-      <PricingSection />
-      <CtaSection />
+      <main>
+        <HeroSection />
+        <ValidationSection />
+        <StepsSection />
+        <ResourcesSection />
+        <PricingSection />
+        <FaqSection />
+        <ClosingSection />
+      </main>
       <LandingFooter />
     </>
   );

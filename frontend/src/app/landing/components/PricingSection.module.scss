@@ -1,0 +1,124 @@
+.pricing {
+  padding-block: clamp(64px, 9vw, 120px);
+}
+
+.head {
+  max-width: 40rem;
+  margin-bottom: clamp(2rem, 5vw, 3.5rem);
+
+  h2 {
+    font-size: clamp(2rem, 4vw, 3.3rem);
+    margin-block: 1rem;
+  }
+
+  > p:last-child {
+    color: var(--ink-2);
+  }
+}
+
+.plans {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  background: #fff;
+
+  article {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    padding: clamp(2.6rem, 4vw, 3.2rem) clamp(1.4rem, 3vw, 2.2rem) clamp(1.4rem, 3vw, 2.2rem);
+
+    + article {
+      border-left: 2px solid var(--ink);
+    }
+
+    h3 {
+      font-size: 1.9rem;
+    }
+
+    > a {
+      margin-top: 0.4rem;
+    }
+  }
+}
+
+.featured {
+  background: var(--amber-soft);
+}
+
+.flag {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0.4rem clamp(1.4rem, 3vw, 2.2rem);
+  background: var(--ink);
+  color: var(--amber);
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.for {
+  flex: 1;
+  color: var(--ink-2);
+  font-size: 0.97rem;
+}
+
+.price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--ink);
+
+  strong {
+    font-family: var(--font-display), 'Arial Narrow', sans-serif;
+    font-weight: 800;
+    font-size: 2.7rem;
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  span {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 0.78rem;
+    color: var(--muted);
+  }
+
+  .consult {
+    font-size: 2rem;
+  }
+}
+
+.alt,
+.note {
+  font-size: 0.93rem;
+  color: var(--ink-2);
+}
+
+.note {
+  font-weight: 600;
+}
+
+.footnote {
+  margin-top: 1.4rem;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 0.74rem;
+  color: var(--muted);
+  max-width: 52rem;
+}
+
+@media (max-width: 900px) {
+  .plans {
+    grid-template-columns: 1fr;
+
+    article + article {
+      border-left: 0;
+      border-top: 2px solid var(--ink);
+    }
+  }
+}

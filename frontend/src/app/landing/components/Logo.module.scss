@@ -1,0 +1,37 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+// recorta o espaço em branco do PNG quadrado: o pássaro ocupa ~62% x 43%
+.crop {
+  position: relative;
+  display: block;
+  width: var(--size);
+  aspect-ratio: 635 / 440;
+  overflow: hidden;
+  flex: none;
+
+  img {
+    position: absolute;
+    width: 161.3%;
+    max-width: none;
+    left: -33.9%;
+    top: -64.8%;
+    height: auto;
+  }
+}
+
+.word {
+  font-family: var(--font-display), 'Arial Narrow', sans-serif;
+  font-weight: 800;
+  font-size: calc(var(--size) * 0.46);
+  letter-spacing: -0.03em;
+  color: var(--ink);
+  line-height: 1;
+
+  span {
+    color: var(--amber);
+  }
+}

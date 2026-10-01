@@ -7,9 +7,14 @@
 // ----------------------------------------------------------
 // Font Families
 // ----------------------------------------------------------
-$font-headline: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
-$font-body:     'Manrope', 'Nunito', sans-serif;
-$font-label:    'Manrope', sans-serif;
+// As variáveis --font-display, --font-instrument e --font-mono vêm do next/font no layout
+// raiz (Bricolage Grotesque, Instrument Sans e JetBrains Mono); o resto é fallback.
+// Atenção: não nomear a variável do next/font como --font-body, que o globals.scss já
+// define no :root a partir deste token (seria uma referência circular).
+$font-headline: var(--font-display), 'Plus Jakarta Sans', 'Arial Narrow', sans-serif;
+$font-body:     var(--font-instrument), 'Nunito', system-ui, sans-serif;
+$font-label:    var(--font-instrument), system-ui, sans-serif;
+$font-mono:     var(--font-mono), ui-monospace, monospace;
 
 // ----------------------------------------------------------
 // Spacing Scale (0.25rem = 1 unit)
@@ -35,12 +40,13 @@ $sp-24:  6rem;      // 96px
 // ----------------------------------------------------------
 // Border Radius
 // ----------------------------------------------------------
-$radius-sm:   0.5rem;    //  8px
-$radius-md:   0.75rem;   // 12px
-$radius-lg:   1rem;      // 16px
-$radius-xl:   1.25rem;   // 20px
-$radius-2xl:  1.5rem;    // 24px
-$radius-3xl:  2.5rem;    // 40px
+// Cantos retos, como na landing. O círculo completo segue só para avatares e pontos.
+$radius-sm:   2px;
+$radius-md:   3px;
+$radius-lg:   3px;
+$radius-xl:   4px;
+$radius-2xl:  4px;
+$radius-3xl:  6px;
 $radius-full: 9999px;
 
 // ----------------------------------------------------------
@@ -115,9 +121,9 @@ $blue-500: #3b82f6;
 $blue-700: #1d4ed8;
 
 // Surface / Background
-$surface:     #f9f9f9;
+$surface:     #fdfaf3;
 $surface-dim: #dadada;
-$background:  #f9f9f9;
+$background:  #fdfaf3;
 
 // ----------------------------------------------------------
 // CSS Custom Properties (injected into :root)

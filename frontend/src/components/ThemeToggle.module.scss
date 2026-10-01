@@ -10,13 +10,10 @@
   align-items: center;
   gap: $sp-2;
   padding: $sp-2 $sp-3;
-  border-radius: $radius-full;
-  background: var(--surface-glass);
+  border-radius: $radius-md;
+  background: var(--surface-card);
   border: 1px solid var(--border-strong);
   color: var(--text-primary);
-  box-shadow: var(--shadow-floating);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
   transition: $transition-base;
 
   &:hover {
@@ -28,7 +25,7 @@
 .iconWrap {
   width: 1.8rem;
   height: 1.8rem;
-  border-radius: $radius-full;
+  border-radius: $radius-sm;
   @include flex-center;
   background: rgba($amber-400, 0.16);
   color: $amber-500;

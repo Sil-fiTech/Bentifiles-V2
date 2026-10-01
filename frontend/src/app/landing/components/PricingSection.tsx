@@ -1,157 +1,66 @@
-'use client';
+import RegisterLink from './RegisterLink';
+import { plans } from '../data/plans';
+import ui from '../landing.module.scss';
+import styles from './PricingSection.module.scss';
 
-import { useState } from 'react';
-import {
-  LayoutDashboard,
-  Users,
-  Zap,
-  Shield,
-  ChevronDown,
-} from 'lucide-react';
-import { plans, billingFaqs } from '../data/plans';
-import type { Plan } from '../data/plans';
-import PricingCard from './PricingCard';
-import styles from '../landing.module.scss';
-
-async function handleSubscribe(plan: Plan): Promise<void> {
-  // TODO: replace this mock with a real call to /api/stripe/checkout
-  console.log(`[Stripe] Initiating checkout for plan: ${plan.name} | priceId: ${plan.priceId}`);
-
-  // Simulate async latency (remove in production)
-  await new Promise((resolve) => setTimeout(resolve, 1200));
-
-  //login
-  const ref = new URLSearchParams(window.location.search).get('ref');
-  const refParam = ref && ref.trim() ? `&ref=${encodeURIComponent(ref.trim())}` : '';
-  window.location.href = `${window.location.origin}/login?mode=register${refParam}`;
-}
-
-const valueProps = [
-  {
-    icon: <LayoutDashboard size={22} />,
-    title: 'Centralização total',
-    description: 'Todos os documentos, templates e projetos em um painel único e organizado.',
-  },
-  {
-    icon: <Shield size={22} />,
-    title: 'Padronização real',
-    description: 'Templates e estruturas consistentes que eliminam retrabalho e erros.',
-  },
-  {
-    icon: <Zap size={22} />,
-    title: 'Produtividade elevada',
-    description: 'Menos tempo procurando arquivos, mais tempo produzindo resultados.',
-  },
-  {
-    icon: <Users size={22} />,
-    title: 'Colaboração eficiente',
-    description: 'Equipes alinhadas, com controle de acesso e visibilidade compartilhada.',
-  },
-];
+const SALES_URL = 'https://www.silfi-tech.net/';
 
 export default function PricingSection() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-
-  const toggleFaq = (i: number) => setOpenFaq(openFaq === i ? null : i);
-
   return (
-    <>
-      <section className={styles.pricingHero} id="planos">
-        <div className={styles.pricingHeroOrb1} aria-hidden="true" />
-        <div className={styles.pricingHeroOrb2} aria-hidden="true" />
-
-        <div className={styles.sectionInner}>
-          <div className={styles.sectionHeader}>
-            <div className={styles.sectionBadge}>Planos &amp; Preços</div>
-            <h1 className={styles.sectionTitle}>
-              Escolha o plano{' '}
-              <span className={styles.sectionTitleAccent}>ideal para você</span>
-            </h1>
-            <p className={styles.sectionSubtitle}>
-              Do profissional autônomo à grande empresa, temos o plano certo para cada perfil.
-              Sem taxas ocultas. Cancele quando quiser.
-            </p>
-          </div>
-
-          <div className={styles.pricingGrid}>
-            {plans.map((plan) => (
-              <PricingCard key={plan.id} plan={plan} onSubscribe={handleSubscribe} />
-            ))}
-          </div>
-
-          <p className={styles.pricingDisclaimer}>
-            Pagamentos processados com segurança via{' '}
-            <span className={styles.pricingDisclaimerStripe}>Stripe</span>.
-            Todos os preços em BRL. Cobranças recorrentes mensais.
-          </p>
+    <section className={styles.pricing} id="planos">
+      <div className={ui.wrap}>
+        <div className={styles.head}>
+          <p className={ui.kicker}>Planos e preços</p>
+          <h2>Escolha como começar. Sem taxas ocultas.</h2>
+          <p>Valores em reais. Você pode trocar de plano a qualquer momento, com cobrança proporcional.</p>
         </div>
-      </section>
 
-      <section className={styles.pricingValueProps}>
-        <div className={styles.sectionInner}>
-          <div className={styles.sectionHeader} style={{ marginBottom: '3rem' }}>
-            <h2 className={styles.sectionTitle}>
-              Por que o{' '}
-              <span className={styles.sectionTitleAccent}>Bentifiles?</span>
-            </h2>
-            <p className={styles.sectionSubtitle}>
-              Uma plataforma feita para quem leva organização e produtividade a sério.
-            </p>
-          </div>
+        <div className={styles.plans}>
+          {plans.map((plan) => (
+            <article key={plan.id} className={plan.highlighted ? styles.featured : undefined}>
+              {plan.badge && <p className={styles.flag}>{plan.badge}</p>}
+              <h3>{plan.name}</h3>
+              <p className={styles.for}>{plan.description}</p>
 
-          <div className={styles.pricingValueGrid}>
-            {valueProps.map((prop, i) => (
-              <div key={i} className={styles.pricingValueCard}>
-                <div className={styles.pricingValueIcon}>{prop.icon}</div>
-                <h3 className={styles.pricingValueTitle}>{prop.title}</h3>
-                <p className={styles.pricingValueDesc}>{prop.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+              {plan.contactLabel ? (
+                <p className={styles.price}>
+                  <strong className={styles.consult}>Sob consulta</strong>
+                </p>
+              ) : (
+                <p className={styles.price}>
+                  <strong>{plan.monthlyPrice}</strong>
+                  <span>/mês</span>
+                </p>
+              )}
 
-      <section className={styles.pricingFaq} id="faq-cobranca">
-        <div className={styles.sectionInner}>
-          <div className={styles.sectionHeader}>
-            <div className={styles.sectionBadge}>Dúvidas sobre cobrança</div>
-            <h2 className={styles.sectionTitle}>
-              Perguntas{' '}
-              <span className={styles.sectionTitleAccent}>frequentes</span>
-            </h2>
-            <p className={styles.sectionSubtitle}>
-              Tudo o que você precisa saber sobre planos, pagamentos e assinatura.
-            </p>
-          </div>
+              {!plan.contactLabel && (
+                <p className={styles.alt}>
+                  No anual: <b>{plan.annualPrice}/mês</b> ({plan.annualTotal}), {plan.discount} de desconto.
+                </p>
+              )}
+              <p className={styles.note}>{plan.priceNote}</p>
 
-          <div className={styles.pricingFaqList}>
-            {billingFaqs.map((faq, i) => (
-              <div
-                key={i}
-                className={`${styles.faqItem} ${openFaq === i ? styles.faqItemOpen : ''}`}
-              >
-                <button
-                  className={styles.faqQuestion}
-                  onClick={() => toggleFaq(i)}
-                  aria-expanded={openFaq === i}
-                  id={`billing-faq-${i}`}
+              {plan.contactLabel ? (
+                <a className={`${ui.btn} ${ui.btnGhost}`} href={SALES_URL}>
+                  {plan.ctaLabel}
+                </a>
+              ) : (
+                <RegisterLink
+                  className={`${ui.btn} ${plan.highlighted ? ui.btnAmber : ui.btnInk}`}
+                  id={`subscribe-btn-${plan.id}`}
                 >
-                  <span>{faq.question}</span>
-                  <ChevronDown
-                    size={18}
-                    className={`${styles.faqChevron} ${openFaq === i ? styles.faqChevronOpen : ''}`}
-                  />
-                </button>
-                {openFaq === i && (
-                  <div className={styles.faqAnswer}>
-                    <p>{faq.answer}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+                  {plan.ctaLabel}
+                </RegisterLink>
+              )}
+            </article>
+          ))}
         </div>
-      </section>
-    </>
+
+        <p className={styles.footnote}>
+          Pagamento processado com segurança via Stripe. Cobranças recorrentes; cancele quando quiser pelo
+          painel e mantenha o acesso até o fim do período pago.
+        </p>
+      </div>
+    </section>
   );
 }

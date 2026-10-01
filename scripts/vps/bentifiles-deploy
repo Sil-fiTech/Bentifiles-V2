@@ -12,4 +12,8 @@ esac
 if [ -n "${SHA:-}" ] && ! [[ "$SHA" =~ ^[0-9a-f]{7,40}$ ]]; then echo "sha invalido"; exit 2; fi
 exec 9>"/var/lock/bentifiles-deploy-$ENV_NAME.lock"; flock -n 9 || { echo "deploy em andamento"; exit 3; }
 cd "$DIR"
-exec bash scripts/deploy.sh "$BRANCH" ${SHA:+"$SHA"}
+# Usa o deploy.sh da ponta de origin/<branch>: funciona mesmo se o checkout local ainda for antigo.
+git fetch --prune origin
+TMP="$(mktemp)"; trap 'rm -f "$TMP"' EXIT
+git show "origin/$BRANCH:scripts/deploy.sh" > "$TMP"
+bash "$TMP" "$BRANCH" ${SHA:+"$SHA"}

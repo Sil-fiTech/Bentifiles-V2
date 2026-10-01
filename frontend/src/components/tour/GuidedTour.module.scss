@@ -1,0 +1,171 @@
+@use '../../styles/tokens' as *;
+@use '../../styles/mixins' as *;
+
+// Camada acima do Nav (z-index 40) e dos modais da página.
+.root {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+}
+
+// Bloqueia cliques na página enquanto o guia está aberto.
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(24, 24, 27, 0.62);
+}
+
+// Com um alvo destacado, o recorte (.spot) faz o escurecimento; o fundo fica só para capturar cliques.
+.backdropClear {
+  background: transparent;
+}
+
+.spot {
+  position: fixed;
+  border-radius: $radius-xl;
+  box-shadow: 0 0 0 2px $amber-400, 0 0 0 100vmax rgba(24, 24, 27, 0.62);
+  pointer-events: none;
+  transition: top 0.25s ease, left 0.25s ease, width 0.25s ease, height 0.25s ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.popover {
+  position: fixed;
+  width: min(360px, calc(100vw - #{$sp-6}));
+  padding: $sp-5;
+  // Fundo opaco: --surface-card é translúcido no tema escuro e deixaria a página vazar sob o texto.
+  background: #fff;
+  color: var(--text-primary);
+  border: 1px solid var(--border-strong);
+  border-radius: $radius-xl;
+  box-shadow: $shadow-2xl;
+  font-family: $font-body;
+  outline: none;
+
+  :global([data-theme='dark']) & {
+    background: #1c1c20;
+  }
+
+  // Celular: folha presa à base, para não cobrir o destaque no topo.
+  &.sheet {
+    top: auto !important;
+    left: 0 !important;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 48dvh;
+    overflow-y: auto;
+    border-radius: $radius-3xl $radius-3xl 0 0;
+    border-width: 1px 0 0;
+    padding: $sp-4 $sp-4 calc(#{$sp-4} + env(safe-area-inset-bottom));
+  }
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: $sp-2;
+}
+
+.progress {
+  font-family: $font-mono;
+  font-size: 0.6875rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  opacity: 0.62;
+}
+
+.close {
+  @include btn-reset;
+  display: inline-flex;
+  padding: $sp-1;
+  border-radius: $radius-md;
+  color: var(--text-primary);
+  opacity: 0.62;
+
+  &:hover { opacity: 1; background: var(--surface-hover); }
+  &:focus-visible { outline: 2px solid $amber-500; outline-offset: 1px; }
+}
+
+.title {
+  margin: 0 0 $sp-2;
+  font-family: $font-headline;
+  font-size: 1.125rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.body {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--text-primary);
+  opacity: 0.84;
+}
+
+.foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $sp-3;
+  margin-top: $sp-4;
+}
+
+.dots {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  max-width: 45%;
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: $radius-full;
+  background: var(--text-primary);
+  opacity: 0.22;
+}
+
+.dotActive {
+  background: $amber-500;
+  opacity: 1;
+}
+
+.actions {
+  display: flex;
+  gap: $sp-2;
+  margin-left: auto;
+}
+
+.primary,
+.ghost {
+  @include btn-reset;
+  display: inline-flex;
+  align-items: center;
+  gap: $sp-1_5;
+  padding: $sp-2 $sp-3_5;
+  border-radius: $radius-md;
+  font-size: 0.8125rem;
+  font-weight: 600;
+
+  &:focus-visible { outline: 2px solid $amber-500; outline-offset: 2px; }
+}
+
+.primary {
+  background: $amber-400;
+  color: $zinc-900;
+
+  &:hover { background: $amber-500; }
+}
+
+.ghost {
+  color: var(--text-primary);
+  opacity: 0.75;
+
+  &:hover { background: var(--surface-hover); opacity: 1; }
+}

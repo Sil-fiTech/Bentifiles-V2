@@ -1,175 +1,78 @@
-'use client';
+import { ArrowRight } from 'lucide-react';
+import Logo from './Logo';
+import RegisterLink from './RegisterLink';
+import ui from '../landing.module.scss';
+import styles from './HeroSection.module.scss';
 
-import { useRouter } from 'next/navigation';
-import { ArrowRight, ChevronRight, FolderOpen, FileText, LayoutGrid, Users } from 'lucide-react';
-import { withRefParam } from '@/lib/affiliate/refLink';
-import styles from '../landing.module.scss';
+// exemplo ilustrativo: não são dados reais de clientes
+const rows = [
+  { doc: 'RG, frente e verso', who: 'Enviado por Maria Exemplo', state: 'ok', label: 'Aprovado' },
+  { doc: 'Comprovante de residência', who: 'Enviado por João Exemplo', state: 'bad', label: 'Ilegível' },
+  { doc: 'Contrato assinado', who: 'Aguardando envio', state: 'wait', label: 'Pendente' },
+  { doc: 'Certidão de nascimento', who: 'Enviado por Maria Exemplo', state: 'check', label: 'Validando' },
+] as const;
+
+const stampClass = {
+  ok: styles.stampOk,
+  bad: styles.stampBad,
+  wait: styles.stampWait,
+  check: styles.stampCheck,
+} as const;
 
 export default function HeroSection() {
-  const router = useRouter();
-
-  const handleScrollToFeatures = (e: React.MouseEvent) => {
-    e.preventDefault();
-    const el = document.querySelector('#recursos');
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
   return (
-    <section className={styles.hero} id="hero-section">
-      {/* Background orbs */}
-      <div className={styles.heroOrb1} />
-      <div className={styles.heroOrb2} />
-      <div className={styles.heroGrid} />
-
-      <div className={styles.heroContent}>
-        {/* Left column */}
-        <div className={styles.heroText}>
-          <div className={styles.heroBadge}>
-            <span className={styles.heroBadgeDot} />
-            Plataforma de Gestão Documental
-          </div>
-
-          <h1 className={styles.heroTitle}>
-            Garanta documentos{' '}
-            <span className={styles.heroTitleAccent}>legíveis</span>
-            {' '}antes que elas travem sua operação
+    <section className={styles.hero} id="inicio">
+      <div className={`${ui.wrap} ${styles.grid}`}>
+        <div className={styles.copy}>
+          <p className={ui.kicker}>Solicite · Valide · Aprove</p>
+          <h1>
+            Peça o documento.
+            <br />
+            Receba <mark>legível</mark>.
           </h1>
-
-          <p className={styles.heroSubtitle}>
-            O Bentifiles valida automaticamente a legibilidade dos documentos, gerencia os uploads e centraliza os arquivos em um só lugar.
-            Além disso, renomeia cada documento para manter o fluxo organizado e sem retrabalho.
+          <p className={styles.lead}>
+            No Bentifiles você solicita documentos aos seus clientes, acompanha quem já enviou e valida a
+            qualidade de cada arquivo antes de abrir. Chega de caçar anexo no WhatsApp e no e-mail.
           </p>
-
-          <div className={styles.heroCtas}>
-            <button
-              className={styles.heroCtaPrimary}
-              onClick={() => router.push(withRefParam('/login?mode=register'))}
-              id="hero-cta-primary"
-            >
-              Começar agora
-              <ArrowRight size={18} />
-            </button>
-            <button
-              className={styles.heroCtaSecondary}
-              onClick={handleScrollToFeatures}
-              id="hero-cta-secondary"
-            >
-              Ver recursos
-              <ChevronRight size={16} />
-            </button>
+          <div className={styles.cta}>
+            <RegisterLink className={`${ui.btn} ${ui.btnAmber}`}>
+              Criar conta
+              <ArrowRight size={18} strokeWidth={2.4} aria-hidden="true" />
+            </RegisterLink>
+            <a className={`${ui.btn} ${ui.btnGhost}`} href="#validacao">
+              Ver a validação
+            </a>
           </div>
-
-          <div className={styles.heroStats}>
-            <div className={styles.heroStat}>
-              <span className={styles.heroStatValue}>24/7</span>
-              <span className={styles.heroStatLabel}>Validação</span>
-            </div>
-            <div className={styles.heroStatDivider} />
-            <div className={styles.heroStat}>
-              <span className={styles.heroStatValue}>-</span>
-              <span className={styles.heroStatLabel}>Menos falhas</span>
-            </div>
-            <div className={styles.heroStatDivider} />
-            <div className={styles.heroStat}>
-              <span className={styles.heroStatValue}>+</span>
-              <span className={styles.heroStatLabel}>Fluxo contínuo</span>
-            </div>
-          </div>
+          <ul className={styles.facts}>
+            <li>100% web, nada para instalar</li>
+            <li>10 dias de teste no plano Individual</li>
+            <li>Cancele quando quiser, pelo painel</li>
+          </ul>
         </div>
 
-        {/* Right column - Dashboard mockup */}
-        <div className={styles.heroVisual}>
-          <div className={styles.dashboardMockup}>
-            {/* Mockup header */}
-            <div className={styles.mockupHeader}>
-              <div className={styles.mockupDots}>
-                <span className={styles.mockupDot} style={{ background: '#ef4444' }} />
-                <span className={styles.mockupDot} style={{ background: '#f59e0b' }} />
-                <span className={styles.mockupDot} style={{ background: '#10b981' }} />
-              </div>
-              <div className={styles.mockupTitle}>Dashboard - Bentifiles</div>
+        <figure className={styles.board} aria-label="Exemplo ilustrativo de uma fila de solicitações de documentos">
+          <div className={styles.bird} aria-hidden="true">
+            <Logo size={132} wordmark={false} />
+          </div>
+          <div className={styles.sheet}>
+            <div className={styles.sheetHead}>
+              <span>Projeto · Admissão</span>
+              <span>4 solicitações</span>
             </div>
-
-            {/* Mockup body */}
-            <div className={styles.mockupBody}>
-              {/* Sidebar */}
-              <div className={styles.mockupSidebar}>
-                <div className={styles.mockupSidebarItem + ' ' + styles.mockupSidebarActive}>
-                  <LayoutGrid size={12} /> Dashboard
-                </div>
-                <div className={styles.mockupSidebarItem}>
-                  <FolderOpen size={12} /> Projetos
-                </div>
-                <div className={styles.mockupSidebarItem}>
-                  <FileText size={12} /> Documentos
-                </div>
-                <div className={styles.mockupSidebarItem}>
-                  <Users size={12} /> Equipe
-                </div>
-              </div>
-
-              {/* Main panel */}
-              <div className={styles.mockupMain}>
-                <div className={styles.mockupStatsRow}>
-                  <div className={styles.mockupStatCard}>
-                    <span className={styles.mockupStatNum}>24</span>
-                    <span className={styles.mockupStatLbl}>Projetos</span>
+            <ul>
+              {rows.map((r) => (
+                <li key={r.doc}>
+                  <div>
+                    <strong>{r.doc}</strong>
+                    <span>{r.who}</span>
                   </div>
-                  <div className={styles.mockupStatCard}>
-                    <span className={styles.mockupStatNum}>187</span>
-                    <span className={styles.mockupStatLbl}>Documentos</span>
-                  </div>
-                  <div className={styles.mockupStatCard}>
-                    <span className={styles.mockupStatNum}>12</span>
-                    <span className={styles.mockupStatLbl}>Templates</span>
-                  </div>
-                </div>
-
-                <div className={styles.mockupList}>
-                  {['Contrato Social v2.pdf', 'Relatório Q1 2025.docx', 'Proposta Técnica.pdf'].map((name, i) => (
-                    <div key={i} className={styles.mockupListItem}>
-                      <div className={styles.mockupListIcon}>
-                        <FileText size={10} />
-                      </div>
-                      <div className={styles.mockupListInfo}>
-                        <span className={styles.mockupListName}>{name}</span>
-                        <span className={styles.mockupListMeta}>Projeto Alpha</span>
-                      </div>
-                      <div className={styles.mockupListBadge}>OK</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+                  <span className={`${styles.stamp} ${stampClass[r.state]}`}>{r.label}</span>
+                </li>
+              ))}
+            </ul>
+            <p className={styles.sheetFoot}>Exemplo ilustrativo, com dados fictícios.</p>
           </div>
-
-          {/* Floating cards */}
-          <div className={styles.floatingCard1}>
-            <div className={styles.floatingCardIcon}>
-              <FolderOpen size={16} />
-            </div>
-            <div>
-              <div className={styles.floatingCardTitle}>Projeto Alpha</div>
-              <div className={styles.floatingCardSub}>34 documentos</div>
-            </div>
-          </div>
-
-          <div className={styles.floatingCard2}>
-            <div className={styles.floatingCardCheckIcon}>OK</div>
-            <div>
-              <div className={styles.floatingCardTitle}>Imagem legível</div>
-              <div className={styles.floatingCardSub}>samfersill_RG.jpg</div>
-            </div>
-          </div>
-
-          <div className={styles.floatingCard3}>
-            <div className={styles.floatingCardStarIcon}>*</div>
-            <div>
-              <div className={styles.floatingCardTitle}>Template criado</div>
-              <div className={styles.floatingCardSub}>NDA Padrão</div>
-            </div>
-          </div>
-        </div>
+        </figure>
       </div>
     </section>
   );
