@@ -16,6 +16,7 @@ import {
     ChevronDown,
     User,
     CreditCard,
+    Gift,
     Shield,
     LogOut,
     Menu,
@@ -164,6 +165,13 @@ export function Nav({
                                 </button> */}
                             </>
                         )}
+                        <button
+                            className={styles.navBtn}
+                            onClick={() => router.push('/afiliado')}
+                            title="Programa de afiliados"
+                        >
+                            <Gift size={16} /> Afiliados
+                        </button>
                         {isSuperAdmin && (
                             <button
                                 className={styles.navBtn}
@@ -219,6 +227,13 @@ export function Nav({
                                     >
                                         <CreditCard size={16} />
                                         Assinatura
+                                    </button>
+                                    <button
+                                        className={styles.dropdownItem}
+                                        onClick={() => router.push('/afiliado')}
+                                    >
+                                        <Gift size={16} />
+                                        Afiliados
                                     </button>
                                     <div className={styles.dropdownDivider} />
                                     <button
@@ -371,6 +386,16 @@ export function Nav({
                             }}
                         >
                             <CreditCard size={16} /> Assinatura
+                        </button>
+
+                        <button
+                            className={styles.mobileNavBtn}
+                            onClick={() => {
+                                setIsMobileMenuOpen(false);
+                                router.push('/afiliado');
+                            }}
+                        >
+                            <Gift size={16} /> Afiliados
                         </button>
 
                         <button

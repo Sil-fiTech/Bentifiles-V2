@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import RegisterLink from './RegisterLink';
 import { plans } from '../data/plans';
 import ui from '../landing.module.scss';
 import styles from './PricingSection.module.scss';
@@ -45,13 +45,12 @@ export default function PricingSection() {
                   {plan.ctaLabel}
                 </a>
               ) : (
-                <Link
+                <RegisterLink
                   className={`${ui.btn} ${plan.highlighted ? ui.btnAmber : ui.btnInk}`}
-                  href="/login?mode=register"
                   id={`subscribe-btn-${plan.id}`}
                 >
                   {plan.ctaLabel}
-                </Link>
+                </RegisterLink>
               )}
             </article>
           ))}

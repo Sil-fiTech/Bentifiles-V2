@@ -53,7 +53,7 @@ def _build_analysis_result(raw_result: dict) -> AnalysisResult:
     status_raw = data.get("status", "reject")
     approved = status_raw == "approve"
     reasons = data.get("reasons", [])
-    readability = float(data.get("readability_score", 0.0))
+    readability = float(data.get("readability_score") or 0.0)
 
     return AnalysisResult(
         approved=approved,
@@ -64,10 +64,10 @@ def _build_analysis_result(raw_result: dict) -> AnalysisResult:
         score=readability,
         minScore=0.45,
         status="APPROVED" if approved else ("CONDITIONAL" if status_raw == "manual_review" else "REJECTED"),
-        blurScore=float(data.get("blur_score", 0.0)),
-        brightness=float(data.get("brightness_score", data.get("brightness", 0.0))),
+        blurScore=float(data.get("blur_score") or 0.0),
+        brightness=float(data.get("brightness_score") or data.get("brightness") or 0.0),
         textDetected=bool(data.get("document_detected", False)),
-        usefulAreaPct=float(data.get("area_ratio", 0.0)) * 100.0,
+        usefulAreaPct=float(data.get("area_ratio") or 0.0) * 100.0,
         recommendation=" | ".join(reasons) if reasons else "OK",
         thresholds=THRESHOLDS,
     )

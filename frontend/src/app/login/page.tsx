@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import { toast } from 'sonner';
+import { flushPendingAffiliateRef } from '@/lib/affiliate/affiliateApi';
 import { signIn, useSession } from 'next-auth/react';
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile';
 import styles from '../page.module.scss';
@@ -34,6 +35,7 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const inviteToken = searchParams.get('invite');
   const officeInviteToken = searchParams.get('officeInvite');
+  const affiliateRef = searchParams.get('ref');
   const urlMode = searchParams.get('mode');
   const resetToken = searchParams.get('token');
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '0x4AAAAAACvhVvi_0lSDhv6U';
@@ -92,6 +94,12 @@ function LoginContent() {
       localStorage.setItem('pendingOfficeInvite', officeInviteToken);
     }
   }, [officeInviteToken]);
+
+  useEffect(() => {
+    if (affiliateRef && affiliateRef.trim()) {
+      localStorage.setItem('pendingAffiliateRef', affiliateRef.trim());
+    }
+  }, [affiliateRef]);
 
   useEffect(() => {
     if (status === 'authenticated') {
@@ -174,6 +182,7 @@ function LoginContent() {
         if (res.data?.token) {
           localStorage.setItem('backend_token', String(res.data.token));
         }
+        await flushPendingAffiliateRef(res.data?.token);
         router.push('/dashboard');
         return;
       }
@@ -181,6 +190,7 @@ function LoginContent() {
       if (isRegister) {
         const pendingInvite = inviteToken || localStorage.getItem('pendingInvite');
         const pendingOfficeInvite = officeInviteToken || localStorage.getItem('pendingOfficeInvite');
+        const pendingAffiliateRef = affiliateRef || localStorage.getItem('pendingAffiliateRef');
         await api.post('/api/users/register', {
           name,
           email,
@@ -188,6 +198,7 @@ function LoginContent() {
           turnstileToken,
           inviteToken: pendingInvite,
           officeInviteToken: pendingOfficeInvite,
+          affiliateRef: pendingAffiliateRef,
         });
 
         toast.success('Conta criada! Verifique seu e-mail para validar a conta.');

@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
+import { flushPendingAffiliateRef } from '@/lib/affiliate/affiliateApi';
 import styles from './page.module.scss';
 import Link from 'next/link';
 
@@ -12,6 +13,7 @@ function VerifyEmailContent() {
     const token = searchParams.get('token');
     const inviteToken = searchParams.get('invite');
     const officeInviteToken = searchParams.get('officeInvite');
+    const affiliateRef = searchParams.get('ref');
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [message, setMessage] = useState('Verificando seu e-mail...');
 
@@ -49,6 +51,14 @@ function VerifyEmailContent() {
                     if (effectiveOfficeInvite) {
                         localStorage.removeItem('pendingOfficeInvite');
                     }
+                    if (affiliateRef && affiliateRef.trim()) {
+                        try {
+                            localStorage.setItem('pendingAffiliateRef', affiliateRef.trim());
+                        } catch {
+                            /* no-op */
+                        }
+                    }
+                    await flushPendingAffiliateRef(res.data.token);
                     setMessage('E-mail verificado com sucesso! Redirecionando para o painel...');
                     setTimeout(() => {
                         router.push('/dashboard');

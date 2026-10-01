@@ -5,3 +5,7 @@
 # and adding instructions for developers to copy it and fill in the necessary details.
 docker-compose.yml
 .codex
+.deploy_last_good
+
+# env da raiz (portas/prefixo por ambiente na VPS)
+/.env
