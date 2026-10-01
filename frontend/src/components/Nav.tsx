@@ -9,6 +9,7 @@ import { performLogout } from '@/lib/authClient';
 import {
     LayoutGrid,
     Folder,
+    Lightbulb,
     Plus,
     Loader2,
     ChevronDown,
@@ -20,6 +21,9 @@ import {
     Menu,
     X
 } from 'lucide-react';
+import GuidedTour from './tour/GuidedTour';
+import { TOURS, type TourId } from './tour/tours';
+import { useTourSeen } from './tour/useTourSeen';
 import styles from './Nav.module.scss';
 
 interface NavProps {
@@ -30,6 +34,8 @@ interface NavProps {
     context?: 'dashboard' | 'project';
     projectName?: string;
     className?: string;
+    /** Quando informado, exibe a lâmpada que abre o guia da página. */
+    tourId?: TourId;
 }
 
 export function Nav({
@@ -39,14 +45,18 @@ export function Nav({
     onLogout,
     context = 'dashboard',
     projectName,
-    className
+    className,
+    tourId
 }: NavProps) {
     const router = useRouter();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const [navUserName, setNavUserName] = useState('');
     const [navSystemRole, setNavSystemRole] = useState<string | null>(null);
+    const [tourOpen, setTourOpen] = useState(false);
+    const [tourSeen, markTourSeen] = useTourSeen(tourId);
     const profileRef = useRef<HTMLDivElement>(null);
+    const tourBtnRef = useRef<HTMLButtonElement>(null);
     const { data: session, status: sessionStatus } = useSession();
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -59,6 +69,20 @@ export function Nav({
     }, []);
 
     const isSticky = !className;
+
+    // A lâmpada pulsa até o guia ser aberto uma vez; ele nunca abre sozinho.
+    const openTour = () => {
+        setIsMobileMenuOpen(false);
+        setIsProfileOpen(false);
+        setTourOpen(true);
+        markTourSeen();
+    };
+
+    // Devolve o foco à lâmpada: nem todo navegador foca o botão ao clicar (ex.: Safari).
+    const closeTour = () => {
+        setTourOpen(false);
+        tourBtnRef.current?.focus();
+    };
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -127,6 +151,7 @@ export function Nav({
                                     onClick={onCreateProject}
                                     disabled={creating}
                                     className={styles.navBtn}
+                                    data-tour="new-project"
                                 >
                                     {creating ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
                                     Novo Projeto
@@ -135,6 +160,7 @@ export function Nav({
                                 <button
                                     onClick={() => router.push('/dashboard/documents')}
                                     className={styles.navBtn}
+                                    data-tour="templates"
                                 >
                                     <Folder size={16} /> Tipos & Templates
                                 </button>
@@ -150,6 +176,7 @@ export function Nav({
                                 <button
                                     onClick={() => router.push('/dashboard/documents')}
                                     className={styles.navBtn}
+                                    data-tour="templates"
                                 >
                                     <Folder size={16} /> Tipos & Templates
                                 </button>
@@ -182,8 +209,23 @@ export function Nav({
 
                 {/* Right Section */}
                 <div className={styles.right}>
+                    {tourId && (
+                        <button
+                            ref={tourBtnRef}
+                            type="button"
+                            className={`${styles.iconBtn} ${styles.tourBtn}`}
+                            onClick={openTour}
+                            aria-label="Abrir guia da plataforma"
+                            aria-haspopup="dialog"
+                            title="Guia da plataforma"
+                        >
+                            <Lightbulb size={18} />
+                            {!tourSeen && <span className={styles.tourHint} />}
+                        </button>
+                    )}
+
                     <div className={styles.actions}>
-                        <div className={styles.profileWrapper} ref={profileRef}>
+                        <div className={styles.profileWrapper} ref={profileRef} data-tour="profile">
                             <button
                                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                                 className={styles.profileBtn}
@@ -368,6 +410,10 @@ export function Nav({
                         </button>
                     </nav>
                 </div>
+            )}
+
+            {tourId && (
+                <GuidedTour steps={TOURS[tourId]} open={tourOpen} onClose={closeTour} />
             )}
         </header>
     );
