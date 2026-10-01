@@ -13,7 +13,6 @@ import {
     Folder, Zap, CheckCircle2, XCircle, FileIcon, Loader2, Archive
 } from 'lucide-react';
 import styles from './page.module.scss';
-import { profile } from 'console';
 
 interface Project {
     id: string;
@@ -233,7 +232,6 @@ export default function Dashboard() {
             <main className={styles.main}>
                 <Nav
                     userInitials={userInitials}
-                    hasActiveProcessing={hasActiveProcessing}
                     creating={creating}
                     onCreateProject={handleCreateProject}
                     onLogout={handleLogout}
@@ -298,7 +296,7 @@ export default function Dashboard() {
                                             <div className={styles.projectInfo}>
                                                 <h3 className={styles.projectName} title={project.name}>{project.name}</h3>
                                                 <p className={styles.projectDate}>
-                                                    Última mod.: {new Date(project.createdAt).toLocaleDateString()}
+                                                    Criado em {new Date(project.createdAt).toLocaleDateString()}
                                                 </p>
                                                 {/* <div style={{ display: 'flex', marginLeft: '-0.5rem' }}>
                                                     <div className={styles.projectAvatar}>{userInitials}</div>
@@ -362,11 +360,11 @@ export default function Dashboard() {
                                         <Zap size={16} />
                                     </div>
                                     <span className={styles.statLabel}>
-                                        {isReviewTab ? 'Aguardando Avaliação' : 'Total Uploads'}
+                                        {isReviewTab ? 'Aguardando avaliação' : 'Total de envios'}
                                     </span>
                                 </div>
                                 <p className={styles.statValue}>
-                                    {isReviewTab ? pendingFiles.length : files.length}
+                                    {isReviewTab ? pendingFiles.length : dashboardStats.total}
                                 </p>
                             </div>
                             {!isReviewTab && (

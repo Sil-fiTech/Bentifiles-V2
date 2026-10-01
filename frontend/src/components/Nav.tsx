@@ -9,8 +9,6 @@ import { performLogout } from '@/lib/authClient';
 import {
     LayoutGrid,
     Folder,
-    Search,
-    Bell,
     Plus,
     Loader2,
     ChevronDown,
@@ -26,7 +24,6 @@ import styles from './Nav.module.scss';
 
 interface NavProps {
     userInitials?: string;
-    hasActiveProcessing?: boolean;
     creating?: boolean;
     onCreateProject?: () => void;
     onLogout?: () => void;
@@ -37,7 +34,6 @@ interface NavProps {
 
 export function Nav({
     userInitials,
-    hasActiveProcessing = false,
     creating = false,
     onCreateProject,
     onLogout,
@@ -186,23 +182,7 @@ export function Nav({
 
                 {/* Right Section */}
                 <div className={styles.right}>
-                    <div className={styles.searchWrapper}>
-                        <Search className={styles.searchIcon} size={16} />
-                        <input
-                            className={styles.searchInput}
-                            placeholder="Buscar..."
-                            type="text"
-                        />
-                    </div>
-
                     <div className={styles.actions}>
-                        <button className={styles.iconBtn} aria-label="Notificações">
-                            <Bell size={18} />
-                            {hasActiveProcessing && <span className={styles.notifDot} />}
-                        </button>
-
-                        <div className={styles.divider} />
-
                         <div className={styles.profileWrapper} ref={profileRef}>
                             <button
                                 onClick={() => setIsProfileOpen(!isProfileOpen)}
@@ -346,27 +326,6 @@ export function Nav({
                         )}
 
                         <div className={styles.mobileDivider} />
-
-                        <div className={styles.mobileSearchWrapper}>
-                            <Search className={styles.searchIcon} size={16} />
-                            <input
-                                className={styles.searchInput}
-                                placeholder="Buscar..."
-                                type="text"
-                            />
-                        </div>
-
-                        <div className={styles.mobileDivider} />
-
-                        <button
-                            className={styles.mobileNavBtn}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                            <Bell size={16} /> Notificações
-                            {hasActiveProcessing && (
-                                <span className={styles.mobileNotifDot} />
-                            )}
-                        </button>
 
                         <button
                             className={styles.mobileNavBtn}
