@@ -16,6 +16,7 @@ import {
     User,
     CreditCard,
     Gift,
+    BookOpen,
     Shield,
     LogOut,
     Menu,
@@ -257,6 +258,13 @@ export function Nav({
                                         <Gift size={16} />
                                         Afiliados
                                     </button>
+                                    <button
+                                        className={styles.dropdownItem}
+                                        onClick={() => router.push('/docs')}
+                                    >
+                                        <BookOpen size={16} />
+                                        Documentação
+                                    </button>
                                     <div className={styles.dropdownDivider} />
                                     <button
                                         onClick={() => void handleLogout()}
@@ -397,6 +405,16 @@ export function Nav({
                             }}
                         >
                             <Gift size={16} /> Afiliados
+                        </button>
+
+                        <button
+                            className={styles.mobileNavBtn}
+                            onClick={() => {
+                                setIsMobileMenuOpen(false);
+                                router.push('/docs');
+                            }}
+                        >
+                            <BookOpen size={16} /> Documentação
                         </button>
 
                         <button

@@ -1,0 +1,45 @@
+export const meta = {
+  title: 'Membros, arquivar e excluir',
+  description: 'Remova participantes, arquive um projeto concluído ou exclua um projeto.',
+  order: 8,
+};
+
+Estas ações ficam em **Configurações do projeto**, acessível pelo botão no cabeçalho da página do projeto (só para quem administra).
+
+## Membros do projeto
+
+O cartão **Membros do Projeto** lista todas as pessoas que participam. Para tirar alguém, use o ícone **Remover membro do projeto** na linha dela e confirme. A mensagem de sucesso é "Membro removido com sucesso".
+
+## Arquivar um projeto
+
+Arquivar é o caminho para **encerrar** um projeto sem perdê-lo.
+
+<Steps>
+
+1. Em **Configurações do projeto**, vá até **Zona de Perigo**.
+2. Em **Arquivar Projeto**, clique em **Arquivar** e confirme.
+
+</Steps>
+
+Um projeto **arquivado**:
+
+- fica **somente para consulta**: não aceita alterações nem novos envios;
+- não permite gerar convites, e convites antigos deixam de funcionar ("Este projeto está arquivado (somente leitura)");
+- some da lista do painel, a menos que você use **Mostrar Arquivados**.
+
+Para voltar a usar o projeto, abra-o de novo em **Configurações do projeto** e clique em **Desarquivar**.
+
+## Excluir um projeto
+
+<Callout type="warning" title="A exclusão é irreversível">
+Em **Zona de Perigo**, o botão **Excluir** remove o projeto. O sistema pede confirmação e avisa que **não há como desfazer**. Se existe qualquer chance de você precisar do histórico, prefira **arquivar**.
+</Callout>
+
+## Qual escolher?
+
+| Quero... | Use |
+| --- | --- |
+| Encerrar, mas manter para consultar | **Arquivar** |
+| Pausar e retomar depois | **Arquivar**, depois **Desarquivar** |
+| Apagar de vez | **Excluir** |
+| Tirar uma pessoa, mantendo o projeto | **Remover membro** |

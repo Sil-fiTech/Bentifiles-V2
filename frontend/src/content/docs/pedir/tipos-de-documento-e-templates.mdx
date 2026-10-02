@@ -1,0 +1,53 @@
+export const meta = {
+  title: 'Tipos de documento e templates',
+  description: 'Cadastre os documentos que você costuma pedir e monte modelos de projeto reutilizáveis.',
+  order: 2,
+};
+
+Em **Tipos & Templates** (menu superior) você prepara o que vai pedir nos projetos. A tela tem duas abas.
+
+## Tipos de Documento
+
+Um **tipo de documento** é um item que pode ser pedido, como "RG", "CNH" ou "Comprovante de residência".
+
+### Criar um tipo
+
+<Steps>
+
+1. Abra **Tipos & Templates** e fique na aba **Tipos de Documento**.
+2. Em **Novo Tipo de Documento**, preencha o **Nome** (por exemplo, `CNH` ou `RG`).
+3. Se quiser, escreva uma **Descrição**. Ela aparece para quem vai enviar, então use para orientar ("Frente e verso, sem cortes").
+4. Clique em **Adicionar**.
+
+</Steps>
+
+### Editar e remover
+
+Cada tipo da lista pode ser editado (nome e descrição, depois **Salvar**) ou removido. Ao remover, o sistema pergunta se você tem certeza, porque a remoção **pode afetar os projetos que já usam aquele tipo**.
+
+## Templates de Projeto
+
+Um **template** é um modelo: uma lista pronta de documentos para você aplicar a vários projetos, em vez de marcar um por um. Por exemplo, "Onboarding PJ" com contrato social, cartão CNPJ e documento do sócio.
+
+### Criar um template
+
+<Steps>
+
+1. Na aba **Templates de Projeto**, informe o **Nome do Template** (obrigatório) e, se quiser, uma descrição do uso.
+2. Em **Selecione os Documentos para este Template**, busque entre os tipos cadastrados e selecione os que o modelo deve ter. Para cada um, você indica se ele é **obrigatório**.
+3. Salve. Todos os documentos do template precisam ter um nome.
+
+</Steps>
+
+### Duplicar e remover
+
+- **Duplicar** cria uma cópia do template, útil para fazer uma variação.
+- **Remover** tira o template da lista. Projetos que já o usaram **continuam funcionando**.
+
+<Callout type="tip">
+Cadastre primeiro os tipos que você mais usa e só depois monte os templates. Assim, na hora de criar o modelo, é só buscar e selecionar.
+</Callout>
+
+## Como usar no projeto
+
+Os tipos e templates são aplicados em cada projeto, em **Configurações do projeto**. Veja [Definir os documentos pedidos](/docs/pedir/definir-documentos-obrigatorios).
