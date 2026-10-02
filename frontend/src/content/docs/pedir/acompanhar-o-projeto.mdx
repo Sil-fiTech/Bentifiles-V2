@@ -1,0 +1,51 @@
+export const meta = {
+  title: 'Acompanhar o projeto',
+  description: 'Entenda as métricas do topo da página e o checklist de cada pessoa.',
+  order: 5,
+};
+
+A página do projeto é onde você vê, de uma vez, **quem já enviou o quê** e o que ainda falta.
+
+## Métricas do topo
+
+| Cartão | O que mostra |
+| --- | --- |
+| **Contribuidores** | Quantas pessoas participam do projeto. |
+| **Documentos Enviados** | Total de documentos enviados no projeto. |
+| **Revisões Pendentes** | Quantos envios estão esperando a sua decisão. |
+| **Progresso Geral** | Percentual de documentos pedidos que já foram concluídos. Mostra "—" e a mensagem "Sem documentos solicitados" quando o projeto ainda não tem lista de documentos. |
+
+<Callout type="info">
+Se o **Progresso Geral** aparece vazio, o motivo mais comum é que ainda não foram definidos os documentos pedidos. Veja [Definir os documentos pedidos](/docs/pedir/definir-documentos-obrigatorios).
+</Callout>
+
+## Checklist da equipe
+
+Abaixo das métricas, o **Checklist da Equipe** tem um cartão por **participante** (quem envia documentos). Os administradores do projeto não aparecem como cartão. Cada cartão traz:
+
+- nome e e-mail da pessoa;
+- uma barra de **Progresso** com o número de documentos concluídos sobre o total pedido;
+- o botão **Detalhes** (ou **Ocultar**) para abrir e fechar a lista.
+
+### Dentro de cada cartão
+
+Cada documento pedido aparece com seu nome, a descrição (ou "OBRIGATÓRIO" quando não há descrição) e um status:
+
+| Status | Significado |
+| --- | --- |
+| **Pendente** | Ainda não foi enviado. |
+| **Em Análise** | Foi enviado e aguarda a decisão de quem revisa. |
+| **Aprovado** | Foi aceito. |
+| **Rejeitado** | Foi recusado. O **motivo** aparece logo abaixo do nome do documento. |
+
+### Buscar uma pessoa
+
+Em projetos com muita gente, use **Buscar usuários...** acima da lista para filtrar por nome ou e-mail.
+
+## Ações em cada documento
+
+Para cada documento enviado há:
+
+- **Ver:** abre o arquivo.
+- **Baixar PDF**, com um menu para escolher entre **PDF** e **Original**. Veja [Baixar documentos](/docs/pedir/baixar-documentos).
+- **Aprovar** e **Rejeitar**, enquanto o documento está em análise. Veja [Revisar documentos](/docs/pedir/revisar-documentos).

@@ -1,0 +1,49 @@
+export const meta = {
+  title: 'Enviar um documento',
+  description: 'Como enviar cada documento pedido, quais formatos são aceitos e qual o tamanho máximo.',
+  order: 2,
+};
+
+Dentro do projeto, a seção **Meus Documentos** mostra a lista do que foi pedido a você. Cada item tem um status e, quando falta enviar, um botão **Upload**.
+
+## Enviar
+
+<Steps>
+
+1. Abra o projeto pelo painel.
+2. Em **Meus Documentos**, encontre o documento pedido (a descrição abaixo do nome diz o que enviar).
+3. Clique em **Upload** e escolha o arquivo, ou arraste o arquivo para o botão.
+4. Acompanhe a **barra de progresso**. Se for uma imagem, o Bentifiles confere a legibilidade durante o envio. Veja [Como funciona a validação](/docs/enviar/como-funciona-a-validacao).
+5. Quando terminar, o documento passa para **Em Análise**, aguardando quem pediu.
+
+</Steps>
+
+## Formatos e tamanho
+
+| | |
+| --- | --- |
+| **Formatos aceitos** | JPG, JPEG, PNG, PDF e DOCX |
+| **Tamanho máximo** | 10 MB por arquivo |
+
+O Bentifiles confere o **conteúdo real** do arquivo, não apenas a extensão. Renomear um arquivo para `.pdf` não faz dele um PDF, e o envio é recusado se o tipo verdadeiro não for aceito ou não coincidir com o informado.
+
+<Callout type="tip" title="Foto ou PDF?">
+Se você tem o documento em PDF, enviar o PDF costuma ser o caminho mais simples. Se for fotografar, siga as [dicas para fotografar bem](/docs/enviar/dicas-para-fotografar). Só as **imagens** passam pela conferência automática de legibilidade.
+</Callout>
+
+## Status que você vai ver
+
+| Status | O que significa |
+| --- | --- |
+| **Pendente** | Ainda não foi enviado. |
+| **Em Análise** | Enviado. Quem pediu ainda vai decidir. |
+| **Aprovado** | Aceito. |
+| **Rejeitado** | Recusado. O motivo aparece abaixo do nome do documento. |
+
+## Enviar de novo
+
+Se um documento foi rejeitado, o botão passa a ser **Re-enviar**. Veja [Documento rejeitado: o que fazer](/docs/enviar/documento-rejeitado).
+
+## Projeto arquivado
+
+Em projetos **arquivados**, os botões de envio não aparecem, porque o projeto está somente para consulta.
