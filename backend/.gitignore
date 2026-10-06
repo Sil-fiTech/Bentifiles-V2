@@ -48,4 +48,3 @@ package-lock.json
 /dev.db*
 *.md
 dist/
-tests/

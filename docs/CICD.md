@@ -1,7 +1,7 @@
 # CI/CD
 
 ## Fluxo
-- `ci.yml` (PR e push em main/dev/dev-V2): o job `changes` (paths-filter) detecta as areas tocadas e so elas rodam: build backend (prisma generate + tsc), lint+build frontend, smoke test do microservice (transitorio, ver abaixo) e o `docker build` da propria area. Area intocada fica *skipped*; falha em uma area nao bloqueia o build Docker das outras. Mudar o proprio `ci.yml` roda tudo.
+- `ci.yml` (PR e push em main/dev/dev-V2): o job `changes` (paths-filter) detecta as areas tocadas e so elas rodam: build + testes do backend (prisma generate + tsc + vitest), lint + testes + build do frontend, smoke test do microservice (transitorio, ver abaixo) e o `docker build` da propria area. Area intocada fica *skipped*; falha em uma area nao bloqueia o build Docker das outras. Mudar o proprio `ci.yml` roda tudo.
 - `deploy.yml`: apos CI verde em push na `main` deploya **prod**; em push na `dev` deploya **dev**. Tambem manual (Actions > Deploy > Run workflow; `sha` serve para rollback).
 - Na VPS o GitHub conecta com uma chave SSH restrita (`command=`) que so executa `/usr/local/bin/bentifiles-deploy prod|dev [sha]` (fonte: `scripts/vps/bentifiles-deploy`). Esse wrapper faz lock e chama `scripts/deploy.sh` no diretorio do ambiente.
 - `scripts/deploy.sh`: `git merge --ff-only`, depois redeploya **so os servicos cujo diff mudou** desde o ultimo deploy saudavel (`.deploy_last_good`): `frontend/` -> frontend; `backend/` -> backend + worker; `microservice/` -> python-microservice; `docker-compose.yml` ou `scripts/deploy.sh` (ou sem estado anterior) -> todos; so docs/CI -> nada. Usa `docker compose up -d --build --no-deps <servicos>` e healthcheck apenas desses servicos. Se falhar, volta ao ultimo SHA saudavel e o estado nao avanca (o proximo deploy refaz o que ficou pendente).
@@ -32,6 +32,6 @@ O deploy recusa rodar se houver arquivo rastreado modificado no servidor.
 ## Notas
 - VPS: 1 vCPU, 3.8 GB RAM, sem swap. Build das imagens no servidor e pesado; considere criar swap.
 - Lint do frontend roda com `continue-on-error` (ha debito existente).
-- Backend tem `npm test`, mas o CI so valida o build (o script chama `npm.cmd`, so funciona no Windows).
+- Testes unitarios com Vitest em `backend/tests/` e `frontend/tests/` (`npm test` em cada pasta; rodam no CI antes do build). Para novo teste: `<area>/tests/*.test.ts`. Ainda nao ha testes de integracao (rotas/banco) nem de componentes React.
 - O job de microservice e o `microservice/` sao transitorios: o motor tem repo/CI/deploy proprios (document-quality-pipeline). Remover aqui quando a producao passar a usar a imagem do motor.
 - Migrations Prisma nao rodam no deploy.
