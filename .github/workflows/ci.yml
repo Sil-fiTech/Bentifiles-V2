@@ -13,8 +13,37 @@ permissions:
   contents: read
 
 jobs:
+  # Detecta quais areas o diff tocou; jobs de areas intocadas sao pulados (skipped nao quebra o CI).
+  changes:
+    name: Detect changed areas
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      backend: ${{ steps.f.outputs.backend }}
+      frontend: ${{ steps.f.outputs.frontend }}
+      microservice: ${{ steps.f.outputs.microservice }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: f
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+              - '.github/workflows/ci.yml'
+            frontend:
+              - 'frontend/**'
+              - '.github/workflows/ci.yml'
+            microservice:
+              - 'microservice/**'
+              - '.github/workflows/ci.yml'
+
   backend:
     name: Backend (build)
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -32,6 +61,8 @@ jobs:
 
   frontend:
     name: Frontend (lint + build)
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -51,8 +82,12 @@ jobs:
         env:
           NEXT_TELEMETRY_DISABLED: "1"
 
+  # Transitorio: a producao ainda builda microservice/ deste repo. Remover junto com a pasta
+  # quando a producao passar a usar a imagem do motor (repo document-quality-pipeline).
   microservice:
     name: Microservice (smoke test)
+    needs: changes
+    if: needs.changes.outputs.microservice == 'true'
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -72,15 +107,23 @@ jobs:
   docker:
     name: Docker build (${{ matrix.service }})
     runs-on: ubuntu-latest
-    needs: [backend, frontend, microservice]
+    # Cada imagem so builda se a propria area mudou e o proprio teste passou; falha de outra area nao bloqueia.
+    # (matrix nao existe no `if` do job, entao a condicao fica nos steps.)
+    needs: [changes, backend, frontend, microservice]
+    if: ${{ !cancelled() }}
     strategy:
       fail-fast: false
       matrix:
         service: [backend, frontend, microservice]
+    env:
+      RUN: ${{ needs.changes.outputs[matrix.service] == 'true' && needs[matrix.service].result == 'success' }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/build-push-action@v6
+      - if: env.RUN == 'true'
+        uses: actions/checkout@v4
+      - if: env.RUN == 'true'
+        uses: docker/setup-buildx-action@v3
+      - if: env.RUN == 'true'
+        uses: docker/build-push-action@v6
         with:
           context: ./${{ matrix.service }}
           push: false
