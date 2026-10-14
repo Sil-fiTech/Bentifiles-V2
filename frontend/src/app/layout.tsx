@@ -5,15 +5,23 @@ import './globals.scss';
 import Providers from '../components/Providers';
 import ThemeToggleGate from '../components/ThemeToggleGate';
 import ThemedToaster from '../components/ThemedToaster';
+import { SITE_NAME, SITE_URL } from '@/lib/seo';
 
 const display = Bricolage_Grotesque({ subsets: ['latin'], variable: '--font-display', display: 'swap' });
 const body = Instrument_Sans({ subsets: ['latin'], variable: '--font-instrument', display: 'swap' });
 const mono = JetBrains_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-mono', display: 'swap' });
 
 export const metadata: Metadata = {
-  title: 'Bentifiles — Centralize, Organize e Padronize seus Documentos',
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: 'Bentifiles: solicite documentos e valide a legibilidade',
+    template: '%s | Bentifiles',
+  },
   description:
-    'O Bentifiles é uma plataforma de gestão de documentos, projetos e templates. Reduza o retrabalho e mantenha sua equipe alinhada com organização inteligente.',
+    'Peça documentos aos seus clientes, acompanhe os envios e valide a legibilidade de cada arquivo antes de abrir. 10 dias de teste no plano Individual.',
+  applicationName: SITE_NAME,
+  openGraph: { type: 'website', siteName: SITE_NAME, locale: 'pt_BR' },
+  twitter: { card: 'summary_large_image' },
 };
 
 export default function RootLayout({
