@@ -12,6 +12,8 @@ const navLinks = [
   { label: 'FAQ', href: '#faq' },
 ];
 
+const docsHref = '/docs';
+
 export default function LandingHeader() {
   return (
     <header className={styles.top}>
@@ -25,8 +27,12 @@ export default function LandingHeader() {
               {link.label}
             </a>
           ))}
+          <Link href={docsHref}>Documentação</Link>
         </nav>
         <div className={styles.actions}>
+          <Link className={styles.docs} href={docsHref}>
+            Documentação
+          </Link>
           <Link className={styles.enter} href="/login">
             Entrar
           </Link>

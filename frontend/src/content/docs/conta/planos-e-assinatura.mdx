@@ -1,0 +1,56 @@
+export const meta = {
+  title: 'Planos e assinatura',
+  description: 'Escolha um plano, entenda o período de teste e saiba como cancelar ou reativar.',
+  order: 2,
+};
+
+Para criar projetos é preciso ter uma assinatura ativa. Os planos e os valores atuais estão sempre na página [Planos](/plans). Esta página explica como a assinatura funciona; os preços não são repetidos aqui para não ficarem desatualizados.
+
+## Os planos
+
+| Plano | Para quem é |
+| --- | --- |
+| **Individual** | Profissionais autônomos. Tem **10 dias de teste** antes da primeira cobrança. |
+| **Office (por acesso)** | Equipes. O valor é por acesso (licença), e você escolhe a quantidade. Veja [Licenças Office](/docs/conta/licencas-office). |
+| **Empresarial** | Empresas que precisam de escala e suporte dedicado. A contratação é feita pelo botão **Falar com vendas**. |
+
+Os planos **Individual** e **Office** têm opção de cobrança **mensal** ou **anual**, com desconto no anual.
+
+## Assinar
+
+<Steps>
+
+1. Abra a página [Planos](/plans) ou clique em **Novo Projeto** sem assinatura, que leva você até ela.
+2. Escolha o ciclo (mensal ou anual) e clique no botão do plano (**Assinar Individual** ou **Assinar Office**).
+3. Conclua o pagamento na página segura da Stripe. Você volta ao Bentifiles ao terminar.
+
+</Steps>
+
+## Acompanhar a assinatura
+
+A página **Plano e Faturamento** (menu do avatar, **Assinatura**) mostra o plano, o ciclo de faturamento, a próxima cobrança e o histórico recente. O status pode ser:
+
+| Status | Significado |
+| --- | --- |
+| **Período de Teste** | Você está no teste gratuito. |
+| **Assinatura Ativa** | Tudo em dia. |
+| **Pagamento Pendente** | Houve problema na última cobrança. Atualize a forma de pagamento para evitar interrupções. |
+| **Assinatura Encerrada** | A assinatura terminou. |
+| **Sem Assinatura** | Você ainda não assinou nenhum plano. |
+
+### Forma de pagamento e faturas
+
+Use **Gerenciar no Portal Stripe** para trocar o cartão, ver faturas e dados do plano.
+
+## Cancelar e reativar
+
+- **Cancelar Plano:** a assinatura é **agendada para cancelamento** e continua valendo **até o fim do período já pago**. A tela avisa: "Sua assinatura está marcada para encerrar ao fim do período atual".
+- **Reativar Assinatura AGORA:** enquanto o cancelamento está só agendado, esse botão desfaz o cancelamento e a assinatura segue normalmente.
+
+<Callout type="info">
+Sem assinatura ativa, não é possível criar novos projetos.
+</Callout>
+
+## Quem é convidado para um plano Office
+
+Se alguém da sua empresa convidou você para uma licença Office, você não precisa assinar nada. Veja [Licenças Office](/docs/conta/licencas-office).

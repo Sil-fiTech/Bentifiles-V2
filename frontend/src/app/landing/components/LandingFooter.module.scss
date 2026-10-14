@@ -32,6 +32,10 @@
 }
 
 .copy {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.4rem 2rem;
   margin-top: 1.8rem;
   padding-top: 1.2rem;
   border-top: 1px solid var(--line);

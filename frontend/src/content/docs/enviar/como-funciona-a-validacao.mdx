@@ -1,0 +1,52 @@
+export const meta = {
+  title: 'Como funciona a validação automática',
+  description: 'O que o Bentifiles confere nas imagens, o que acontece quando uma imagem é recusada e o que ele não verifica.',
+  order: 3,
+};
+
+Quando você envia uma **imagem** (JPG, JPEG ou PNG), o Bentifiles a analisa na hora, antes de guardá-la. O objetivo é evitar que um documento ilegível chegue a quem vai revisar.
+
+## O que é conferido
+
+A análise procura o documento dentro da foto, endireita a perspectiva e avalia:
+
+| O que | Para que serve |
+| --- | --- |
+| **Nitidez** | Detecta fotos tremidas ou fora de foco. |
+| **Brilho e contraste** | Detecta imagens escuras demais, claras demais ou apagadas. |
+| **Reflexo** | Detecta brilho de luz que cobre parte do texto. |
+| **Presença de texto** | Verifica se há blocos de texto legíveis. |
+| **Enquadramento** | Detecta documento cortado ou muito inclinado. |
+
+Com base nisso, a imagem recebe uma nota de legibilidade e um resultado.
+
+## Os resultados possíveis
+
+| Resultado | O que acontece |
+| --- | --- |
+| **Aprovada** | O envio segue normalmente. |
+| **Revisão** | O envio segue, e a decisão final fica com uma pessoa. |
+| **Rejeitada** | O envio é **barrado** e o arquivo **não é salvo**. |
+
+## Quando a imagem é recusada
+
+Você vê a mensagem **"A imagem não atende aos critérios mínimos de qualidade"**, seguida do motivo, por exemplo "baixa evidência de texto legível" ou "nenhuma região plausível de documento encontrada". Basta **corrigir a foto e enviar de novo**.
+
+Cada imagem barrada conta em **Reprovados** no painel, mesmo sem ter sido salva.
+
+<Callout type="tip">
+O motivo mostrado é a melhor pista do que melhorar. Veja as [dicas para fotografar](/docs/enviar/dicas-para-fotografar).
+</Callout>
+
+## O que a validação NÃO faz
+
+<Callout type="warning" title="Qualidade da imagem, não autenticidade">
+A validação não confirma se o documento é verdadeiro, se os dados estão corretos ou se pertencem a você. Ela só avalia se a imagem está **legível**. A conferência do conteúdo é feita por quem revisa.
+</Callout>
+
+- **PDF e DOCX não passam por essa análise.** Eles são aceitos e seguem direto para a revisão.
+- Uma imagem aprovada ainda pode ser **rejeitada** por quem revisa, com um motivo.
+
+## Se a validação não responder
+
+Se o serviço de análise estiver indisponível, o envio é interrompido com a mensagem **"Falha ao validar a imagem. O serviço de análise pode estar indisponível."** Aguarde alguns minutos e tente de novo. Se persistir, veja [Problemas comuns](/docs/ajuda/problemas-comuns).

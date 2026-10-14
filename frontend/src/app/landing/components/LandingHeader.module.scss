@@ -50,6 +50,18 @@
   }
 }
 
+.docs {
+  display: none;
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--ink-2);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--ink);
+  }
+}
+
 .enter {
   font-weight: 600;
   font-size: 0.95rem;
@@ -67,10 +79,15 @@
   .nav {
     display: none;
   }
+
+  .docs {
+    display: inline;
+  }
 }
 
 @media (max-width: 480px) {
-  .enter {
+  .enter,
+  .docs {
     display: none;
   }
 }

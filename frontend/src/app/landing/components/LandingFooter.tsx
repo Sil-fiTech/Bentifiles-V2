@@ -12,6 +12,7 @@ export default function LandingFooter() {
           <a href="#como-funciona">Como funciona</a>
           <a href="#planos">Planos</a>
           <a href="#faq">FAQ</a>
+          <a href="/docs">Documentação</a>
           <a href="/terms-of-service">Termos de Serviço e Privacidade</a>
         </nav>
         <div className={styles.maker}>
@@ -21,7 +22,10 @@ export default function LandingFooter() {
           </a>
         </div>
       </div>
-      <p className={`${ui.wrap} ${styles.copy}`}>© 2026 Bentifiles. Todos os direitos reservados.</p>
+      <p className={`${ui.wrap} ${styles.copy}`}>
+        <span>© 2026 Bentifiles. Todos os direitos reservados.</span>
+        <span>Silfi-Tech · CNPJ 62.326.981/0001-19</span>
+      </p>
     </footer>
   );
 }

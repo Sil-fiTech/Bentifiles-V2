@@ -1,0 +1,57 @@
+export const meta = {
+  title: 'Criar conta e entrar',
+  description: 'Como se cadastrar, confirmar o e-mail, entrar com Google e recuperar a senha.',
+  order: 2,
+};
+
+Você pode criar uma conta com **e-mail e senha** ou entrar com a sua **conta Google**. A tela de entrada e de cadastro é a mesma: `/login`.
+
+## Criar uma conta com e-mail
+
+<Steps>
+
+1. Abra a tela de entrada e escolha **criar conta**.
+2. Informe nome, e-mail e uma senha, e repita a senha para confirmar.
+3. Conclua a **verificação de segurança** que aparece na tela (ela existe para barrar robôs).
+4. Envie o formulário. O Bentifiles manda um e-mail para você confirmar o endereço.
+5. Abra o e-mail e clique no link de confirmação. **O link vale por 24 horas.**
+
+</Steps>
+
+### Requisitos da senha
+
+A senha precisa ter, no mínimo:
+
+- 8 caracteres;
+- 1 letra maiúscula;
+- 1 letra minúscula;
+- 1 número;
+- 1 símbolo (por exemplo `!`, `@`, `#`).
+
+Se algum requisito faltar, o sistema avisa antes de criar a conta.
+
+### Não recebeu o e-mail de confirmação?
+
+Confira a caixa de spam. Se não estiver lá, volte à tela de entrada, informe o e-mail usado no cadastro e peça o reenvio. Você receberá um novo link.
+
+## Entrar com o Google
+
+Na tela de entrada, use a opção de entrar com o Google. Não é preciso criar uma senha separada.
+
+## Esqueci minha senha
+
+<Steps>
+
+1. Na tela de entrada, clique em **Esqueci minha senha**.
+2. Informe o e-mail da conta.
+3. Se o e-mail estiver cadastrado, você recebe um link para criar uma nova senha. **Esse link vale por 1 hora.**
+
+</Steps>
+
+<Callout type="info">
+Por segurança, a mensagem na tela é a mesma exista ou não uma conta com aquele e-mail. Se o e-mail não chegar, confira se digitou o endereço certo.
+</Callout>
+
+## Entrando por um convite
+
+Se você chegou por um link de convite, o cadastro ou a entrada leva você direto ao projeto. Veja [Aceitar um convite](/docs/enviar/aceitar-um-convite).
