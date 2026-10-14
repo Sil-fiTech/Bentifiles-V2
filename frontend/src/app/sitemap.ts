@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { getAllPages } from '@/lib/docs/content';
+import { segments } from './para/data/segments';
 import { SITE_URL } from '@/lib/seo';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -7,6 +8,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return [
         { url: `${SITE_URL}/`, changeFrequency: 'monthly', priority: 1 },
+        ...segments.map((s) => ({
+            url: `${SITE_URL}/para/${s.slug}`,
+            changeFrequency: 'monthly' as const,
+            priority: 0.8,
+        })),
         { url: `${SITE_URL}/docs`, changeFrequency: 'monthly', priority: 0.7 },
         { url: `${SITE_URL}/docs/videos`, changeFrequency: 'monthly', priority: 0.5 },
         ...docs.map((page) => ({

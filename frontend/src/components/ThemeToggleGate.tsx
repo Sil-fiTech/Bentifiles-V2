@@ -7,6 +7,7 @@ const LOGGED_PREFIXES = ['/dashboard', '/projects', '/admin', '/profile', '/subs
 const PUBLIC_PREFIXES = [
   '/',
   '/landing',
+  '/para',
   '/login',
   '/signup',
   '/plans',
