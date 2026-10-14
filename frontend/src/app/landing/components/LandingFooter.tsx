@@ -22,7 +22,10 @@ export default function LandingFooter() {
           </a>
         </div>
       </div>
-      <p className={`${ui.wrap} ${styles.copy}`}>© 2026 Bentifiles. Todos os direitos reservados.</p>
+      <p className={`${ui.wrap} ${styles.copy}`}>
+        <span>© 2026 Bentifiles. Todos os direitos reservados.</span>
+        <span>Silfi-Tech · CNPJ 62.326.981/0001-19</span>
+      </p>
     </footer>
   );
 }
