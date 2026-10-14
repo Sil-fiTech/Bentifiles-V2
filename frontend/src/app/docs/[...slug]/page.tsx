@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation';
 import { Video } from '@/components/docs/Video';
 import { getAllPages, getNeighbours, getPage, getToc } from '@/lib/docs/content';
 import { SECTIONS } from '@/lib/docs/sections';
+import { openGraphFor } from '@/lib/seo';
 import styles from '@/components/docs/docs.module.scss';
 
 type Params = { slug: string[] };
@@ -19,7 +20,13 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     const { slug } = await params;
     const page = await getPage(slug);
     if (!page) return {};
-    return { title: page.meta.title, description: page.meta.description };
+    const path = `/docs/${page.file}`;
+    return {
+        title: page.meta.title,
+        description: page.meta.description,
+        alternates: { canonical: path },
+        openGraph: openGraphFor({ title: page.meta.title, description: page.meta.description, path, type: 'article' }),
+    };
 }
 
 export default async function DocPage({ params }: { params: Promise<Params> }) {

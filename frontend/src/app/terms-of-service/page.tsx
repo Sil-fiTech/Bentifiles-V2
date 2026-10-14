@@ -1,4 +1,11 @@
+import type { Metadata } from 'next';
 import styles from './page.module.scss';
+
+export const metadata: Metadata = {
+  title: 'Termos de Serviço e Política de Privacidade',
+  description: 'Termos de uso do Bentifiles e como tratamos seus dados pessoais, conforme a LGPD.',
+  alternates: { canonical: '/terms-of-service' },
+};
 
 export default function TermsOfService() {
   return (
