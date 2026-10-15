@@ -3,9 +3,10 @@ import prisma from '../prisma';
 import { AuthRequest } from '../middleware/auth';
 import axios from 'axios';
 import FormData from 'form-data';
-import { getFileFromR2, getFileUrl } from '../services/r2Service';
-import { storeFile } from '../services/storage';
-import { encryptField } from '../services/storage/envelopeCrypto';
+import { readFile, storeFile } from '../services/storage';
+import { storageErrorToHttp } from '../services/storage/httpErrors';
+import { decryptField, encryptField } from '../services/storage/envelopeCrypto';
+import { logFileAccess } from '../services/fileAccessLogService';
 import { serializeFile } from '../services/storage/serializeFile';
 
 const DEFAULT_DOWNLOAD_FORMAT = 'pdf';
@@ -283,15 +284,7 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
             orderBy: { createdAt: 'desc' }
         });
 
-        // Regenerate fresh URLs for each file (fixes old files with expired signed URLs)
-        const filesWithFreshUrls = await Promise.all(
-            files.map(async (file) => ({
-                ...file,
-                url: await getFileUrl(file.filename),
-            }))
-        );
-
-        res.json({ files: filesWithFreshUrls });
+        res.json({ files: files.map(serializeFile) });
     } catch (error) {
         console.error('Get files error:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
@@ -300,26 +293,19 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
 
 export const getFileBase64 = async (req: AuthRequest, res: Response) => {
     try {
-        const { url } = req.query;
+        const { fileId } = req.query;
         const requestedFormat = resolveDownloadFormat(req.query.format);
-        if (!url || typeof url !== 'string') {
-            return res.status(400).json({ message: 'URL do arquivo não fornecida' });
-        }
-
-        // Extract filename from URL (last segment before query params)
-        const urlWithoutQuery = url.split('?')[0];
-        const filename = urlWithoutQuery ? urlWithoutQuery.split('/').pop() : null;
-
-        if (!filename) {
-            return res.status(400).json({ message: 'Nome do arquivo não encontrado na URL' });
+        const action = req.query.purpose === 'view' ? 'VIEW' : 'DOWNLOAD';
+        if (!fileId || typeof fileId !== 'string') {
+            return res.status(400).json({ message: 'fileId não fornecido' });
         }
 
         const userId = req.user?.userId;
         if (!userId) return res.status(401).json({ message: 'Não autorizado' });
 
         // Security check (IDOR fix)
-        const fileRecord = await prisma.file.findFirst({
-            where: { filename },
+        const fileRecord = await prisma.file.findUnique({
+            where: { id: fileId },
             include: { project: { include: { members: true } } }
         });
 
@@ -329,33 +315,31 @@ export const getFileBase64 = async (req: AuthRequest, res: Response) => {
 
         const isOwner = fileRecord.userId === userId;
         const isMember = fileRecord.project?.members.some(m => m.userId === userId);
-        
+
         if (!isOwner && !isMember) {
             return res.status(403).json({ message: 'Acesso negado. Você não pertence a este projeto.' });
         }
 
         let fileBuffer: Buffer;
-        let mimeType: string;
-
         try {
-            const r2Data = await getFileFromR2(filename);
-            fileBuffer = r2Data.buffer;
-            mimeType = r2Data.contentType;
-        } catch (r2Error) {
-            console.error(`Failed to fetch ${filename} from R2:`, r2Error);
-            return res.status(404).json({ message: 'Arquivo não encontrado' });
+            fileBuffer = await readFile(fileRecord);
+        } catch (storageError) {
+            const mapped = storageErrorToHttp(storageError);
+            if (mapped) return res.status(mapped.status).json({ message: mapped.message });
+            throw storageError;
         }
 
         const downloadPayload = await buildDownloadPayload({
             buffer: fileBuffer,
-            originalName: fileRecord.originalName,
-            mimeType,
+            originalName: decryptField(fileRecord.originalName),
+            mimeType: fileRecord.mimetype,
             requestedFormat,
         });
 
-        const base64 = downloadPayload.buffer.toString('base64');
+        await logFileAccess([{ fileId: fileRecord.id, userId, action, ip: req.ip ?? null }]);
+
         res.json({
-            base64,
+            base64: downloadPayload.buffer.toString('base64'),
             mimeType: downloadPayload.mimeType,
             filename: downloadPayload.filename,
             format: downloadPayload.format,
@@ -430,7 +414,7 @@ export const getPendingFiles = async (req: AuthRequest, res: Response) => {
             },
         });
 
-        res.json({ files: pendingFiles });
+        res.json({ files: pendingFiles.map(serializeFile) });
     } catch (error) {
         console.error('[Pending Files] Error:', error);
         res.status(500).json({ message: 'Erro ao buscar arquivos pendentes' });
@@ -489,22 +473,22 @@ export const getProjectFilesBase64 = async (req: AuthRequest, res: Response) => 
             return res.json({ files: [] });
         }
 
-        // Fetch all files from R2 in parallel
         const filesData = await Promise.all(
             clientDocuments.map(async (doc: any) => {
                 try {
-                    const r2Data = await getFileFromR2(doc.file.filename);
+                    const originalName = decryptField(doc.file.originalName);
+                    const buffer = await readFile(doc.file);
                     const downloadPayload = await buildDownloadPayload({
-                        buffer: r2Data.buffer,
-                        originalName: doc.file.originalName,
-                        mimeType: r2Data.contentType,
+                        buffer,
+                        originalName,
+                        mimeType: doc.file.mimetype,
                         requestedFormat,
                     });
-                    
+
                     return {
                         id: doc.id,
-                        originalName: doc.file.originalName,
-                        filename: doc.file.filename,
+                        fileId: doc.file.id,
+                        originalName,
                         downloadName: downloadPayload.filename,
                         mimeType: downloadPayload.mimeType,
                         base64: downloadPayload.buffer.toString('base64'),
@@ -516,16 +500,17 @@ export const getProjectFilesBase64 = async (req: AuthRequest, res: Response) => 
                         }
                     };
                 } catch (error) {
-                    console.error(`Failed to fetch file ${doc.file?.filename} from R2:`, error);
+                    console.error(`Failed to read file ${doc.file?.id}:`, error);
                     return null;
                 }
             })
         );
 
-        // Filter out any failed R2 fetches
-        const successfulFiles = filesData.filter(f => f !== null);
+        const successfulFiles = filesData.filter((f): f is NonNullable<typeof f> => f !== null);
 
-        res.json({ files: successfulFiles });
+        await logFileAccess(successfulFiles.map((f) => ({ fileId: f.fileId, userId, action: 'ZIP' as const, ip: req.ip ?? null })));
+
+        res.json({ files: successfulFiles, skipped: filesData.length - successfulFiles.length });
     } catch (error) {
         console.error('Get project files base64 error:', error);
         res.status(500).json({ message: 'Erro interno ao buscar arquivos do projeto' });

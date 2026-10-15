@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import prisma from '../prisma';
 import { AuthRequest } from '../middleware/auth';
 import { generateSlug } from '../utils/slugify';
+import { serializeFile } from '../services/storage/serializeFile';
 
 /**
  * Global Document Types
@@ -259,7 +260,7 @@ export const uploadClientDocument = async (req: AuthRequest, res: Response) => {
             }
         });
 
-        res.status(201).json(clientDoc);
+        res.status(201).json({ ...clientDoc, file: serializeFile(clientDoc.file) });
     } catch (error) {
         console.error('Error uploading client document:', error);
         res.status(500).json({ message: 'Erro ao salvar documento do cliente' });
@@ -296,7 +297,7 @@ export const getClientDocuments = async (req: AuthRequest, res: Response) => {
             orderBy: { createdAt: 'desc' }
         });
 
-        res.json(docs);
+        res.json(docs.map((doc) => ({ ...doc, file: serializeFile(doc.file) })));
     } catch (error) {
         console.error('Error getting client docs:', error);
         res.status(500).json({ message: 'Erro interno' });
@@ -356,7 +357,7 @@ export const updateClientDocumentStatus = async (req: AuthRequest, res: Response
             }
         });
 
-        res.json(updatedDoc);
+        res.json({ ...updatedDoc, file: serializeFile(updatedDoc.file) });
     } catch (error) {
         console.error('Error updating document status:', error);
         res.status(500).json({ message: 'Erro ao avaliar documento' });

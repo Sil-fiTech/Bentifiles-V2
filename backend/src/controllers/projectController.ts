@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthRequest } from '../middleware/auth';
 import prisma from '../prisma';
 import { generateSlug } from '../utils/slugify';
+import { serializeFile } from '../services/storage/serializeFile';
 
 export const getProjects = async (req: AuthRequest, res: Response) => {
     try {
@@ -133,7 +134,7 @@ export const getProjectDocuments = async (req: AuthRequest, res: Response) => {
             orderBy: { createdAt: 'desc' },
         });
 
-        res.status(200).json({ files });
+        res.status(200).json({ files: files.map(serializeFile) });
     } catch (error) {
         console.error('Error fetching project documents:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
@@ -207,14 +208,14 @@ export const getProjectDetails = async (req: AuthRequest, res: Response) => {
                 status: project.status,
                 createdAt: project.createdAt
             },
-            files,
+            files: files.map(serializeFile),
             members: project.members.map(m => ({
                 userId: m.userId,
                 user: m.user,
                 permissions: getPermissions(m.role)
             })),
             requiredDocuments: project.requiredDocuments,
-            clientDocuments: clientDocs,
+            clientDocuments: clientDocs.map((doc) => ({ ...doc, file: serializeFile(doc.file) })),
             currentUserPermissions
         });
     } catch (error) {
