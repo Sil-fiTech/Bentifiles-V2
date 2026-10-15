@@ -30,6 +30,12 @@ describe('storageErrorToHttp', () => {
   it('mapeia NOT_FOUND para 404', () => {
     expect(storageErrorToHttp(new StorageError('NOT_FOUND', 'x'))?.status).toBe(404);
   });
+  it('mapeia NOT_FOUND de arquivo no Drive para 410', () => {
+    expect(storageErrorToHttp(new StorageError('NOT_FOUND', 'x'), 'GDRIVE')).toEqual({ status: 410, message: 'Arquivo removido do Google Drive' });
+  });
+  it('mantém 404 para NOT_FOUND no R2', () => {
+    expect(storageErrorToHttp(new StorageError('NOT_FOUND', 'x'), 'R2')?.status).toBe(404);
+  });
   it('mapeia DISCONNECTED para 409', () => {
     expect(storageErrorToHttp(new StorageError('DISCONNECTED', 'x'))?.status).toBe(409);
   });

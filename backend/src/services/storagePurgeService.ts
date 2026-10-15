@@ -70,17 +70,25 @@ const sendWarnings = async (now: Date): Promise<number> => {
 
 const purgeFiles = async (now: Date, batchSize: number): Promise<{ purged: number; failed: number }> => {
     const failedIds: string[] = [];
+    const skippedIds: string[] = [];
     let purged = 0;
 
     while (true) {
-        const where: Prisma.FileWhereInput = failedIds.length > 0
-            ? { ...purgeableFilesWhere(now), id: { notIn: failedIds } }
+        const excludedIds = [...failedIds, ...skippedIds];
+        const where: Prisma.FileWhereInput = excludedIds.length > 0
+            ? { ...purgeableFilesWhere(now), id: { notIn: excludedIds } }
             : purgeableFilesWhere(now);
         const files = await prisma.file.findMany({ where, take: batchSize });
         if (files.length === 0) break;
 
         for (const file of files) {
             try {
+                // O projeto pode ter sido desarquivado entre a seleção e agora.
+                const stillEligible = await prisma.file.count({ where: { id: file.id, ...purgeableFilesWhere(now) } });
+                if (stillEligible === 0) {
+                    skippedIds.push(file.id);
+                    continue;
+                }
                 await deleteStoredFile(file);
                 // Sem a DEK o arquivo é irrecuperável mesmo que o objeto sobreviva em algum backup.
                 await prisma.file.update({

@@ -124,6 +124,7 @@ export default function StorageCard({ returnPath }: { returnPath: '/profile' | '
                         <div className={styles.actions}>
                             <button className={styles.primary} onClick={createDefaultFolder} disabled={busy}>Criar pasta &quot;BentiFiles&quot; no Meu Drive</button>
                             <button className={styles.secondary} onClick={chooseFolder} disabled={busy}>Escolher pasta (inclui Drive compartilhado)</button>
+                            <button className={styles.danger} onClick={disconnect} disabled={busy}>Desconectar</button>
                         </div>
                     ) : (
                         <div className={styles.actions}>

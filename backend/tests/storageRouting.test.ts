@@ -44,9 +44,22 @@ describe('resolveConnectionForProject', () => {
     await expect(resolveConnectionForProject('p1')).resolves.toBe(officeConn);
   });
 
-  it('usa o Drive do criador quando o escritório não conectou', async () => {
+  it('criador com vaga no escritório nunca usa o Drive pessoal: sem Drive do escritório vai para o R2', async () => {
     getOfficeSeatAccessForUser.mockResolvedValue({ subscriptionId: 's1' });
     prismaMock.storageConnection.findUnique.mockImplementation(({ where }: any) => (where.subscriptionId ? null : ownConn));
+    await expect(resolveConnectionForProject('p1')).resolves.toBeNull();
+    expect(prismaMock.storageConnection.findUnique).not.toHaveBeenCalledWith({ where: { userId: 'creator' } });
+  });
+
+  it('criador com vaga e Drive do escritório inutilizável também vai para o R2', async () => {
+    getOfficeSeatAccessForUser.mockResolvedValue({ subscriptionId: 's1' });
+    prismaMock.storageConnection.findUnique.mockImplementation(({ where }: any) => (where.subscriptionId ? { ...officeConn, status: 'REVOKED' } : ownConn));
+    await expect(resolveConnectionForProject('p1')).resolves.toBeNull();
+  });
+
+  it('criador sem vaga usa o próprio Drive', async () => {
+    getOfficeSeatAccessForUser.mockResolvedValue(null);
+    prismaMock.storageConnection.findUnique.mockImplementation(({ where }: any) => (where.subscriptionId ? officeConn : ownConn));
     await expect(resolveConnectionForProject('p1')).resolves.toBe(ownConn);
   });
 

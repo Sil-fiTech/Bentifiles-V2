@@ -325,7 +325,7 @@ export const getFileBase64 = async (req: AuthRequest, res: Response) => {
         try {
             fileBuffer = await readFile(fileRecord);
         } catch (storageError) {
-            const mapped = storageErrorToHttp(storageError);
+            const mapped = storageErrorToHttp(storageError, fileRecord.storageProvider);
             if (mapped) return res.status(mapped.status).json({ message: mapped.message });
             throw storageError;
         }

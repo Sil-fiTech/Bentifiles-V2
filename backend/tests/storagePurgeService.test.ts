@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const prismaMock = vi.hoisted(() => ({
   project: { findMany: vi.fn(), update: vi.fn() },
-  file: { findMany: vi.fn(), update: vi.fn() },
+  file: { findMany: vi.fn(), update: vi.fn(), count: vi.fn() },
 }));
 vi.mock('../src/prisma', () => ({ default: prismaMock }));
 const deleteStoredFile = vi.hoisted(() => vi.fn());
@@ -20,6 +20,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   prismaMock.project.findMany.mockResolvedValue([]);
   prismaMock.file.findMany.mockResolvedValue([]);
+  prismaMock.file.count.mockResolvedValue(1);
   sendProjectPurgeWarningEmail.mockResolvedValue(true);
 });
 
@@ -82,6 +83,21 @@ describe('runStoragePurgeCycle', () => {
     await runStoragePurgeCycle({ now });
     const secondQuery = prismaMock.file.findMany.mock.calls[1]?.[0];
     expect(secondQuery.where.id).toEqual({ notIn: ['a'] });
+  });
+
+  it('pula o arquivo que deixou de ser elegível (projeto desarquivado) sem apagar nem marcar', async () => {
+    const file = { id: 'f1', storageProvider: 'R2', storageRef: 'k1' };
+    prismaMock.file.findMany.mockResolvedValueOnce([file]).mockResolvedValueOnce([]);
+    prismaMock.file.count.mockResolvedValueOnce(0);
+
+    const summary = await runStoragePurgeCycle({ now });
+
+    expect(prismaMock.file.count).toHaveBeenCalledWith({ where: { id: 'f1', ...purgeableFilesWhere(now) } });
+    expect(deleteStoredFile).not.toHaveBeenCalled();
+    expect(prismaMock.file.update).not.toHaveBeenCalled();
+    expect(summary).toEqual({ warned: 0, purged: 0, failed: 0 });
+    const secondQuery = prismaMock.file.findMany.mock.calls[1]?.[0];
+    expect(secondQuery.where.id).toEqual({ notIn: ['f1'] });
   });
 
   it('envia o aviso aos ADMINs e grava purgeWarningSentAt', async () => {

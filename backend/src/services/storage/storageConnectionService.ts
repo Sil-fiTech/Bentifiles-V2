@@ -15,8 +15,9 @@ export const resolveConnectionForProject = async (projectId: string): Promise<St
 
     const seat = await getOfficeSeatAccessForUser(project.createdByUserId);
     if (seat) {
+        // Projetos de quem tem vaga no escritório nunca vão para o Drive pessoal: escritório ou R2.
         const office = await prisma.storageConnection.findUnique({ where: { subscriptionId: seat.subscriptionId } });
-        if (isUsable(office)) return office;
+        return isUsable(office) ? office : null;
     }
 
     const own = await prisma.storageConnection.findUnique({ where: { userId: project.createdByUserId } });

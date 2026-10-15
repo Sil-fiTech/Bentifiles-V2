@@ -231,6 +231,17 @@ export const uploadClientDocument = async (req: AuthRequest, res: Response) => {
             }
         }
 
+        const file = await prisma.file.findUnique({
+            where: { id: fileId },
+            select: { id: true, projectId: true, userId: true }
+        });
+        if (!file || file.projectId !== projectId) {
+            return res.status(400).json({ message: 'Arquivo inválido para este projeto' });
+        }
+        if (role === 'USER' && file.userId !== uploadedByUserId) {
+            return res.status(403).json({ message: 'Acesso negado' });
+        }
+
         const isRequired = await prisma.projectRequiredDocument.findFirst({
             where: { projectId, documentTypeId }
         });
