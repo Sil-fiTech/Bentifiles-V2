@@ -37,6 +37,17 @@ enum DocumentStatus {
   rejected
 }
 
+enum StorageProvider {
+  R2
+  GDRIVE
+}
+
+enum FileAccessAction {
+  VIEW
+  DOWNLOAD
+  ZIP
+}
+
 model User {
   id         String              @id @default(uuid())
   email      String              @unique
@@ -273,10 +284,16 @@ model ProjectInvite {
 model File {
   id                  String               @id @default(uuid())
   filename            String
-  originalName        String
+  originalName        String // cifrado: enc:v<n>:<base64>
   mimetype            String
   size                Int
-  url                 String
+  storageProvider     StorageProvider      @default(R2)
+  storageRef          String // chave no R2 ou fileId no Drive
+  encryptedDek        String?
+  iv                  String?
+  authTag             String?
+  keyVersion          Int?
+  purgedAt            DateTime?
   userId              String
   user                User                 @relation(fields: [userId], references: [id])
   projectId           String
@@ -284,8 +301,21 @@ model File {
   verificationResults VerificationResult[]
   shareLinks          ShareLink[]
   clientDocuments     ClientDocument[]
+  accessLogs          FileAccessLog[]
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
+}
+
+model FileAccessLog {
+  id        String           @id @default(uuid())
+  fileId    String
+  file      File             @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  userId    String
+  action    FileAccessAction
+  ip        String?
+  createdAt DateTime         @default(now())
+
+  @@index([fileId, createdAt])
 }
 
 model VerificationResult {
