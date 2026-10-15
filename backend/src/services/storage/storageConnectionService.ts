@@ -34,7 +34,7 @@ export const recordConnectionFailure = async (connection: StorageConnection, err
     });
 
     if (!isNewProblem) return;
-    if (error.code !== 'AUTH_REVOKED' && error.code !== 'QUOTA' && error.code !== 'UNAVAILABLE') return;
+    if (error.code !== 'AUTH_REVOKED' && error.code !== 'QUOTA' && error.code !== 'UNAVAILABLE' && error.code !== 'NOT_FOUND') return;
 
     const owner = await prisma.user.findUnique({ where: { id: connection.connectedByUserId }, select: { email: true, name: true } });
     if (owner) await sendStorageConnectionAlertEmail({ email: owner.email, name: owner.name, reason: error.code });

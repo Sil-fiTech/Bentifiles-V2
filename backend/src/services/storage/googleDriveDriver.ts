@@ -21,11 +21,12 @@ type DriveConnection = Pick<StorageConnection, 'id' | 'encryptedRefreshToken' | 
 const tokenCache = new Map<string, { token: string; expiresAt: number }>();
 
 export const getAccessToken = async (connection: DriveConnection): Promise<string> => {
-    const cached = tokenCache.get(connection.id);
+    const cacheKey = `${connection.id}:${connection.encryptedRefreshToken}`;
+    const cached = tokenCache.get(cacheKey);
     if (cached && cached.expiresAt - 60_000 > Date.now()) return cached.token;
 
     const { accessToken, expiresIn } = await refreshAccessToken(decryptField(connection.encryptedRefreshToken));
-    tokenCache.set(connection.id, { token: accessToken, expiresAt: Date.now() + expiresIn * 1000 });
+    tokenCache.set(cacheKey, { token: accessToken, expiresAt: Date.now() + expiresIn * 1000 });
     return accessToken;
 };
 

@@ -263,10 +263,13 @@ export const uploadClientDocument = async (req: AuthRequest, res: Response) => {
         });
 
         if (clientDoc.file.storageProvider === 'GDRIVE') {
-            const extension = decryptField(clientDoc.file.originalName).match(/\.[^.]+$/)?.[0] ?? '';
-            const driveName = `${clientDoc.ownerUser.name} - ${clientDoc.documentType.name}${extension}`;
-            await renameStoredFile(clientDoc.file, driveName).catch((error) =>
-                console.error('[ClientDocument] Failed to rename file in Drive:', error));
+            try {
+                const extension = decryptField(clientDoc.file.originalName).match(/\.[^.]+$/)?.[0] ?? '';
+                const driveName = `${clientDoc.ownerUser.name} - ${clientDoc.documentType.name}${extension}`;
+                await renameStoredFile(clientDoc.file, driveName);
+            } catch (error) {
+                console.error('[ClientDocument] Failed to rename file in Drive:', error);
+            }
         }
 
         res.status(201).json({ ...clientDoc, file: serializeFile(clientDoc.file) });

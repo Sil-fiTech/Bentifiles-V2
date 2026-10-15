@@ -576,7 +576,7 @@ export const sendProjectPurgeWarningEmail = async (params: {
     }
 };
 
-const STORAGE_ALERT_COPY: Record<'AUTH_REVOKED' | 'QUOTA' | 'UNAVAILABLE', { title: string; body: string }> = {
+const STORAGE_ALERT_COPY: Record<'AUTH_REVOKED' | 'QUOTA' | 'UNAVAILABLE' | 'NOT_FOUND', { title: string; body: string }> = {
     AUTH_REVOKED: {
         title: 'Reconecte o Google Drive',
         body: 'O BentiFiles perdeu o acesso ao Google Drive conectado. Os novos documentos estão sendo guardados com segurança no BentiFiles até você reconectar.',
@@ -584,6 +584,10 @@ const STORAGE_ALERT_COPY: Record<'AUTH_REVOKED' | 'QUOTA' | 'UNAVAILABLE', { tit
     QUOTA: {
         title: 'Seu Google Drive está sem espaço',
         body: 'Não foi possível salvar novos documentos no Google Drive por falta de espaço. Eles estão sendo guardados com segurança no BentiFiles até você liberar espaço.',
+    },
+    NOT_FOUND: {
+        title: 'Pasta do BentiFiles não encontrada no Google Drive',
+        body: 'A pasta onde o BentiFiles salvava os documentos não foi encontrada no seu Google Drive (ela pode ter sido apagada ou movida). Este documento foi guardado com segurança no BentiFiles e a pasta será recriada no próximo envio. Se você apagou a pasta principal, escolha uma nova pasta nas configurações de armazenamento.',
     },
     UNAVAILABLE: {
         title: 'Google Drive instável',
@@ -594,7 +598,7 @@ const STORAGE_ALERT_COPY: Record<'AUTH_REVOKED' | 'QUOTA' | 'UNAVAILABLE', { tit
 export const sendStorageConnectionAlertEmail = async (params: {
     email: string;
     name: string;
-    reason: 'AUTH_REVOKED' | 'QUOTA' | 'UNAVAILABLE';
+    reason: 'AUTH_REVOKED' | 'QUOTA' | 'UNAVAILABLE' | 'NOT_FOUND';
 }) => {
     try {
         const frontendUrl = getFrontendUrl();

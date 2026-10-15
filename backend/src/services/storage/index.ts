@@ -18,22 +18,34 @@ const driverFor = async (file: StoredFileRef): Promise<StorageDriver> => {
 };
 
 export const storeFile = async (input: PutInput): Promise<StoredObject> => {
-    const connection = await resolveConnectionForProject(input.projectId);
+    let connection: Awaited<ReturnType<typeof resolveConnectionForProject>> = null;
+    try {
+        connection = await resolveConnectionForProject(input.projectId);
+    } catch (error) {
+        logError('Failed to resolve storage connection, falling back to R2', error, { projectId: input.projectId });
+    }
     if (!connection) return r2EncryptedDriver.put(input);
 
+    let stored: StoredObject;
     try {
-        const stored = await createGoogleDriveDriver(connection).put(input);
-        await clearConnectionFailure(connection);
-        return stored;
+        stored = await createGoogleDriveDriver(connection).put(input);
     } catch (error) {
         if (error instanceof StorageError) {
             logWarn('Drive upload failed, falling back to R2', { connectionId: connection.id, code: error.code });
+            if (error.code === 'NOT_FOUND') {
+                await prisma.storageFolder
+                    .deleteMany({ where: { connectionId: connection.id, projectId: input.projectId } })
+                    .catch((e) => logError('Failed to reset stale Drive folder', e));
+            }
             await recordConnectionFailure(connection, error).catch((e) => logError('Failed to record Drive failure', e));
         } else {
             logError('Unexpected Drive upload error, falling back to R2', error, { connectionId: connection.id });
         }
         return r2EncryptedDriver.put(input);
     }
+
+    await clearConnectionFailure(connection).catch((e) => logError('Failed to clear Drive failure', e));
+    return stored;
 };
 
 export const readFile = async (file: StoredFileRef): Promise<Buffer> => (await driverFor(file)).get(file);

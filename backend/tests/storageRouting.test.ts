@@ -5,6 +5,7 @@ const prismaMock = vi.hoisted(() => ({
   project: { findUnique: vi.fn() },
   storageConnection: { findUnique: vi.fn(), update: vi.fn() },
   user: { findUnique: vi.fn() },
+  storageFolder: { deleteMany: vi.fn() },
 }));
 vi.mock('../src/prisma', () => ({ default: prismaMock }));
 const getOfficeSeatAccessForUser = vi.hoisted(() => vi.fn());
@@ -84,6 +85,21 @@ describe('storeFile', () => {
     await storeFile(input);
     expect(sendStorageConnectionAlertEmail).toHaveBeenCalledTimes(1);
     expect(r2Put).toHaveBeenCalledTimes(2);
+  });
+
+  it('NOT_FOUND limpa a pasta em cache, cai para o R2 e avisa uma vez', async () => {
+    prismaMock.storageFolder.deleteMany.mockResolvedValue({ count: 1 });
+    drivePut.mockRejectedValue(new StorageError('NOT_FOUND', 'x'));
+    await expect(storeFile(input)).resolves.toBe(r2Result);
+    expect(prismaMock.storageFolder.deleteMany).toHaveBeenCalledWith({ where: { connectionId: 'own', projectId: 'p1' } });
+    expect(sendStorageConnectionAlertEmail).toHaveBeenCalledTimes(1);
+    expect(sendStorageConnectionAlertEmail).toHaveBeenCalledWith({ email: 'owner@x.com', name: 'Dona', reason: 'NOT_FOUND' });
+  });
+
+  it('falha ao resolver a conexão cai para o R2', async () => {
+    prismaMock.storageConnection.findUnique.mockRejectedValue(new Error('db down'));
+    await expect(storeFile(input)).resolves.toBe(r2Result);
+    expect(drivePut).not.toHaveBeenCalled();
   });
 
   it('erro inesperado do Drive também cai para o R2', async () => {
