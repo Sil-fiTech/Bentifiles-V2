@@ -9,7 +9,7 @@ const ALLOWED_MIME_TYPES = new Set([
 
 const ALLOWED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.pdf', '.docx']);
 
-// O arquivo nunca é gravado aberto em disco: fica em memória até ser cifrado.
+// O arquivo nunca Ã© gravado aberto em disco: fica em memÃ³ria atÃ© ser cifrado.
 const storage = multer.memoryStorage();
 
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {

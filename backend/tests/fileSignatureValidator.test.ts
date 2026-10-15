@@ -27,13 +27,13 @@ beforeEach(() => {
 });
 
 describe('validateFileSignature', () => {
-  it('segue em frente quando não há arquivo', async () => {
+  it('segue em frente quando nÃ£o hÃ¡ arquivo', async () => {
     const { next } = await run(undefined);
     expect(next).toHaveBeenCalledOnce();
     expect(fromBuffer).not.toHaveBeenCalled();
   });
 
-  it('aceita tipo permitido lendo o buffer em memória', async () => {
+  it('aceita tipo permitido lendo o buffer em memÃ³ria', async () => {
     fromBuffer.mockResolvedValue({ mime: 'application/pdf' });
     const { next, res } = await run(upload);
     expect(fromBuffer).toHaveBeenCalledWith(upload.buffer);
@@ -41,7 +41,7 @@ describe('validateFileSignature', () => {
     expect(res.status).not.toHaveBeenCalled();
   });
 
-  it('rejeita assinatura não reconhecida', async () => {
+  it('rejeita assinatura nÃ£o reconhecida', async () => {
     fromBuffer.mockResolvedValue(undefined);
     const { next, res } = await run(upload);
     expect(res.status).toHaveBeenCalledWith(400);
