@@ -66,7 +66,7 @@ export const googleCallback = async (req: AuthRequest, res: Response) => {
         const { code, state } = req.query;
         if (typeof code !== 'string' || typeof state !== 'string') throw new Error('Parametros ausentes');
         const payload = verifyState(state);
-        returnPath = payload.returnPath;
+        returnPath = ALLOWED_RETURN_PATHS.has(payload.returnPath) ? payload.returnPath : '/profile';
 
         const tokens = await exchangeCode(code);
         const ownerWhere = payload.subscriptionId ? { subscriptionId: payload.subscriptionId } : { userId: payload.userId };
@@ -81,14 +81,26 @@ export const googleCallback = async (req: AuthRequest, res: Response) => {
             lastError: null,
         };
 
-        await prisma.storageConnection.upsert({
-            where: ownerWhere,
-            create: { ...ownerWhere, ...data },
-            update: data,
+        await prisma.$transaction(async (tx) => {
+            const existing = await tx.storageConnection.findUnique({ where: ownerWhere });
+            let connection;
+            if (existing && existing.googleAccountEmail !== tokens.email) {
+                // Outra conta Google: preserva a linha antiga (arquivos antigos resolvem para DISCONNECTED/409).
+                await tx.storageConnection.update({
+                    where: { id: existing.id },
+                    data: { subscriptionId: null, userId: null, status: 'REVOKED' },
+                });
+                connection = await tx.storageConnection.create({ data: { ...ownerWhere, ...data } });
+            } else {
+                connection = await tx.storageConnection.upsert({
+                    where: ownerWhere,
+                    create: { ...ownerWhere, ...data },
+                    update: data,
+                });
+            }
+            // Pastas de projeto antigas pertenciam ao Drive anterior.
+            await tx.storageFolder.deleteMany({ where: { connectionId: connection.id } });
         });
-        // Pastas de projeto antigas pertenciam ao Drive anterior.
-        const connection = await prisma.storageConnection.findUnique({ where: ownerWhere });
-        if (connection) await prisma.storageFolder.deleteMany({ where: { connectionId: connection.id } });
 
         res.redirect(`${frontendUrl()}${returnPath}?storage=connected`);
     } catch (error) {
@@ -137,6 +149,8 @@ export const setFolder = async (req: AuthRequest, res: Response) => {
         res.json({ connection: publicConnection(updated) });
     } catch (error) {
         logError('Failed to set Drive folder', error);
+        const mapped = storageErrorToHttp(error);
+        if (mapped) return res.status(mapped.status).json({ message: mapped.message });
         res.status(502).json({ message: 'Não foi possível acessar a pasta no Google Drive' });
     }
 };
@@ -146,7 +160,11 @@ export const disconnect = async (req: AuthRequest, res: Response) => {
     const connection = scope && await findConnection(scope);
     if (!connection) return res.status(404).json({ message: 'Drive não conectado' });
 
-    await revokeToken(decryptField(connection.encryptedRefreshToken));
+    try {
+        await revokeToken(decryptField(connection.encryptedRefreshToken));
+    } catch (error) {
+        logError('Failed to revoke Google token on disconnect', error);
+    }
     await prisma.storageConnection.update({ where: { id: connection.id }, data: { status: 'REVOKED', lastError: null } });
     res.json({ success: true });
 };
