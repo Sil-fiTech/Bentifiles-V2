@@ -17,7 +17,12 @@ export const purgeableFilesWhere = (now: Date): Prisma.FileWhereInput => ({
     storageProvider: 'R2',
     project: {
         OR: [
-            { status: 'ARCHIVED', archivedAt: { not: null, lte: daysBefore(now, PURGE_AFTER_DAYS) } },
+            {
+                status: 'ARCHIVED',
+                archivedAt: { not: null, lte: daysBefore(now, PURGE_AFTER_DAYS) },
+                // Pelo menos 24h entre o aviso e o expurgo.
+                purgeWarningSentAt: { not: null, lte: daysBefore(now, 1) },
+            },
             { status: 'DELETED' },
         ],
     },
@@ -25,7 +30,7 @@ export const purgeableFilesWhere = (now: Date): Prisma.FileWhereInput => ({
 
 export const warnableProjectsWhere = (now: Date): Prisma.ProjectWhereInput => ({
     status: 'ARCHIVED',
-    archivedAt: { lte: daysBefore(now, WARN_AFTER_DAYS), gt: daysBefore(now, PURGE_AFTER_DAYS) },
+    archivedAt: { lte: daysBefore(now, WARN_AFTER_DAYS) },
     purgeWarningSentAt: null,
 });
 
@@ -42,17 +47,22 @@ const sendWarnings = async (now: Date): Promise<number> => {
 
     for (const project of projects) {
         if (!project.archivedAt) continue;
-        const purgeAt = new Date(project.archivedAt.getTime() + PURGE_AFTER_DAYS * DAY_MS);
+        const purgeAt = new Date(Math.max(project.archivedAt.getTime() + PURGE_AFTER_DAYS * DAY_MS, now.getTime() + DAY_MS));
+        let delivered = 0;
         for (const member of project.members) {
-            await sendProjectPurgeWarningEmail({
+            const ok = await sendProjectPurgeWarningEmail({
                 email: member.user.email,
                 name: member.user.name,
                 projectName: project.name,
                 projectId: project.id,
                 purgeAt,
             });
+            if (ok) delivered += 1;
         }
-        await prisma.project.update({ where: { id: project.id }, data: { purgeWarningSentAt: now } });
+        // Sem nenhum envio bem-sucedido o aviso fica pendente e é refeito no próximo ciclo.
+        if (delivered > 0 || project.members.length === 0) {
+            await prisma.project.update({ where: { id: project.id }, data: { purgeWarningSentAt: now } });
+        }
     }
 
     return projects.length;

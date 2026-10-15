@@ -61,8 +61,7 @@ services:
     environment:
       - STORAGE_PURGE_WORKER_MODE=loop
       - STORAGE_PURGE_WORKER_POLL_MS=3600000
-      # Session pooler (porta 5432): o transaction pooler (6543) derruba conexões ociosas.
-      - DATABASE_URL=${STORAGE_PURGE_DATABASE_URL}
+      # Session pooler (porta 5432): defina STORAGE_PURGE_DATABASE_URL em backend/.env (o transaction pooler 6543 derruba conexões ociosas).
     env_file:
       - ./backend/.env
     restart: unless-stopped

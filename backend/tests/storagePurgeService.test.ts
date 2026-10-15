@@ -20,6 +20,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   prismaMock.project.findMany.mockResolvedValue([]);
   prismaMock.file.findMany.mockResolvedValue([]);
+  sendProjectPurgeWarningEmail.mockResolvedValue(true);
 });
 
 describe('purgeableFilesWhere', () => {
@@ -29,7 +30,7 @@ describe('purgeableFilesWhere', () => {
       storageProvider: 'R2',
       project: {
         OR: [
-          { status: 'ARCHIVED', archivedAt: { not: null, lte: daysAgo(7) } },
+          { status: 'ARCHIVED', archivedAt: { not: null, lte: daysAgo(7) }, purgeWarningSentAt: { not: null, lte: daysAgo(1) } },
           { status: 'DELETED' },
         ],
       },
@@ -38,10 +39,10 @@ describe('purgeableFilesWhere', () => {
 });
 
 describe('warnableProjectsWhere', () => {
-  it('avisa projetos arquivados entre 6 e 7 dias, uma vez só', () => {
+  it('avisa projetos arquivados há 6+ dias, uma vez só', () => {
     expect(warnableProjectsWhere(now)).toEqual({
       status: 'ARCHIVED',
-      archivedAt: { lte: daysAgo(6), gt: daysAgo(7) },
+      archivedAt: { lte: daysAgo(6) },
       purgeWarningSentAt: null,
     });
   });
@@ -96,5 +97,26 @@ describe('runStoragePurgeCycle', () => {
     });
     expect(prismaMock.project.update).toHaveBeenCalledWith({ where: { id: 'p1' }, data: { purgeWarningSentAt: now } });
     expect(summary.warned).toBe(1);
+  });
+
+  it('não marca o aviso quando todos os envios falham', async () => {
+    prismaMock.project.findMany.mockResolvedValue([{
+      id: 'p1', name: 'P', archivedAt: daysAgo(6),
+      members: [{ user: { email: 'a@x.com', name: 'A' } }, { user: { email: 'b@x.com', name: 'B' } }],
+    }]);
+    sendProjectPurgeWarningEmail.mockResolvedValue(false);
+
+    await runStoragePurgeCycle({ now });
+
+    expect(prismaMock.project.update).not.toHaveBeenCalled();
+  });
+
+  it('marca o aviso quando o projeto não tem ADMIN', async () => {
+    prismaMock.project.findMany.mockResolvedValue([{ id: 'p2', name: 'P', archivedAt: daysAgo(6), members: [] }]);
+
+    await runStoragePurgeCycle({ now });
+
+    expect(sendProjectPurgeWarningEmail).not.toHaveBeenCalled();
+    expect(prismaMock.project.update).toHaveBeenCalledWith({ where: { id: 'p2' }, data: { purgeWarningSentAt: now } });
   });
 });

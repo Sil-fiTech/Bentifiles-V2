@@ -1,12 +1,11 @@
-import dotenv from 'dotenv';
+import 'dotenv/config';
+import './storagePurgeEnv';
 
 import prisma from '../prisma';
 import { notifyErrorEventAsync } from '../services/discordAlertService';
 import { assertStorageKeysConfigured } from '../services/storage/envelopeCrypto';
 import { runStoragePurgeCycle } from '../services/storagePurgeService';
 import { logError, logInfo, logWarn } from '../utils/logger';
-
-dotenv.config();
 
 const DEFAULT_POLL_MS = 60 * 60 * 1000;
 const MAX_CONSECUTIVE_FAILURES = 3;
@@ -57,7 +56,7 @@ const run = async () => {
             logError('Storage purge cycle failed', error, { consecutiveFailures });
             if (mode !== 'loop' || consecutiveFailures >= MAX_CONSECUTIVE_FAILURES) throw error;
         }
-        if (mode !== 'loop') break;
+        if (mode !== 'loop' || isStopping) break;
         await sleep(pollMs);
     }
 };
