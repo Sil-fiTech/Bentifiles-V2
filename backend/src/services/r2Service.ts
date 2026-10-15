@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import crypto from "crypto";
 
@@ -81,4 +81,29 @@ export const getFileFromR2 = async (filename: string): Promise<{ buffer: Buffer,
         contentType: response.ContentType || 'application/octet-stream'
     };
 
+};
+
+const requireBucket = (): string => {
+    const bucketName = process.env.R2_BUCKET_NAME;
+    if (!bucketName) throw new Error("R2_BUCKET_NAME not defined in environment");
+    return bucketName;
+};
+
+export const putObject = async (key: string, body: Buffer): Promise<void> => {
+    await r2.send(new PutObjectCommand({
+        Bucket: requireBucket(),
+        Key: key,
+        Body: body,
+        ContentType: 'application/octet-stream',
+    }));
+};
+
+export const getObject = async (key: string): Promise<Buffer> => {
+    const response = await r2.send(new GetObjectCommand({ Bucket: requireBucket(), Key: key }));
+    if (!response.Body) throw new Error("Empty response body from R2");
+    return Buffer.from(await response.Body.transformToByteArray());
+};
+
+export const deleteObject = async (key: string): Promise<void> => {
+    await r2.send(new DeleteObjectCommand({ Bucket: requireBucket(), Key: key }));
 };
