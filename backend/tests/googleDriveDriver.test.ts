@@ -121,7 +121,7 @@ describe('GoogleDriveDriver fixes', () => {
   it('401 descarta o token em cache', async () => {
     const conn = { ...connection, id: 'c-401' };
     axiosMock.post.mockRejectedValueOnce(httpError(401)).mockResolvedValueOnce({ data: { id: 'x' } });
-    await expect(createGoogleDriveDriver(conn).put(input)).rejects.toMatchObject({ code: 'AUTH_REVOKED' });
+    await expect(createGoogleDriveDriver(conn).put(input)).rejects.toMatchObject({ code: 'UNAVAILABLE' });
     await createGoogleDriveDriver(conn).put(input);
     expect(refreshAccessToken).toHaveBeenCalledTimes(2);
   });

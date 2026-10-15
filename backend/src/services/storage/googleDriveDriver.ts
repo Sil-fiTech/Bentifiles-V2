@@ -35,7 +35,7 @@ const mapDriveError = (error: any): StorageError | null => {
     const reasons: string[] = (error?.response?.data?.error?.errors ?? []).map((e: any) => e.reason);
     if (status === 404) return new StorageError('NOT_FOUND', 'Arquivo removido do Google Drive');
     if (status === 403 && reasons.includes('storageQuotaExceeded')) return new StorageError('QUOTA', 'Google Drive sem espaço');
-    if (status === 401) return new StorageError('AUTH_REVOKED', 'Acesso ao Google Drive revogado');
+    if (status === 401) return new StorageError('UNAVAILABLE', 'Google Drive indisponível');
     if (status === 403 && reasons.some((r) => PERMISSION_REASONS.includes(r))) {
         return new StorageError('AUTH_REVOKED', 'Acesso ao Google Drive revogado');
     }
