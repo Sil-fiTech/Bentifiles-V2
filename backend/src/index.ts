@@ -10,6 +10,7 @@ import prisma from './prisma';
 import authRoutes from './routes/authRoutes';
 import adminUsersRoutes from './routes/adminUsersRoutes';
 import affiliateRoutes from './routes/affiliateRoutes';
+import storageRoutes from './routes/storageRoutes';
 import billingRoutes from './routes/billingRoutes';
 import documentRoutes from './routes/documentRoutes';
 import fileRoutes from './routes/fileRoutes';
@@ -55,6 +56,7 @@ app.use('/api/documents', documentRoutes);
 app.use('/api/templates', templateRoutes);
 app.use('/api/billing', billingRoutes);
 app.use('/api/affiliate', affiliateRoutes);
+app.use('/api/storage', storageRoutes);
 
 app.get('/health', (req, res) => {
     res.json({
