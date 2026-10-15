@@ -13,7 +13,7 @@ beforeEach(() => {
 describe('serializeFile', () => {
   it('decifra o nome e esconde os campos de criptografia', () => {
     const out = serializeFile({
-      id: 'f1', originalName: encryptField('CNH.png'), storageRef: 'uuid', encryptedDek: 'x', iv: 'y', authTag: 'z', keyVersion: 1, purgedAt: null,
+      id: 'f1', originalName: encryptField('CNH.png'), filename: 'uuid', storageRef: 'uuid', encryptedDek: 'x', iv: 'y', authTag: 'z', keyVersion: 1, purgedAt: null,
     });
     expect(out).toEqual({ id: 'f1', originalName: 'CNH.png', purgedAt: null });
   });
