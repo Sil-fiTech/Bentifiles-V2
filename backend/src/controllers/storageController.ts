@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { Response } from 'express';
 
 import { AuthRequest } from '../middleware/auth';
@@ -7,11 +8,24 @@ import { decryptField, encryptField } from '../services/storage/envelopeCrypto';
 import { createDriveFolder, getAccessToken } from '../services/storage/googleDriveDriver';
 import { buildConsentUrl, exchangeCode, revokeToken, signState, verifyState } from '../services/storage/googleOAuth';
 import { storageErrorToHttp } from '../services/storage/httpErrors';
+import { getAuthCookieOptions } from '../utils/authCookie';
 import { logError } from '../utils/logger';
 
 type ManageScope = { kind: 'OFFICE'; subscriptionId: string } | { kind: 'USER'; userId: string } | null;
 
 const ALLOWED_RETURN_PATHS = new Set(['/profile', '/subscription']);
+const NONCE_COOKIE = 'gdrive_oauth_nonce';
+const DRIVE_FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+
+const nonceCookieOptions = () => ({ ...getAuthCookieOptions(), maxAge: 10 * 60 * 1000, path: '/api/storage/google' });
+const sha256Hex = (value: string) => crypto.createHash('sha256').update(value).digest('hex');
+
+const nonceMatches = (cookieNonce: unknown, nonceHash: string): boolean => {
+    if (typeof cookieNonce !== 'string' || !cookieNonce) return false;
+    const expected = Buffer.from(nonceHash);
+    const received = Buffer.from(sha256Hex(cookieNonce));
+    return expected.length === received.length && crypto.timingSafeEqual(expected, received);
+};
 
 export const resolveManageScope = async (userId: string): Promise<ManageScope> => {
     const office = await prisma.subscription.findFirst({ where: { ownerId: userId, plan: 'OFFICE' }, select: { id: true } });
@@ -56,19 +70,31 @@ export const startGoogleConnect = async (req: AuthRequest, res: Response) => {
 
     const requested = typeof req.query.returnPath === 'string' ? req.query.returnPath : '/profile';
     const returnPath = ALLOWED_RETURN_PATHS.has(requested) ? requested : '/profile';
-    const state = signState({ userId, subscriptionId: scope.kind === 'OFFICE' ? scope.subscriptionId : null, returnPath });
+    // Amarra o callback ao navegador que iniciou o fluxo (evita login CSRF / troca de conta).
+    const nonce = crypto.randomBytes(32).toString('hex');
+    res.cookie(NONCE_COOKIE, nonce, nonceCookieOptions());
+    const state = signState({
+        userId,
+        subscriptionId: scope.kind === 'OFFICE' ? scope.subscriptionId : null,
+        returnPath,
+        nonceHash: sha256Hex(nonce),
+    });
     res.json({ url: buildConsentUrl(state) });
 };
 
 export const googleCallback = async (req: AuthRequest, res: Response) => {
     let returnPath = '/profile';
+    const cookieNonce = req.cookies?.[NONCE_COOKIE];
+    res.clearCookie(NONCE_COOKIE, nonceCookieOptions());
     try {
         const { code, state } = req.query;
         if (typeof code !== 'string' || typeof state !== 'string') throw new Error('Parametros ausentes');
         const payload = verifyState(state);
         returnPath = ALLOWED_RETURN_PATHS.has(payload.returnPath) ? payload.returnPath : '/profile';
+        if (!nonceMatches(cookieNonce, payload.nonceHash)) throw new Error('Nonce OAuth ausente ou divergente');
 
         const tokens = await exchangeCode(code);
+        if (!tokens.scope.split(' ').includes(DRIVE_FILE_SCOPE)) throw new Error('Escopo drive.file nao concedido');
         const ownerWhere = payload.subscriptionId ? { subscriptionId: payload.subscriptionId } : { userId: payload.userId };
         const data = {
             provider: 'GDRIVE' as const,
@@ -81,10 +107,12 @@ export const googleCallback = async (req: AuthRequest, res: Response) => {
             lastError: null,
         };
 
-        await prisma.$transaction(async (tx) => {
+        const detached = await prisma.$transaction(async (tx) => {
             const existing = await tx.storageConnection.findUnique({ where: ownerWhere });
             let connection;
+            let detachedRow: typeof existing = null;
             if (existing && existing.googleAccountEmail !== tokens.email) {
+                detachedRow = existing;
                 // Outra conta Google: preserva a linha antiga (arquivos antigos resolvem para DISCONNECTED/409).
                 await tx.storageConnection.update({
                     where: { id: existing.id },
@@ -100,7 +128,17 @@ export const googleCallback = async (req: AuthRequest, res: Response) => {
             }
             // Pastas de projeto antigas pertenciam ao Drive anterior.
             await tx.storageFolder.deleteMany({ where: { connectionId: connection.id } });
+            return detachedRow;
         });
+
+        if (detached) {
+            // Melhor esforço: a conta Google anterior não deve manter um refresh token válido.
+            try {
+                await revokeToken(decryptField(detached.encryptedRefreshToken));
+            } catch (error) {
+                logError('Failed to revoke previous Google account token', error);
+            }
+        }
 
         res.redirect(`${frontendUrl()}${returnPath}?storage=connected`);
     } catch (error) {

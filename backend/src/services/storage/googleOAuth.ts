@@ -8,11 +8,13 @@ const STATE_TTL_MS = 10 * 60 * 1000;
 const TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const USERINFO_URL = 'https://openidconnect.googleapis.com/v1/userinfo';
 const REVOKE_URL = 'https://oauth2.googleapis.com/revoke';
+const OAUTH_TIMEOUT_MS = 15_000;
 
 export interface OAuthStatePayload {
     userId: string;
     subscriptionId: string | null;
     returnPath: string;
+    nonceHash: string;
 }
 
 const requireEnv = (name: string): string => {
@@ -46,6 +48,7 @@ export const verifyState = (state: string, now: Date = new Date()): OAuthStatePa
     if (!parsed || typeof parsed !== 'object') throw new Error('Estado OAuth inválido');
     const { exp, ...payload } = parsed;
     if (typeof exp !== 'number' || exp < now.getTime()) throw new Error('Estado OAuth expirado');
+    if (typeof payload.nonceHash !== 'string' || !payload.nonceHash) throw new Error('Estado OAuth inválido');
     return payload as OAuthStatePayload;
 };
 
@@ -67,7 +70,7 @@ const tokenRequest = (params: Record<string, string>) =>
         client_id: requireEnv('GOOGLE_DRIVE_CLIENT_ID'),
         client_secret: requireEnv('GOOGLE_DRIVE_CLIENT_SECRET'),
         ...params,
-    }).toString(), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+    }).toString(), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, timeout: OAUTH_TIMEOUT_MS });
 
 export const exchangeCode = async (code: string) => {
     const { data } = await tokenRequest({
@@ -77,13 +80,17 @@ export const exchangeCode = async (code: string) => {
     });
     if (!data.refresh_token) throw new Error('Google nao devolveu refresh token');
 
-    const userInfo = await axios.get(USERINFO_URL, { headers: { Authorization: `Bearer ${data.access_token}` } });
+    const userInfo = await axios.get(USERINFO_URL, {
+        headers: { Authorization: `Bearer ${data.access_token}` },
+        timeout: OAUTH_TIMEOUT_MS,
+    });
 
     return {
         refreshToken: data.refresh_token as string,
         accessToken: data.access_token as string,
         expiresIn: Number(data.expires_in),
         email: userInfo.data.email as string,
+        scope: typeof data.scope === 'string' ? data.scope : '',
     };
 };
 
@@ -102,5 +109,6 @@ export const refreshAccessToken = async (refreshToken: string) => {
 export const revokeToken = async (token: string): Promise<void> => {
     await axios.post(REVOKE_URL, new URLSearchParams({ token }).toString(), {
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        timeout: OAUTH_TIMEOUT_MS,
     }).catch(() => undefined);
 };

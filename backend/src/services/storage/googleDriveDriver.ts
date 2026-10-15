@@ -15,6 +15,8 @@ const PERMISSION_REASONS = ['insufficientPermissions', 'forbidden', 'appNotAutho
 const RATE_LIMIT_REASONS = ['userRateLimitExceeded', 'rateLimitExceeded'];
 const MAX_ATTEMPTS = 3;
 const BASE_BACKOFF_MS = 500;
+const API_TIMEOUT_MS = 15_000;
+const UPLOAD_TIMEOUT_MS = 60_000;
 
 type DriveConnection = Pick<StorageConnection, 'id' | 'encryptedRefreshToken' | 'rootFolderId' | 'sharedDriveId'>;
 
@@ -78,7 +80,7 @@ export const createDriveFolder = async (accessToken: string, name: string, paren
     const { data } = await withRetry(() => axios.post(
         `${API}?supportsAllDrives=true&fields=id`,
         { name, mimeType: FOLDER_MIME, ...(parentId ? { parents: [parentId] } : {}) },
-        { headers: { Authorization: `Bearer ${accessToken}` } },
+        { headers: { Authorization: `Bearer ${accessToken}` }, timeout: API_TIMEOUT_MS },
     ), accessToken);
     return data.id as string;
 };
@@ -135,7 +137,7 @@ export const createGoogleDriveDriver = (connection: DriveConnection): StorageDri
         const { data } = await withRetry(() => axios.post(
             `${UPLOAD_API}?uploadType=multipart&supportsAllDrives=true&fields=id`,
             body,
-            { headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': contentType }, maxBodyLength: Infinity },
+            { headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': contentType }, maxBodyLength: Infinity, timeout: UPLOAD_TIMEOUT_MS },
         ), accessToken);
 
         return {
@@ -153,7 +155,7 @@ export const createGoogleDriveDriver = (connection: DriveConnection): StorageDri
         const accessToken = await getAccessToken(connection);
         const { data } = await withRetry(() => axios.get(
             `${API}/${encodeURIComponent(file.storageRef)}?alt=media&supportsAllDrives=true`,
-            { headers: { Authorization: `Bearer ${accessToken}` }, responseType: 'arraybuffer' },
+            { headers: { Authorization: `Bearer ${accessToken}` }, responseType: 'arraybuffer', timeout: API_TIMEOUT_MS },
         ), accessToken);
         return Buffer.from(data);
     },
@@ -167,7 +169,7 @@ export const createGoogleDriveDriver = (connection: DriveConnection): StorageDri
         await withRetry(() => axios.patch(
             `${API}/${encodeURIComponent(file.storageRef)}?supportsAllDrives=true`,
             { name },
-            { headers: { Authorization: `Bearer ${accessToken}` } },
+            { headers: { Authorization: `Bearer ${accessToken}` }, timeout: API_TIMEOUT_MS },
         ), accessToken);
     },
 });

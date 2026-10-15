@@ -65,6 +65,24 @@ describe('GoogleDriveDriver.put', () => {
     axiosMock.post.mockRejectedValueOnce(httpError(429)).mockResolvedValueOnce({ data: { id: 'ok' } });
     await expect(createGoogleDriveDriver(connection).put(input)).resolves.toMatchObject({ storageRef: 'ok' });
   });
+
+  it('repete um timeout (erro sem response) e recupera', async () => {
+    const timeoutError = Object.assign(new Error('timeout of 60000ms exceeded'), { code: 'ECONNABORTED' });
+    axiosMock.post.mockRejectedValueOnce(timeoutError).mockResolvedValueOnce({ data: { id: 'ok' } });
+    await expect(createGoogleDriveDriver(connection).put(input)).resolves.toMatchObject({ storageRef: 'ok' });
+    expect(axiosMock.post).toHaveBeenCalledTimes(2);
+  });
+
+  it('define timeout de 60s no upload e 15s na criação de pasta', async () => {
+    prismaMock.storageFolder.findUnique.mockResolvedValue(null);
+    prismaMock.project.findUnique.mockResolvedValue({ name: 'Processo Silva' });
+    axiosMock.post
+      .mockResolvedValueOnce({ data: { id: 'new-folder' } })
+      .mockResolvedValueOnce({ data: { id: 'drive-file-3' } });
+    await createGoogleDriveDriver(connection).put(input);
+    expect(axiosMock.post.mock.calls[0]![2]).toMatchObject({ timeout: 15_000 });
+    expect(axiosMock.post.mock.calls[1]![2]).toMatchObject({ timeout: 60_000 });
+  });
 });
 
 describe('GoogleDriveDriver.get', () => {
@@ -75,6 +93,7 @@ describe('GoogleDriveDriver.get', () => {
     const buf = await createGoogleDriveDriver(connection).get(ref);
     expect(buf.toString()).toBe('%PDF');
     expect(axiosMock.get.mock.calls[0]![0]).toContain('alt=media');
+    expect(axiosMock.get.mock.calls[0]![1]).toMatchObject({ timeout: 15_000 });
   });
 
   it('traduz 404 em NOT_FOUND', async () => {

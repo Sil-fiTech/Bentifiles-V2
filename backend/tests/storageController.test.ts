@@ -1,4 +1,5 @@
 // backend/tests/storageController.test.ts
+import crypto from 'crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const prismaMock = vi.hoisted(() => ({
@@ -34,8 +35,12 @@ const makeRes = () => {
   const res: any = {};
   res.status = vi.fn(() => res);
   res.json = vi.fn(() => res);
+  res.cookie = vi.fn(() => res);
   return res;
 };
+
+const sha256 = (v: string) => crypto.createHash('sha256').update(v).digest('hex');
+const DRIVE_FILE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 
 describe('resolveManageScope', () => {
   beforeEach(() => vi.clearAllMocks());
@@ -68,13 +73,25 @@ describe('startGoogleConnect', () => {
   it('falls back to /profile when returnPath is outside the allow-list', async () => {
     const res = makeRes();
     await startGoogleConnect({ user: { userId: 'u1' }, query: { returnPath: 'https://evil.com' } } as any, res);
-    expect(signState).toHaveBeenCalledWith({ userId: 'u1', subscriptionId: null, returnPath: '/profile' });
+    expect(signState).toHaveBeenCalledWith(expect.objectContaining({ userId: 'u1', subscriptionId: null, returnPath: '/profile' }));
   });
 
   it('keeps an allowed returnPath', async () => {
     const res = makeRes();
     await startGoogleConnect({ user: { userId: 'u1' }, query: { returnPath: '/subscription' } } as any, res);
-    expect(signState).toHaveBeenCalledWith({ userId: 'u1', subscriptionId: null, returnPath: '/subscription' });
+    expect(signState).toHaveBeenCalledWith(expect.objectContaining({ userId: 'u1', subscriptionId: null, returnPath: '/subscription' }));
+  });
+
+  it('sets the nonce cookie and signs its sha256 into the state', async () => {
+    const res = makeRes();
+    await startGoogleConnect({ user: { userId: 'u1' }, query: {} } as any, res);
+    expect(res.cookie).toHaveBeenCalledWith(
+      'gdrive_oauth_nonce',
+      expect.stringMatching(/^[0-9a-f]{64}$/),
+      expect.objectContaining({ httpOnly: true, maxAge: 10 * 60 * 1000, path: '/api/storage/google' }),
+    );
+    const nonce = res.cookie.mock.calls[0][1] as string;
+    expect(signState).toHaveBeenCalledWith(expect.objectContaining({ nonceHash: sha256(nonce) }));
   });
 
   it('responds 403 for non-owner Office seats', async () => {
@@ -99,13 +116,50 @@ describe('getPickerToken', () => {
 });
 
 describe('googleCallback', () => {
-  const makeCallbackRes = () => ({ redirect: vi.fn() }) as any;
-  const call = (res: any) => googleCallback({ query: { code: 'c', state: 's' } } as any, res);
+  const makeCallbackRes = () => ({ redirect: vi.fn(), clearCookie: vi.fn() }) as any;
+  const NONCE = 'n'.repeat(64);
+  const call = (res: any, cookies: Record<string, string> = { gdrive_oauth_nonce: NONCE }) =>
+    googleCallback({ query: { code: 'c', state: 's' }, cookies } as any, res);
   beforeEach(() => {
     vi.clearAllMocks();
     prismaMock.$transaction.mockImplementation(async (fn: any) => fn(prismaMock));
-    verifyState.mockReturnValue({ userId: 'u1', subscriptionId: null, returnPath: '/subscription' });
-    exchangeCode.mockResolvedValue({ email: 'new@x.com', refreshToken: 'rt' });
+    verifyState.mockReturnValue({ userId: 'u1', subscriptionId: null, returnPath: '/subscription', nonceHash: sha256(NONCE) });
+    exchangeCode.mockResolvedValue({ email: 'new@x.com', refreshToken: 'rt', scope: `openid email ${DRIVE_FILE_SCOPE}` });
+  });
+
+  it('rejects when the nonce cookie is missing and writes nothing', async () => {
+    const res = makeCallbackRes();
+    await call(res, {});
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringMatching(/\/subscription\?storage=error$/));
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(exchangeCode).not.toHaveBeenCalled();
+    expect(res.clearCookie).toHaveBeenCalledWith('gdrive_oauth_nonce', expect.objectContaining({ path: '/api/storage/google' }));
+  });
+
+  it('rejects when the nonce cookie does not match the state', async () => {
+    const res = makeCallbackRes();
+    await call(res, { gdrive_oauth_nonce: 'x'.repeat(64) });
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringMatching(/\/subscription\?storage=error$/));
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(res.clearCookie).toHaveBeenCalledWith('gdrive_oauth_nonce', expect.objectContaining({ path: '/api/storage/google' }));
+  });
+
+  it('proceeds when the nonce cookie matches and clears it', async () => {
+    prismaMock.storageConnection.findUnique.mockResolvedValue(null);
+    prismaMock.storageConnection.upsert.mockResolvedValue({ id: 'c1' });
+    const res = makeCallbackRes();
+    await call(res);
+    expect(prismaMock.$transaction).toHaveBeenCalled();
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringMatching(/\/subscription\?storage=connected$/));
+    expect(res.clearCookie).toHaveBeenCalledWith('gdrive_oauth_nonce', expect.objectContaining({ path: '/api/storage/google' }));
+  });
+
+  it('rejects when the granted scope lacks drive.file', async () => {
+    exchangeCode.mockResolvedValue({ email: 'new@x.com', refreshToken: 'rt', scope: 'openid email' });
+    const res = makeCallbackRes();
+    await call(res);
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringMatching(/\/subscription\?storage=error$/));
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 
   it('redirects with storage=error and writes nothing on invalid state', async () => {
@@ -117,7 +171,7 @@ describe('googleCallback', () => {
   });
 
   it('falls back to /profile when the state returnPath is not allowed', async () => {
-    verifyState.mockReturnValue({ userId: 'u1', subscriptionId: null, returnPath: 'https://evil.com' });
+    verifyState.mockReturnValue({ userId: 'u1', subscriptionId: null, returnPath: 'https://evil.com', nonceHash: sha256(NONCE) });
     prismaMock.storageConnection.findUnique.mockResolvedValue(null);
     prismaMock.storageConnection.upsert.mockResolvedValue({ id: 'c1' });
     const res = makeCallbackRes();
@@ -137,10 +191,13 @@ describe('googleCallback', () => {
   });
 
   it('detaches the old row and creates a new one when the account email differs', async () => {
-    prismaMock.storageConnection.findUnique.mockResolvedValue({ id: 'old', googleAccountEmail: 'old@x.com' });
+    prismaMock.storageConnection.findUnique.mockResolvedValue({ id: 'old', googleAccountEmail: 'old@x.com', encryptedRefreshToken: 'enc-old' });
     prismaMock.storageConnection.create.mockResolvedValue({ id: 'new' });
+    decryptField.mockReturnValue('old-rt');
     const res = makeCallbackRes();
     await call(res);
+    expect(decryptField).toHaveBeenCalledWith('enc-old');
+    expect(revokeToken).toHaveBeenCalledWith('old-rt');
     expect(prismaMock.storageConnection.update).toHaveBeenCalledWith({
       where: { id: 'old' },
       data: { subscriptionId: null, userId: null, status: 'REVOKED' },
@@ -150,6 +207,22 @@ describe('googleCallback', () => {
     });
     expect(prismaMock.storageConnection.upsert).not.toHaveBeenCalled();
     expect(prismaMock.storageFolder.deleteMany).toHaveBeenCalledWith({ where: { connectionId: 'new' } });
+  });
+
+  it('still redirects connected when revoking the old account token fails', async () => {
+    prismaMock.storageConnection.findUnique.mockResolvedValue({ id: 'old', googleAccountEmail: 'old@x.com', encryptedRefreshToken: 'enc-old' });
+    prismaMock.storageConnection.create.mockResolvedValue({ id: 'new' });
+    decryptField.mockImplementation(() => { throw new Error('bad ciphertext'); });
+    const res = makeCallbackRes();
+    await call(res);
+    expect(res.redirect).toHaveBeenCalledWith(expect.stringMatching(/\/subscription\?storage=connected$/));
+  });
+
+  it('does not revoke anything when the account email is the same', async () => {
+    prismaMock.storageConnection.findUnique.mockResolvedValue({ id: 'c1', googleAccountEmail: 'new@x.com' });
+    prismaMock.storageConnection.upsert.mockResolvedValue({ id: 'c1' });
+    await call(makeCallbackRes());
+    expect(revokeToken).not.toHaveBeenCalled();
   });
 });
 
