@@ -68,4 +68,11 @@ describe('r2EncryptedDriver', () => {
     await r2EncryptedDriver.delete({ ...stored, purgedAt: null });
     expect(store.has(stored.storageRef)).toBe(false);
   });
+
+  it('recusa metadados de criptografia parciais em vez de devolver o bruto', async () => {
+    store.set('partial', Buffer.from('cifrado?'));
+    await expect(r2EncryptedDriver.get({
+      storageProvider: 'R2', storageRef: 'partial', encryptedDek: 'abc', iv: null, authTag: null, keyVersion: 1, purgedAt: null,
+    })).rejects.toThrow('Metadados de criptografia incompletos');
+  });
 });

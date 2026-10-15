@@ -36,7 +36,11 @@ export const r2EncryptedDriver: StorageDriver = {
         }
 
         // Arquivos gravados antes da migração não têm DEK e estão em texto puro.
-        if (!file.encryptedDek || !file.iv || !file.authTag || file.keyVersion === null) return raw;
+        const fields = [file.encryptedDek, file.iv, file.authTag, file.keyVersion];
+        if (fields.every((value) => value == null)) return raw;
+        if (fields.some((value) => value == null) || !file.encryptedDek || !file.iv || !file.authTag || file.keyVersion == null) {
+            throw new Error('Metadados de criptografia incompletos para o arquivo');
+        }
 
         return decryptBuffer(raw, {
             encryptedDek: file.encryptedDek,
