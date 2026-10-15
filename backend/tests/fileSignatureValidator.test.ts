@@ -1,12 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NextFunction, Request, Response } from 'express';
 
-const { fromFile, unlink } = vi.hoisted(() => ({
-  fromFile: vi.fn(),
-  unlink: vi.fn().mockResolvedValue(undefined),
-}));
-vi.mock('file-type', () => ({ fromFile }));
-vi.mock('fs', () => ({ default: { promises: { unlink } } }));
+const { fromBuffer } = vi.hoisted(() => ({ fromBuffer: vi.fn() }));
+vi.mock('file-type', () => ({ fromBuffer }));
 
 import { validateFileSignature } from '../src/middleware/fileSignatureValidator';
 
@@ -21,7 +17,7 @@ const run = async (file?: object) => {
   await validateFileSignature({ file } as Request, res as unknown as Response, next as NextFunction);
   return { res, next };
 };
-const upload = { path: '/tmp/u1', originalname: 'doc.pdf', mimetype: 'application/pdf' };
+const upload = { buffer: Buffer.from('%PDF'), originalname: 'doc.pdf', mimetype: 'application/pdf' };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -31,39 +27,37 @@ beforeEach(() => {
 });
 
 describe('validateFileSignature', () => {
-  it('segue em frente quando nÃ£o hÃ¡ arquivo', async () => {
+  it('segue em frente quando não há arquivo', async () => {
     const { next } = await run(undefined);
     expect(next).toHaveBeenCalledOnce();
-    expect(fromFile).not.toHaveBeenCalled();
+    expect(fromBuffer).not.toHaveBeenCalled();
   });
 
-  it('aceita tipo permitido', async () => {
-    fromFile.mockResolvedValue({ mime: 'application/pdf' });
+  it('aceita tipo permitido lendo o buffer em memória', async () => {
+    fromBuffer.mockResolvedValue({ mime: 'application/pdf' });
     const { next, res } = await run(upload);
+    expect(fromBuffer).toHaveBeenCalledWith(upload.buffer);
     expect(next).toHaveBeenCalledOnce();
     expect(res.status).not.toHaveBeenCalled();
   });
 
-  it('rejeita assinatura nÃ£o reconhecida e apaga o temporÃ¡rio', async () => {
-    fromFile.mockResolvedValue(undefined);
+  it('rejeita assinatura não reconhecida', async () => {
+    fromBuffer.mockResolvedValue(undefined);
     const { next, res } = await run(upload);
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(unlink).toHaveBeenCalledWith('/tmp/u1');
     expect(next).not.toHaveBeenCalled();
   });
 
   it('rejeita tipo fora da lista mesmo se o header disser PDF', async () => {
-    fromFile.mockResolvedValue({ mime: 'application/x-msdownload' });
+    fromBuffer.mockResolvedValue({ mime: 'application/x-msdownload' });
     const { next, res } = await run(upload);
     expect(res.status).toHaveBeenCalledWith(400);
-    expect(unlink).toHaveBeenCalledWith('/tmp/u1');
     expect(next).not.toHaveBeenCalled();
   });
 
-  it('responde 500 e limpa o temporÃ¡rio se a leitura falhar', async () => {
-    fromFile.mockRejectedValue(new Error('boom'));
+  it('responde 500 se a leitura falhar', async () => {
+    fromBuffer.mockRejectedValue(new Error('boom'));
     const { res } = await run(upload);
     expect(res.status).toHaveBeenCalledWith(500);
-    expect(unlink).toHaveBeenCalledWith('/tmp/u1');
   });
 });

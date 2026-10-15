@@ -1,22 +1,12 @@
 import { Request, Response } from 'express';
-import fs from 'fs';
 import prisma from '../prisma';
 import { AuthRequest } from '../middleware/auth';
 import axios from 'axios';
 import FormData from 'form-data';
-import { upload } from '../middleware/upload';
-import crypto from 'crypto';
-import { uploadToR2, getFileUrl, getFileFromR2 } from '../services/r2Service';
-
-// Map allowed MIME types to secure, hardcoded extensions
-const mimeToExt: Record<string, string> = {
-    'image/jpeg': '.jpg',
-    'image/png': '.png',
-    'image/webp': '.webp',
-    'image/bmp': '.bmp',
-    'application/pdf': '.pdf',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx'
-};
+import { getFileFromR2, getFileUrl } from '../services/r2Service';
+import { storeFile } from '../services/storage';
+import { encryptField } from '../services/storage/envelopeCrypto';
+import { serializeFile } from '../services/storage/serializeFile';
 
 const DEFAULT_DOWNLOAD_FORMAT = 'pdf';
 const ALLOWED_DOWNLOAD_FORMATS = new Set(['pdf', 'original']);
@@ -131,7 +121,6 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
         }
 
         if (!userId) {
-            if (file && file.path) fs.promises.unlink(file.path).catch(e=>console.error(e));
             console.error('[Upload] Unauthorized: user context missing');
             return res.status(401).json({ message: 'Não autorizado' });
         }
@@ -145,8 +134,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
 
                 const url = getPythonMicroserviceUrl();
                 const formData = new FormData();
-                const stream = fs.createReadStream(file.path);
-                formData.append('file', stream, {
+                formData.append('file', file.buffer, {
                     filename: file.originalname,
                     contentType: file.mimetype,
                     knownLength: file.size,
@@ -172,8 +160,6 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
 
                     const reasonStr = analysisData.reasons?.length ? ` Motivos: ${analysisData.reasons.join(" | ")}` : "";
                     
-                    if (file && file.path) fs.promises.unlink(file.path).catch(e=>console.error(e));
-
                     return res.status(400).json({
                         success: false,
                         message: `A imagem não atende aos critérios mínimos de qualidade.${reasonStr}`,
@@ -195,7 +181,6 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                 console.log(`[Upload] Image analysis status: ${analysisData.status}`);
             } catch (microserviceError) {
                 console.error('[Upload] Microservice error:', microserviceError);
-                if (file && file.path) fs.promises.unlink(file.path).catch(e=>console.error(e));
                 return res.status(503).json({
                     success: false,
                     message: "Falha ao validar a imagem. O serviço de análise pode estar indisponível."
@@ -203,22 +188,27 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
             }
         }
 
-        // Generate secure filename
-        const ext = mimeToExt[file.mimetype] || '.bin';
-        const savedFilename = `${crypto.randomUUID()}${ext}`;
+        console.log('[Upload] Encrypting and storing file...');
+        const stored = await storeFile({
+            buffer: file.buffer,
+            mimetype: file.mimetype,
+            projectId,
+            displayName: file.originalname,
+        });
+        console.log(`[Upload] File stored (${stored.storageProvider})`);
 
-        console.log('[Upload] Saving file to R2...');
-        await uploadToR2(fs.createReadStream(file.path), file.mimetype, savedFilename);
-        console.log(`[Upload] File saved to R2 as: ${savedFilename}`);
-
-        console.log('[Upload] Creating database record...');
         const dbFile = await prisma.file.create({
             data: {
-                filename: savedFilename,
-                originalName: file.originalname,
+                filename: stored.storageRef,
+                originalName: encryptField(file.originalname),
                 mimetype: file.mimetype,
                 size: file.size,
-                url: await getFileUrl(savedFilename),
+                storageProvider: stored.storageProvider,
+                storageRef: stored.storageRef,
+                encryptedDek: stored.encryptedDek,
+                iv: stored.iv,
+                authTag: stored.authTag,
+                keyVersion: stored.keyVersion,
                 userId: userId,
                 projectId: projectId,
             },
@@ -261,18 +251,14 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                 usefulAreaPct: analysisData.usefulAreaPct,
                 metrics: analysisData.metrics
             } : undefined,
-            document: resultingFile,
-            file: resultingFile,
+            document: resultingFile && serializeFile(resultingFile),
+            file: resultingFile && serializeFile(resultingFile),
             docStatus: analysisData?.status
         });
 
     } catch (error) {
         console.error('[Upload] Unexpected internal error:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
-    } finally {
-        if (req.file && req.file.path) {
-            fs.promises.unlink(req.file.path).catch(e => console.error("Erro ao apagar arquivo teporário:", e));
-        }
     }
 };
 

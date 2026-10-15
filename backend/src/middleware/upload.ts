@@ -1,5 +1,4 @@
 import multer from 'multer';
-import os from 'os';
 
 const ALLOWED_MIME_TYPES = new Set([
     'image/jpeg',
@@ -10,12 +9,8 @@ const ALLOWED_MIME_TYPES = new Set([
 
 const ALLOWED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.pdf', '.docx']);
 
-const storage = multer.diskStorage({
-    destination: os.tmpdir(),
-    filename: (req, file, cb) => {
-        cb(null, `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_')}`);
-    }
-});
+// O arquivo nunca é gravado aberto em disco: fica em memória até ser cifrado.
+const storage = multer.memoryStorage();
 
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
     const normalizedName = file.originalname.trim().toLowerCase();

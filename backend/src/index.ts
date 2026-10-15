@@ -18,9 +18,11 @@ import stripeWebhookRoutes from './routes/stripeWebhookRoutes';
 import templateRoutes from './routes/templateRoutes';
 import usersRoutes from './routes/usersRoutes';
 import { notifyErrorEventAsync } from './services/discordAlertService';
+import { assertStorageKeysConfigured } from './services/storage/envelopeCrypto';
 import { logError, logInfo } from './utils/logger';
 
 dotenv.config();
+assertStorageKeysConfigured();
 
 const app = express();
 const port = Number(process.env.PORT) || 4000;

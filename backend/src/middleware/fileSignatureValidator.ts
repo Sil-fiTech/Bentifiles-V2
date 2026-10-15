@@ -1,6 +1,5 @@
-import fs from 'fs';
 import { NextFunction, Request, Response } from 'express';
-import { fromFile } from 'file-type';
+import { fromBuffer } from 'file-type';
 
 const ALLOWED_MIME_TYPES = [
     'image/jpeg',
@@ -8,11 +7,6 @@ const ALLOWED_MIME_TYPES = [
     'application/pdf',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 ];
-
-const cleanupTempFile = async (path?: string) => {
-    if (!path) return;
-    await fs.promises.unlink(path).catch(() => undefined);
-};
 
 export const validateFileSignature = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -22,11 +16,10 @@ export const validateFileSignature = async (req: Request, res: Response, next: N
             return next();
         }
 
-        const typeInfo = await fromFile(file.path);
+        const typeInfo = await fromBuffer(file.buffer);
 
         if (!typeInfo) {
             console.error(`[BinaryValidator] Failed to detect binary signature for ${file.originalname}`);
-            await cleanupTempFile(file.path);
             return res.status(400).json({
                 success: false,
                 message: 'Assinatura do arquivo invalida ou arquivo corrompido.',
@@ -37,7 +30,6 @@ export const validateFileSignature = async (req: Request, res: Response, next: N
 
         if (!ALLOWED_MIME_TYPES.includes(typeInfo.mime)) {
             console.warn(`[BinaryValidator] Blocked file type: ${typeInfo.mime}`);
-            await cleanupTempFile(file.path);
             return res.status(400).json({
                 success: false,
                 message: `Tipo de arquivo nao permitido (${typeInfo.mime}).`,
@@ -51,7 +43,6 @@ export const validateFileSignature = async (req: Request, res: Response, next: N
         next();
     } catch (error) {
         console.error('[BinaryValidator] Internal error:', error);
-        await cleanupTempFile(req.file?.path);
         res.status(500).json({ message: 'Erro interno ao validar integridade do arquivo.' });
     }
 };
