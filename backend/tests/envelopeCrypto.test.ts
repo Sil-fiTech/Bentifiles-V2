@@ -45,6 +45,12 @@ describe('encryptBuffer / decryptBuffer', () => {
     expect(() => decryptBuffer(blob.ciphertext, { ...blob, authTag: other.authTag })).toThrow();
   });
 
+  it('falha se a tag for truncada', () => {
+    const blob = encryptBuffer(Buffer.from('conteudo'));
+    const short = Buffer.from(blob.authTag, 'base64').subarray(0, 4).toString('base64');
+    expect(() => decryptBuffer(blob.ciphertext, { ...blob, authTag: short })).toThrow();
+  });
+
   it('falha com a KEK errada', () => {
     const blob = encryptBuffer(Buffer.from('conteudo'));
     process.env.STORAGE_MASTER_KEY_V1 = key();
@@ -68,6 +74,13 @@ describe('encryptField / decryptField', () => {
     expect(enc).not.toContain('Certid');
     expect(decryptField(enc)).toBe(name);
   });
+
+  it.each(['enc:v1', 'enc:v1abc', 'enc:vabc:AAAA', 'enc:v0:AAAA', 'enc:v:AAAA'])(
+    'rejeita campo malformado %s',
+    (bad) => {
+      expect(() => decryptField(bad)).toThrow(/malformado/);
+    },
+  );
 
   it('devolve texto legado sem prefixo como está', () => {
     expect(decryptField('rg-frente.jpg')).toBe('rg-frente.jpg');

@@ -48,10 +48,11 @@ const seal = (key: Buffer, plaintext: Buffer): Buffer => {
 };
 
 const open = (key: Buffer, packed: Buffer): Buffer => {
+    if (packed.length < IV_LENGTH + TAG_LENGTH) throw new Error('Payload cifrado malformado');
     const iv = packed.subarray(0, IV_LENGTH);
     const tag = packed.subarray(IV_LENGTH, IV_LENGTH + TAG_LENGTH);
     const ciphertext = packed.subarray(IV_LENGTH + TAG_LENGTH);
-    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv, { authTagLength: TAG_LENGTH });
     decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 };
@@ -73,9 +74,13 @@ export const encryptBuffer = (plaintext: Buffer): EncryptedBlob => {
 };
 
 export const decryptBuffer = (ciphertext: Buffer, meta: EncryptionMeta): Buffer => {
+    const iv = Buffer.from(meta.iv, 'base64');
+    const tag = Buffer.from(meta.authTag, 'base64');
+    if (iv.length !== IV_LENGTH) throw new Error('IV invalido: esperado 12 bytes');
+    if (tag.length !== TAG_LENGTH) throw new Error('authTag invalida: esperado 16 bytes');
     const dek = open(loadKek(meta.keyVersion), Buffer.from(meta.encryptedDek, 'base64'));
-    const decipher = crypto.createDecipheriv(ALGORITHM, dek, Buffer.from(meta.iv, 'base64'));
-    decipher.setAuthTag(Buffer.from(meta.authTag, 'base64'));
+    const decipher = crypto.createDecipheriv(ALGORITHM, dek, iv, { authTagLength: TAG_LENGTH });
+    decipher.setAuthTag(tag);
     return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
 };
 
@@ -90,6 +95,9 @@ export const decryptField = (value: string): string => {
     if (!value.startsWith(FIELD_PREFIX)) return value;
     const separator = value.indexOf(':', FIELD_PREFIX.length);
     const version = Number(value.slice(FIELD_PREFIX.length, separator));
+    if (separator <= FIELD_PREFIX.length || !Number.isInteger(version) || version < 1) {
+        throw new Error('Campo cifrado malformado');
+    }
     const packed = Buffer.from(value.slice(separator + 1), 'base64');
     return open(loadKek(version), packed).toString('utf8');
 };
