@@ -206,6 +206,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                 size: file.size,
                 storageProvider: stored.storageProvider,
                 storageRef: stored.storageRef,
+                storageConnectionId: stored.storageConnectionId,
                 encryptedDek: stored.encryptedDek,
                 iv: stored.iv,
                 authTag: stored.authTag,
