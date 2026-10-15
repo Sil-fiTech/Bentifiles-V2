@@ -82,3 +82,47 @@ describe('GoogleDriveDriver.get', () => {
     await expect(createGoogleDriveDriver(connection).get(ref)).rejects.toMatchObject({ code: 'NOT_FOUND' });
   });
 });
+
+describe('GoogleDriveDriver fixes', () => {
+  it('duas subidas concorrentes em projeto novo criam a pasta uma vez', async () => {
+    prismaMock.storageFolder.findUnique.mockResolvedValue(null);
+    prismaMock.project.findUnique.mockResolvedValue({ name: 'Novo' });
+    axiosMock.post.mockImplementation(async (url: string) => (url.includes('uploadType') ? { data: { id: 'f' } } : { data: { id: 'folder-1' } }));
+    const driver = createGoogleDriveDriver(connection);
+    await Promise.all([driver.put(input), driver.put(input)]);
+    const folderPosts = axiosMock.post.mock.calls.filter(([u]) => !String(u).includes('uploadType'));
+    expect(folderPosts).toHaveLength(1);
+    expect(prismaMock.storageFolder.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('P2002 ao gravar a pasta devolve a pasta existente', async () => {
+    prismaMock.storageFolder.findUnique.mockResolvedValueOnce(null).mockResolvedValueOnce({ folderId: 'winner' });
+    prismaMock.project.findUnique.mockResolvedValue({ name: 'Corrida' });
+    prismaMock.storageFolder.create.mockRejectedValue({ code: 'P2002' });
+    axiosMock.post.mockResolvedValueOnce({ data: { id: 'dup-folder' } }).mockResolvedValueOnce({ data: { id: 'file' } });
+    await createGoogleDriveDriver({ ...connection, id: 'c-race' }).put({ ...input, projectId: 'p-race' });
+    expect(axiosMock.post.mock.calls[1]![1]).toBeDefined();
+    expect(String(axiosMock.post.mock.calls[1]![0])).toContain('uploadType=multipart');
+    expect(axiosMock.post.mock.calls[1]![1].toString()).toContain('"parents":["winner"]');
+  });
+
+  it('403 de rate limit é repetido e recupera', async () => {
+    axiosMock.post.mockRejectedValueOnce(httpError(403, 'userRateLimitExceeded')).mockResolvedValueOnce({ data: { id: 'ok2' } });
+    await expect(createGoogleDriveDriver(connection).put(input)).resolves.toMatchObject({ storageRef: 'ok2' });
+    expect(axiosMock.post).toHaveBeenCalledTimes(2);
+  });
+
+  it('403 insufficientPermissions vira AUTH_REVOKED sem repetir', async () => {
+    axiosMock.post.mockRejectedValue(httpError(403, 'insufficientPermissions'));
+    await expect(createGoogleDriveDriver(connection).put(input)).rejects.toMatchObject({ code: 'AUTH_REVOKED' });
+    expect(axiosMock.post).toHaveBeenCalledTimes(1);
+  });
+
+  it('401 descarta o token em cache', async () => {
+    const conn = { ...connection, id: 'c-401' };
+    axiosMock.post.mockRejectedValueOnce(httpError(401)).mockResolvedValueOnce({ data: { id: 'x' } });
+    await expect(createGoogleDriveDriver(conn).put(input)).rejects.toMatchObject({ code: 'AUTH_REVOKED' });
+    await createGoogleDriveDriver(conn).put(input);
+    expect(refreshAccessToken).toHaveBeenCalledTimes(2);
+  });
+});
