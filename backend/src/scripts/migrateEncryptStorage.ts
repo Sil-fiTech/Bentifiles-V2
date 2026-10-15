@@ -1,16 +1,16 @@
+import 'dotenv/config';
 import crypto from 'crypto';
-import dotenv from 'dotenv';
 
 import prisma from '../prisma';
 import { deleteObject, getObject, putObject } from '../services/r2Service';
 import { assertStorageKeysConfigured, decryptBuffer, encryptBuffer, encryptField } from '../services/storage/envelopeCrypto';
 import { logError, logInfo } from '../utils/logger';
 
-dotenv.config();
-
 const BATCH_SIZE = 50;
 
-const migrateOne = async (file: { id: string; storageRef: string; originalName: string }) => {
+type MigrateResult = { status: 'migrated'; cleanupPendingRef?: string } | { status: 'skipped' };
+
+const migrateOne = async (file: { id: string; storageRef: string; originalName: string }): Promise<MigrateResult> => {
     const original = await getObject(file.storageRef);
     const blob = encryptBuffer(original);
     const newRef = crypto.randomUUID();
@@ -24,8 +24,10 @@ const migrateOne = async (file: { id: string; storageRef: string; originalName: 
         throw new Error('Verificacao de ida e volta falhou');
     }
 
-    await prisma.file.update({
-        where: { id: file.id },
+    logInfo('Storage migration: updating file row', { fileId: file.id, oldRef: file.storageRef, newRef });
+
+    const updated = await prisma.file.updateMany({
+        where: { id: file.id, storageRef: file.storageRef, encryptedDek: null, purgedAt: null },
         data: {
             filename: newRef,
             storageRef: newRef,
@@ -37,17 +39,35 @@ const migrateOne = async (file: { id: string; storageRef: string; originalName: 
         },
     });
 
-    await deleteObject(file.storageRef);
+    if (updated.count === 0) {
+        try {
+            await deleteObject(newRef);
+        } catch (error) {
+            logError('Storage migration: failed to remove orphan new object', error, { fileId: file.id, newRef });
+        }
+        logInfo('Storage migration: file changed concurrently, skipped', { fileId: file.id });
+        return { status: 'skipped' };
+    }
+
+    try {
+        await deleteObject(file.storageRef);
+    } catch (error) {
+        logError('Storage migration: old object cleanup pending', error, { fileId: file.id, oldRef: file.storageRef });
+        return { status: 'migrated', cleanupPendingRef: file.storageRef };
+    }
+    return { status: 'migrated' };
 };
 
 const run = async () => {
     assertStorageKeysConfigured();
     const failedIds = new Set<string>();
+    const skippedIds = new Set<string>();
+    const cleanupPending: { fileId: string; oldRef: string }[] = [];
     let migrated = 0;
 
     while (true) {
         const batch = await prisma.file.findMany({
-            where: { storageProvider: 'R2', encryptedDek: null, purgedAt: null, id: { notIn: [...failedIds] } },
+            where: { storageProvider: 'R2', encryptedDek: null, purgedAt: null, id: { notIn: [...failedIds, ...skippedIds] } },
             select: { id: true, storageRef: true, originalName: true },
             take: BATCH_SIZE,
         });
@@ -55,8 +75,13 @@ const run = async () => {
 
         for (const file of batch) {
             try {
-                await migrateOne(file);
-                migrated += 1;
+                const result = await migrateOne(file);
+                if (result.status === 'migrated') {
+                    migrated += 1;
+                    if (result.cleanupPendingRef) cleanupPending.push({ fileId: file.id, oldRef: result.cleanupPendingRef });
+                } else {
+                    skippedIds.add(file.id);
+                }
             } catch (error) {
                 failedIds.add(file.id);
                 logError('Storage migration failed for file', error, { fileId: file.id });
@@ -65,7 +90,7 @@ const run = async () => {
         logInfo('Storage migration progress', { migrated, failed: failedIds.size });
     }
 
-    logInfo('Storage migration finished', { migrated, failed: failedIds.size, failedIds: [...failedIds] });
+    logInfo('Storage migration finished', { migrated, failed: failedIds.size, failedIds: [...failedIds], skipped: skippedIds.size, cleanupPending });
     if (failedIds.size > 0) process.exitCode = 1;
 };
 
