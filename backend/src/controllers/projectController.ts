@@ -321,7 +321,7 @@ export const archiveProject = async (req: AuthRequest, res: Response) => {
 
         const project = await prisma.project.update({
             where: { id },
-            data: { status: 'ARCHIVED' },
+            data: { status: 'ARCHIVED', archivedAt: new Date(), purgeWarningSentAt: null },
         });
 
         res.status(200).json({ project });
@@ -339,7 +339,7 @@ export const unarchiveProject = async (req: AuthRequest, res: Response) => {
 
         const project = await prisma.project.update({
             where: { id },
-            data: { status: 'ACTIVE' },
+            data: { status: 'ACTIVE', archivedAt: null, purgeWarningSentAt: null },
         });
 
         res.status(200).json({ project });
