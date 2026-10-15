@@ -9,6 +9,8 @@
     "build": "tsc",
     "worker:subscription-reminders": "node dist/workers/subscriptionReminderWorker.js",
     "worker:subscription-reminders:dev": "ts-node src/workers/subscriptionReminderWorker.ts",
+    "storage:migrate-encrypt": "node dist/scripts/migrateEncryptStorage.js",
+    "storage:migrate-encrypt:dev": "ts-node src/scripts/migrateEncryptStorage.ts",
     "test": "vitest run"
   },
   "keywords": [],
