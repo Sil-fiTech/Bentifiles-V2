@@ -216,7 +216,7 @@ export const configureProjectRequiredDocuments = async (req: AuthRequest, res: R
  */
 export const uploadClientDocument = async (req: AuthRequest, res: Response) => {
     try {
-        const projectId = req.body.projectId || (req.projectId as string);
+        const projectId = req.projectId as string;
         const { documentTypeId, ownerUserId, fileId, status } = req.body;
         const uploadedByUserId = req.user?.userId;
         const role = req.projectRole;

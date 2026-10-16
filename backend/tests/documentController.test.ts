@@ -58,6 +58,17 @@ describe('uploadClientDocument', () => {
     expect(renameStoredFile).not.toHaveBeenCalled();
   });
 
+  it('ignora projectId do corpo e recusa arquivo de outro projeto', async () => {
+    prismaMock.file.findUnique.mockResolvedValue({ id: 'f1', projectId: 'outro', userId: 'u1' });
+    const req = makeReq('ADMIN');
+    req.body.projectId = 'outro';
+    const res = makeRes();
+    await uploadClientDocument(req, res);
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(prismaMock.clientDocument.create).not.toHaveBeenCalled();
+    expect(renameStoredFile).not.toHaveBeenCalled();
+  });
+
   it('recusa com 403 quando USER anexa arquivo de outra pessoa', async () => {
     prismaMock.file.findUnique.mockResolvedValue({ id: 'f1', projectId: 'p1', userId: 'u2' });
     const res = makeRes();
