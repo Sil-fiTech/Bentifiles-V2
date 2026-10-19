@@ -1,10 +1,11 @@
 import type { MetadataRoute } from 'next';
+import { getAllPosts } from '@/lib/blog/content';
 import { getAllPages } from '@/lib/docs/content';
 import { segments } from './para/data/segments';
 import { SITE_URL } from '@/lib/seo';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const docs = await getAllPages();
+    const [docs, posts] = await Promise.all([getAllPages(), getAllPosts()]);
 
     return [
         { url: `${SITE_URL}/`, changeFrequency: 'monthly', priority: 1 },
@@ -12,6 +13,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             url: `${SITE_URL}/para/${s.slug}`,
             changeFrequency: 'monthly' as const,
             priority: 0.8,
+        })),
+        { url: `${SITE_URL}/blog`, changeFrequency: 'weekly', priority: 0.7 },
+        ...posts.map((post) => ({
+            url: `${SITE_URL}${post.href}`,
+            lastModified: post.updated,
+            changeFrequency: 'monthly' as const,
+            priority: 0.7,
         })),
         { url: `${SITE_URL}/docs`, changeFrequency: 'monthly', priority: 0.7 },
         { url: `${SITE_URL}/docs/videos`, changeFrequency: 'monthly', priority: 0.5 },
