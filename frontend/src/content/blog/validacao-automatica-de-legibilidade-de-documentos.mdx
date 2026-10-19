@@ -1,0 +1,86 @@
+export const meta = {
+  title: 'Validação automática de legibilidade de documentos: o que é, como funciona e o que ela não faz',
+  description: 'Como o Bentifiles analisa fotos de documentos no momento do envio (nitidez, brilho, reflexo, texto e enquadramento), quais são os resultados possíveis e por que isso não é verificação de autenticidade.',
+  date: '2026-10-19',
+  updated: '2026-10-19',
+};
+
+**Resposta curta:** validação de legibilidade é uma checagem automática que analisa a foto de um documento **no momento do envio** e recusa a imagem se ela não puder ser lida: tremida, escura, com reflexo, sem texto visível ou cortada. No [Bentifiles](/blog/o-que-e-o-bentifiles), essa análise é feita com IA em toda imagem JPG, JPEG ou PNG enviada. Ela **não** verifica se o documento é verdadeiro; só se dá para ler.
+
+## Por que isso importa
+
+Num fluxo comum de coleta, quem pede o documento só descobre que a foto é ruim quando abre o arquivo, muitas vezes dias depois. Aí começa outra rodada: pedir de novo, esperar, conferir de novo. A validação automática move essa conferência para o instante em que a pessoa ainda está com o documento na mão. Ela tira outra foto ali mesmo, e quem revisa só recebe o que dá para ler.
+
+## Como funciona, etapa por etapa
+
+1. **A pessoa envia uma imagem** pelo checklist do projeto.
+2. **O sistema procura o documento dentro da foto**, separando-o do fundo (mesa, mão, chão).
+3. **Endireita a perspectiva**, corrigindo a inclinação de uma foto tirada de lado.
+4. **Avalia cinco critérios:**
+
+| Critério | O que detecta |
+|---|---|
+| **Nitidez** | Foto tremida ou fora de foco |
+| **Brilho e contraste** | Imagem escura demais, clara demais ou apagada |
+| **Reflexo** | Brilho de luz (flash, plástico) cobrindo parte do texto |
+| **Presença de texto** | Se há blocos de texto legíveis |
+| **Enquadramento** | Documento cortado ou muito inclinado |
+
+5. **Gera uma nota de legibilidade e um resultado.**
+
+## Os três resultados possíveis
+
+| Resultado | O que acontece |
+|---|---|
+| **Aprovada** | O envio segue normalmente para a revisão |
+| **Revisão** | O envio segue, e a decisão final fica com uma pessoa |
+| **Rejeitada** | O envio é barrado e **o arquivo não é salvo** |
+
+Na recusa, a pessoa vê a mensagem *"A imagem não atende aos critérios mínimos de qualidade"*, seguida do motivo, por exemplo *"baixa evidência de texto legível"* ou *"nenhuma região plausível de documento encontrada"*. Basta corrigir a foto e enviar de novo. Cada imagem barrada aparece na contagem de "Reprovados" do painel, mesmo sem ter sido salva.
+
+## O que a validação NÃO faz
+
+Esse ponto é importante e vale repetir:
+
+- **Não verifica autenticidade.** Não diz se o documento é verdadeiro ou falsificado.
+- **Não confere os dados.** Não lê nem valida nome, CPF, datas ou valores.
+- **Não confirma a titularidade.** Não sabe se o documento pertence a quem enviou.
+- **Não analisa PDF nem DOCX.** Esses formatos são aceitos e vão direto para a revisão humana.
+
+Uma imagem aprovada pela validação ainda pode ser rejeitada por quem revisa, com um motivo. A validação é um filtro de qualidade, não um substituto da análise humana.
+
+## Dicas para a foto passar de primeira
+
+- **Lente limpa, documento fora do plástico, sem flash.** Plástico e flash são as maiores causas de reflexo.
+- **Documento inteiro no quadro**, com as quatro bordas visíveis, fotografado de frente e de cima.
+- **Superfície lisa e contrastante** embaixo (papel escuro sob documento claro).
+- **Luz natural** ou bem distribuída, sem sombra da mão ou do celular.
+- **Toque na tela para focar** e segure firme. Nada de zoom digital.
+- **Se puder, escaneie em PDF** com um app de escaneamento.
+
+## Exemplo: o RG tremido
+
+Sem validação: o cliente manda a foto do RG às 22h, o escritório abre no dia seguinte, a foto está tremida, alguém pede de novo pelo WhatsApp, o cliente responde à tarde. Um dia perdido por documento.
+
+Com validação: o cliente manda a foto, recebe na hora "A imagem não atende aos critérios mínimos de qualidade", tira outra e envia. O escritório só vê a foto boa.
+
+## Perguntas frequentes
+
+**A validação usa inteligência artificial?**
+Sim. A análise de legibilidade do Bentifiles é feita com IA, no momento do envio.
+
+**Quais formatos passam pela validação?**
+Só imagens: JPG, JPEG e PNG. PDF e DOCX vão direto para a revisão.
+
+**Minha foto foi recusada. O que faço?**
+Leia o motivo na mensagem, corrija (nitidez, luz, enquadramento) e envie de novo.
+
+**E se o serviço de validação estiver fora do ar?**
+O envio é interrompido com a mensagem "Falha ao validar a imagem. O serviço de análise pode estar indisponível." Aguarde alguns minutos e tente de novo.
+
+**A validação detecta fraude?**
+Não. Ela avalia apenas se a imagem está legível. Autenticidade e correção dos dados ficam com quem revisa.
+
+---
+
+Documentação oficial: [Como funciona a validação automática](https://bentifiles.com/docs/enviar/como-funciona-a-validacao) · [Dicas para fotografar](https://bentifiles.com/docs/enviar/dicas-para-fotografar)

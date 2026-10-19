@@ -7,6 +7,7 @@ import styles from '@/components/docs/docs.module.scss';
 export const metadata: Metadata = {
     title: 'Vídeos',
     description: 'Todos os vídeos tutoriais do Bentifiles, organizados por tema.',
+    alternates: { canonical: '/docs/videos' },
 };
 
 export default async function VideosPage() {

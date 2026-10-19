@@ -29,6 +29,7 @@ function applyTheme(theme: Theme) {
 const PUBLIC_PREFIXES = [
   '/',
   '/landing',
+  '/para',
   '/login',
   '/signup',
   '/plans',

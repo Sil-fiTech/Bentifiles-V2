@@ -1,0 +1,56 @@
+@use '../../styles/tokens' as *;
+@use '../../styles/mixins' as *;
+
+// Coluna única centralizada; tipografia do artigo vem de docs.module.scss.
+.container {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: $sp-8 $sp-4 $sp-16;
+
+  @include md { padding-inline: $sp-6; }
+}
+
+.list {
+  display: grid;
+  gap: $sp-4;
+  margin: $sp-8 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card {
+  display: block;
+  padding: $sp-5 $sp-4;
+  border: 1px solid var(--border-strong);
+  border-radius: $radius-lg;
+  color: inherit;
+  text-decoration: none;
+  transition: $transition-base;
+
+  &:hover { background: var(--surface-hover); }
+  &:focus-visible { outline: 2px solid $amber-500; outline-offset: 2px; }
+
+  h2 { margin: 0; font-family: $font-headline; font-size: 1.125rem; line-height: 1.35; }
+  p { margin: $sp-2 0 0; color: var(--text-secondary); font-size: 0.9375rem; }
+}
+
+.date {
+  display: block;
+  margin-bottom: $sp-2;
+  font-family: $font-mono;
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.cta {
+  margin-top: $sp-12;
+  padding: $sp-6;
+  border: 1px solid var(--border-strong);
+  border-radius: $radius-lg;
+
+  strong { display: block; font-family: $font-headline; font-size: 1.125rem; }
+  p { margin: $sp-2 0 $sp-4; color: var(--text-secondary); }
+  a { font-weight: 600; }
+}

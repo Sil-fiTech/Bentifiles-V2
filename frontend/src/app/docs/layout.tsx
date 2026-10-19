@@ -8,6 +8,7 @@ import styles from '@/components/docs/docs.module.scss';
 export const metadata: Metadata = {
     title: { default: 'Documentação — Bentifiles', template: '%s — Documentação Bentifiles' },
     description: 'Aprenda a usar o Bentifiles: criar projetos, pedir documentos, validar envios e acompanhar tudo em um só lugar.',
+    alternates: { canonical: '/docs' },
 };
 
 // Pública de propósito: quem recebe um convite ainda não tem conta e é quem mais precisa de ajuda.
