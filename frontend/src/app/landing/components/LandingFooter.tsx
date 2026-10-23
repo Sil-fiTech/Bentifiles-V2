@@ -15,6 +15,7 @@ export default function LandingFooter() {
           <a href="/para/contabilidades">Para contabilidades</a>
           <a href="/para/escritorios-de-advocacia">Para advocacia</a>
           <a href="/para/imobiliarias">Para imobiliárias</a>
+          <a href="/blog">Blog</a>
           <a href="/docs">Documentação</a>
           <a href="/terms-of-service">Termos de Serviço e Privacidade</a>
         </nav>

@@ -5,7 +5,7 @@ const items = [
   ['Projetos isolados', 'Documentos, membros e templates independentes em cada projeto. Crie quantos precisar.'],
   ['Templates', 'Crie modelos de documento personalizados e reutilize em qualquer projeto.'],
   ['Categorias e tipos', 'Classifique os arquivos por categorias e tipos personalizados.'],
-  ['Qualquer formato', 'Envie arquivos de qualquer formato e associe cada um ao projeto correto.'],
+  ['Imagens, PDF e DOCX', 'Receba JPG, PNG, PDF e DOCX de até 10 MB, cada um ligado ao projeto certo.'],
   ['Membros e permissões', 'Adicione e remova membros por projeto, com permissões claras.'],
   ['Painel centralizado', 'Status de documentos, projetos e membros em um dashboard só.'],
   ['100% web', 'Funciona no navegador, em qualquer dispositivo. Nada para instalar.'],
