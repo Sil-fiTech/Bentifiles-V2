@@ -180,7 +180,11 @@ export default function ProjectSettingsPage() {
     const handleArchiveProject = async () => {
         const isArchived = project?.status === 'ARCHIVED';
         const actionText = isArchived ? 'desarquivar' : 'arquivar';
-        if (!confirm(`Tem certeza que deseja ${actionText} este projeto? ${!isArchived ? 'Ele ficará inacessível para documentação ativa.' : 'Ele voltará a ficar ativo para documentação.'}`)) return;
+        const purgeDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('pt-BR');
+        const message = isArchived
+            ? 'Tem certeza que deseja desarquivar este projeto? Ele voltará a ficar ativo para documentação e a exclusão programada dos arquivos será cancelada.'
+            : `Tem certeza que deseja arquivar este projeto? Os arquivos guardados no BentiFiles serão apagados definitivamente em ${purgeDate}. Baixe o ZIP antes, se precisar. Arquivos no seu Google Drive não são afetados.`;
+        if (!confirm(message)) return;
         try {
             setActionLoading(isArchived ? 'unarchive' : 'archive');
             const token = session?.user?.token;
@@ -522,7 +526,7 @@ export default function ProjectSettingsPage() {
                                         <div className={styles.dangerItem}>
                                             <div className={styles.dangerItemInfo}>
                                                 <strong>{project?.status === 'ARCHIVED' ? 'Desarquivar Projeto' : 'Arquivar Projeto'}</strong>
-                                                <p>{project?.status === 'ARCHIVED' ? 'O projeto voltará a aceitar novos documentos e alterações.' : 'O projeto ficará como "somente leitura" para os usuários normais.'}</p>
+                                                <p>{project?.status === 'ARCHIVED' ? 'O projeto voltará a aceitar novos documentos e alterações.' : 'O projeto ficará como "somente leitura" e os arquivos guardados no BentiFiles serão apagados 7 dias depois.'}</p>
                                             </div>
                                             <button
                                                 onClick={handleArchiveProject}

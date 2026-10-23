@@ -9,6 +9,10 @@
     "build": "tsc",
     "worker:subscription-reminders": "node dist/workers/subscriptionReminderWorker.js",
     "worker:subscription-reminders:dev": "ts-node src/workers/subscriptionReminderWorker.ts",
+    "worker:storage-purge": "node dist/workers/storagePurgeWorker.js",
+    "worker:storage-purge:dev": "ts-node src/workers/storagePurgeWorker.ts",
+    "storage:migrate-encrypt": "node dist/scripts/migrateEncryptStorage.js",
+    "storage:migrate-encrypt:dev": "ts-node src/scripts/migrateEncryptStorage.ts",
     "test": "vitest run"
   },
   "keywords": [],
@@ -17,7 +21,6 @@
   "type": "commonjs",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1009.0",
-    "@aws-sdk/s3-request-presigner": "^3.1009.0",
     "@prisma/client": "^6.4.0",
     "@types/bcryptjs": "^2.4.6",
     "axios": "1.13.6",

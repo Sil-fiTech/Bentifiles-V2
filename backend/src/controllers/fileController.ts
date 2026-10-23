@@ -1,22 +1,13 @@
 import { Request, Response } from 'express';
-import fs from 'fs';
 import prisma from '../prisma';
 import { AuthRequest } from '../middleware/auth';
 import axios from 'axios';
 import FormData from 'form-data';
-import { upload } from '../middleware/upload';
-import crypto from 'crypto';
-import { uploadToR2, getFileUrl, getFileFromR2 } from '../services/r2Service';
-
-// Map allowed MIME types to secure, hardcoded extensions
-const mimeToExt: Record<string, string> = {
-    'image/jpeg': '.jpg',
-    'image/png': '.png',
-    'image/webp': '.webp',
-    'image/bmp': '.bmp',
-    'application/pdf': '.pdf',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx'
-};
+import { readFile, storeFile } from '../services/storage';
+import { storageErrorToHttp } from '../services/storage/httpErrors';
+import { decryptField, encryptField } from '../services/storage/envelopeCrypto';
+import { logFileAccess } from '../services/fileAccessLogService';
+import { serializeFile } from '../services/storage/serializeFile';
 
 const DEFAULT_DOWNLOAD_FORMAT = 'pdf';
 const ALLOWED_DOWNLOAD_FORMATS = new Set(['pdf', 'original']);
@@ -131,7 +122,6 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
         }
 
         if (!userId) {
-            if (file && file.path) fs.promises.unlink(file.path).catch(e=>console.error(e));
             console.error('[Upload] Unauthorized: user context missing');
             return res.status(401).json({ message: 'Não autorizado' });
         }
@@ -145,8 +135,7 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
 
                 const url = getPythonMicroserviceUrl();
                 const formData = new FormData();
-                const stream = fs.createReadStream(file.path);
-                formData.append('file', stream, {
+                formData.append('file', file.buffer, {
                     filename: file.originalname,
                     contentType: file.mimetype,
                     knownLength: file.size,
@@ -172,8 +161,6 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
 
                     const reasonStr = analysisData.reasons?.length ? ` Motivos: ${analysisData.reasons.join(" | ")}` : "";
                     
-                    if (file && file.path) fs.promises.unlink(file.path).catch(e=>console.error(e));
-
                     return res.status(400).json({
                         success: false,
                         message: `A imagem não atende aos critérios mínimos de qualidade.${reasonStr}`,
@@ -195,7 +182,6 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                 console.log(`[Upload] Image analysis status: ${analysisData.status}`);
             } catch (microserviceError) {
                 console.error('[Upload] Microservice error:', microserviceError);
-                if (file && file.path) fs.promises.unlink(file.path).catch(e=>console.error(e));
                 return res.status(503).json({
                     success: false,
                     message: "Falha ao validar a imagem. O serviço de análise pode estar indisponível."
@@ -203,22 +189,28 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
             }
         }
 
-        // Generate secure filename
-        const ext = mimeToExt[file.mimetype] || '.bin';
-        const savedFilename = `${crypto.randomUUID()}${ext}`;
+        console.log('[Upload] Encrypting and storing file...');
+        const stored = await storeFile({
+            buffer: file.buffer,
+            mimetype: file.mimetype,
+            projectId,
+            displayName: file.originalname,
+        });
+        console.log(`[Upload] File stored (${stored.storageProvider})`);
 
-        console.log('[Upload] Saving file to R2...');
-        await uploadToR2(fs.createReadStream(file.path), file.mimetype, savedFilename);
-        console.log(`[Upload] File saved to R2 as: ${savedFilename}`);
-
-        console.log('[Upload] Creating database record...');
         const dbFile = await prisma.file.create({
             data: {
-                filename: savedFilename,
-                originalName: file.originalname,
+                filename: stored.storageRef,
+                originalName: encryptField(file.originalname),
                 mimetype: file.mimetype,
                 size: file.size,
-                url: await getFileUrl(savedFilename),
+                storageProvider: stored.storageProvider,
+                storageRef: stored.storageRef,
+                storageConnectionId: stored.storageConnectionId,
+                encryptedDek: stored.encryptedDek,
+                iv: stored.iv,
+                authTag: stored.authTag,
+                keyVersion: stored.keyVersion,
                 userId: userId,
                 projectId: projectId,
             },
@@ -261,18 +253,14 @@ export const uploadFile = async (req: AuthRequest, res: Response) => {
                 usefulAreaPct: analysisData.usefulAreaPct,
                 metrics: analysisData.metrics
             } : undefined,
-            document: resultingFile,
-            file: resultingFile,
+            document: resultingFile && serializeFile(resultingFile),
+            file: resultingFile && serializeFile(resultingFile),
             docStatus: analysisData?.status
         });
 
     } catch (error) {
         console.error('[Upload] Unexpected internal error:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
-    } finally {
-        if (req.file && req.file.path) {
-            fs.promises.unlink(req.file.path).catch(e => console.error("Erro ao apagar arquivo teporário:", e));
-        }
     }
 };
 
@@ -297,15 +285,7 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
             orderBy: { createdAt: 'desc' }
         });
 
-        // Regenerate fresh URLs for each file (fixes old files with expired signed URLs)
-        const filesWithFreshUrls = await Promise.all(
-            files.map(async (file) => ({
-                ...file,
-                url: await getFileUrl(file.filename),
-            }))
-        );
-
-        res.json({ files: filesWithFreshUrls });
+        res.json({ files: files.map(serializeFile) });
     } catch (error) {
         console.error('Get files error:', error);
         res.status(500).json({ message: 'Erro interno do servidor' });
@@ -314,26 +294,19 @@ export const getFiles = async (req: AuthRequest, res: Response) => {
 
 export const getFileBase64 = async (req: AuthRequest, res: Response) => {
     try {
-        const { url } = req.query;
+        const { fileId } = req.query;
         const requestedFormat = resolveDownloadFormat(req.query.format);
-        if (!url || typeof url !== 'string') {
-            return res.status(400).json({ message: 'URL do arquivo não fornecida' });
-        }
-
-        // Extract filename from URL (last segment before query params)
-        const urlWithoutQuery = url.split('?')[0];
-        const filename = urlWithoutQuery ? urlWithoutQuery.split('/').pop() : null;
-
-        if (!filename) {
-            return res.status(400).json({ message: 'Nome do arquivo não encontrado na URL' });
+        const action = req.query.purpose === 'view' ? 'VIEW' : 'DOWNLOAD';
+        if (!fileId || typeof fileId !== 'string') {
+            return res.status(400).json({ message: 'fileId não fornecido' });
         }
 
         const userId = req.user?.userId;
         if (!userId) return res.status(401).json({ message: 'Não autorizado' });
 
         // Security check (IDOR fix)
-        const fileRecord = await prisma.file.findFirst({
-            where: { filename },
+        const fileRecord = await prisma.file.findUnique({
+            where: { id: fileId },
             include: { project: { include: { members: true } } }
         });
 
@@ -343,33 +316,31 @@ export const getFileBase64 = async (req: AuthRequest, res: Response) => {
 
         const isOwner = fileRecord.userId === userId;
         const isMember = fileRecord.project?.members.some(m => m.userId === userId);
-        
+
         if (!isOwner && !isMember) {
             return res.status(403).json({ message: 'Acesso negado. Você não pertence a este projeto.' });
         }
 
         let fileBuffer: Buffer;
-        let mimeType: string;
-
         try {
-            const r2Data = await getFileFromR2(filename);
-            fileBuffer = r2Data.buffer;
-            mimeType = r2Data.contentType;
-        } catch (r2Error) {
-            console.error(`Failed to fetch ${filename} from R2:`, r2Error);
-            return res.status(404).json({ message: 'Arquivo não encontrado' });
+            fileBuffer = await readFile(fileRecord);
+        } catch (storageError) {
+            const mapped = storageErrorToHttp(storageError, fileRecord.storageProvider);
+            if (mapped) return res.status(mapped.status).json({ message: mapped.message });
+            throw storageError;
         }
 
         const downloadPayload = await buildDownloadPayload({
             buffer: fileBuffer,
-            originalName: fileRecord.originalName,
-            mimeType,
+            originalName: decryptField(fileRecord.originalName),
+            mimeType: fileRecord.mimetype,
             requestedFormat,
         });
 
-        const base64 = downloadPayload.buffer.toString('base64');
+        await logFileAccess([{ fileId: fileRecord.id, userId, action, ip: req.ip ?? null }]);
+
         res.json({
-            base64,
+            base64: downloadPayload.buffer.toString('base64'),
             mimeType: downloadPayload.mimeType,
             filename: downloadPayload.filename,
             format: downloadPayload.format,
@@ -444,7 +415,7 @@ export const getPendingFiles = async (req: AuthRequest, res: Response) => {
             },
         });
 
-        res.json({ files: pendingFiles });
+        res.json({ files: pendingFiles.map(serializeFile) });
     } catch (error) {
         console.error('[Pending Files] Error:', error);
         res.status(500).json({ message: 'Erro ao buscar arquivos pendentes' });
@@ -503,22 +474,22 @@ export const getProjectFilesBase64 = async (req: AuthRequest, res: Response) => 
             return res.json({ files: [] });
         }
 
-        // Fetch all files from R2 in parallel
         const filesData = await Promise.all(
             clientDocuments.map(async (doc: any) => {
                 try {
-                    const r2Data = await getFileFromR2(doc.file.filename);
+                    const originalName = decryptField(doc.file.originalName);
+                    const buffer = await readFile(doc.file);
                     const downloadPayload = await buildDownloadPayload({
-                        buffer: r2Data.buffer,
-                        originalName: doc.file.originalName,
-                        mimeType: r2Data.contentType,
+                        buffer,
+                        originalName,
+                        mimeType: doc.file.mimetype,
                         requestedFormat,
                     });
-                    
+
                     return {
                         id: doc.id,
-                        originalName: doc.file.originalName,
-                        filename: doc.file.filename,
+                        fileId: doc.file.id,
+                        originalName,
                         downloadName: downloadPayload.filename,
                         mimeType: downloadPayload.mimeType,
                         base64: downloadPayload.buffer.toString('base64'),
@@ -530,16 +501,17 @@ export const getProjectFilesBase64 = async (req: AuthRequest, res: Response) => 
                         }
                     };
                 } catch (error) {
-                    console.error(`Failed to fetch file ${doc.file?.filename} from R2:`, error);
+                    console.error(`Failed to read file ${doc.file?.id}:`, error);
                     return null;
                 }
             })
         );
 
-        // Filter out any failed R2 fetches
-        const successfulFiles = filesData.filter(f => f !== null);
+        const successfulFiles = filesData.filter((f): f is NonNullable<typeof f> => f !== null);
 
-        res.json({ files: successfulFiles });
+        await logFileAccess(successfulFiles.map((f) => ({ fileId: f.fileId, userId, action: 'ZIP' as const, ip: req.ip ?? null })));
+
+        res.json({ files: successfulFiles, skipped: filesData.length - successfulFiles.length });
     } catch (error) {
         console.error('Get project files base64 error:', error);
         res.status(500).json({ message: 'Erro interno ao buscar arquivos do projeto' });

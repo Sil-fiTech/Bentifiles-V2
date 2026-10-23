@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import prisma from '../prisma';
 import { AuthRequest } from '../middleware/auth';
 import { generateSlug } from '../utils/slugify';
+import { serializeFile } from '../services/storage/serializeFile';
+import { renameStoredFile } from '../services/storage';
+import { decryptField } from '../services/storage/envelopeCrypto';
 
 /**
  * Global Document Types
@@ -213,7 +216,7 @@ export const configureProjectRequiredDocuments = async (req: AuthRequest, res: R
  */
 export const uploadClientDocument = async (req: AuthRequest, res: Response) => {
     try {
-        const projectId = req.body.projectId || (req.projectId as string);
+        const projectId = req.projectId as string;
         const { documentTypeId, ownerUserId, fileId, status } = req.body;
         const uploadedByUserId = req.user?.userId;
         const role = req.projectRole;
@@ -226,6 +229,17 @@ export const uploadClientDocument = async (req: AuthRequest, res: Response) => {
             if (ownerUserId !== uploadedByUserId) {
                 return res.status(403).json({ message: 'Usuário não pode enviar documentos em nome de outro' });
             }
+        }
+
+        const file = await prisma.file.findUnique({
+            where: { id: fileId },
+            select: { id: true, projectId: true, userId: true }
+        });
+        if (!file || file.projectId !== projectId) {
+            return res.status(400).json({ message: 'Arquivo inválido para este projeto' });
+        }
+        if (role === 'USER' && file.userId !== uploadedByUserId) {
+            return res.status(403).json({ message: 'Acesso negado' });
         }
 
         const isRequired = await prisma.projectRequiredDocument.findFirst({
@@ -259,7 +273,17 @@ export const uploadClientDocument = async (req: AuthRequest, res: Response) => {
             }
         });
 
-        res.status(201).json(clientDoc);
+        if (clientDoc.file.storageProvider === 'GDRIVE') {
+            try {
+                const extension = decryptField(clientDoc.file.originalName).match(/\.[^.]+$/)?.[0] ?? '';
+                const driveName = `${clientDoc.ownerUser.name} - ${clientDoc.documentType.name}${extension}`;
+                await renameStoredFile(clientDoc.file, driveName);
+            } catch (error) {
+                console.error('[ClientDocument] Failed to rename file in Drive:', error);
+            }
+        }
+
+        res.status(201).json({ ...clientDoc, file: serializeFile(clientDoc.file) });
     } catch (error) {
         console.error('Error uploading client document:', error);
         res.status(500).json({ message: 'Erro ao salvar documento do cliente' });
@@ -296,7 +320,7 @@ export const getClientDocuments = async (req: AuthRequest, res: Response) => {
             orderBy: { createdAt: 'desc' }
         });
 
-        res.json(docs);
+        res.json(docs.map((doc) => ({ ...doc, file: serializeFile(doc.file) })));
     } catch (error) {
         console.error('Error getting client docs:', error);
         res.status(500).json({ message: 'Erro interno' });
@@ -356,7 +380,7 @@ export const updateClientDocumentStatus = async (req: AuthRequest, res: Response
             }
         });
 
-        res.json(updatedDoc);
+        res.json({ ...updatedDoc, file: serializeFile(updatedDoc.file) });
     } catch (error) {
         console.error('Error updating document status:', error);
         res.status(500).json({ message: 'Erro ao avaliar documento' });

@@ -52,6 +52,24 @@ services:
     networks:
       - bentifiles-network
 
+  storage-purge-worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ${CONTAINER_PREFIX:-}bentifiles-storage-purge-worker
+    command: ["npm", "run", "worker:storage-purge"]
+    environment:
+      - STORAGE_PURGE_WORKER_MODE=loop
+      - STORAGE_PURGE_WORKER_POLL_MS=3600000
+      # Session pooler (porta 5432): defina STORAGE_PURGE_DATABASE_URL em backend/.env (o transaction pooler 6543 derruba conexões ociosas).
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    profiles:
+      - workers
+    networks:
+      - bentifiles-network
+
   python-microservice:
     build:
       context: ./microservice

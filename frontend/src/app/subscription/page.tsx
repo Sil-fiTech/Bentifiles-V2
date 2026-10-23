@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { 
   CreditCard, 
   AlertTriangle, 
@@ -20,6 +20,7 @@ import { OfficeWorkspaceInvite, OfficeWorkspaceMember, PlanData, SubscriptionDat
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Nav } from '@/components/Nav';
+import StorageCard from '@/components/storage/StorageCard';
 import api from '@/lib/api';
 import { getAuthHeaders, performLogout } from '@/lib/authClient';
 import { toast } from 'sonner';
@@ -663,6 +664,9 @@ export default function SubscriptionPage() {
           </section>
         )}
 
+        <Suspense fallback={null}>
+          <StorageCard returnPath="/subscription" />
+        </Suspense>
 
       </main>
     </div>
