@@ -61,9 +61,35 @@ healthy() {
   return 0
 }
 
+# Migrations do Prisma (so quando o backend esta no deploy). Sao idempotentes: sem migration pendente, nao fazem nada;
+# se um deploy anterior falhou antes de migrar, a pendencia e aplicada agora.
+# Rodam com a imagem NOVA (que tem as migrations do commit) e ANTES de reiniciar os containers: se falharem,
+# o backend antigo continua no ar. SKIP_MIGRATE=1 (no .env do servidor) pula esta etapa.
+MIGRATE=0
+case " $SERVICES " in *" backend "*) [ "${SKIP_MIGRATE:-0}" = "1" ] || MIGRATE=1 ;; esac
+
+run_migrations() {
+  echo ">> prisma migrate status (antes)"
+  docker compose run --rm --no-deps backend-migrate npx prisma migrate status || true   # informativo: sai 1 se ha pendencia
+  echo ">> prisma migrate deploy"
+  docker compose run --rm --no-deps backend-migrate npx prisma migrate deploy
+}
+
 # --no-deps: nao recria dependencias que nao mudaram (ex.: deploy do frontend nao reinicia o backend).
 # shellcheck disable=SC2086
-docker compose up -d --build --no-deps --remove-orphans $SERVICES
+docker compose build $SERVICES $([ "$MIGRATE" = 1 ] && echo backend-migrate)
+
+if [ "$MIGRATE" = 1 ] && ! run_migrations; then
+  echo ">> MIGRATION FALHOU; containers nao foram reiniciados (o backend antigo segue no ar). Corrija e faca novo deploy."
+  echo ">> Veja 'npx prisma migrate status' no servidor; migration marcada como falha exige 'prisma migrate resolve'."
+  git reset -q --hard "$PREV_SHA"
+  # shellcheck disable=SC2086
+  docker compose build $SERVICES   # devolve as imagens ao codigo que esta rodando
+  exit 1
+fi
+
+# shellcheck disable=SC2086
+docker compose up -d --no-build --no-deps --remove-orphans $SERVICES
 
 if healthy; then
   echo ">> healthcheck OK"
@@ -75,6 +101,8 @@ fi
 echo ">> healthcheck FALHOU, rollback para $PREV_SHA"
 docker compose logs --tail=50 $SERVICES || true
 git reset -q --hard "$PREV_SHA"
+# Obs.: migrations ja aplicadas NAO sao desfeitas pelo rollback; por isso devem ser compativeis com o codigo anterior
+# (adicionar colunas/tabelas antes de remover ou renomear).
 # shellcheck disable=SC2086
 docker compose up -d --build --no-deps --remove-orphans $SERVICES
 exit 1
