@@ -43,7 +43,9 @@ app.use(attachRequestContext);
 app.use(logHttpRequests);
 
 // Register Stripe webhooks before express.json() to preserve raw body for signature verification.
+// '/api/webhooks' é o caminho usado em produção: o nginx só repassa /api/* para o backend.
 app.use('/webhooks', stripeWebhookRoutes);
+app.use('/api/webhooks', stripeWebhookRoutes);
 
 app.use(express.json());
 
