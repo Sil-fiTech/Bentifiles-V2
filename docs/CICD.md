@@ -34,4 +34,7 @@ O deploy recusa rodar se houver arquivo rastreado modificado no servidor.
 - Lint do frontend roda com `continue-on-error` (ha debito existente).
 - Testes unitarios com Vitest em `backend/tests/` e `frontend/tests/` (`npm test` em cada pasta; rodam no CI antes do build). Para novo teste: `<area>/tests/*.test.ts`. Ainda nao ha testes de integracao (rotas/banco) nem de componentes React.
 - O job de microservice e o `microservice/` sao transitorios: o motor tem repo/CI/deploy proprios (document-quality-pipeline). Remover aqui quando a producao passar a usar a imagem do motor.
-- Migrations Prisma nao rodam no deploy.
+- Migrations Prisma: quando o backend entra no deploy, `scripts/deploy.sh` roda `prisma migrate status` (informativo) e `prisma migrate deploy` **antes de reiniciar os containers**, usando a imagem nova (servico `backend-migrate` do compose, estagio `builder`, pois a imagem final nao tem o CLI do prisma). Se a migration falhar, o deploy aborta e o backend antigo segue no ar. Nunca roda `migrate dev`/`reset`. `SKIP_MIGRATE=1` no `.env` do servidor desliga a etapa.
+- O rollback automatico (healthcheck falhou) volta o codigo, **nao** as migrations: escreva migrations compativeis com a versao anterior (adicione antes de remover/renomear).
+- Para criar uma migration: altere `backend/prisma/schema.prisma` e rode `npx prisma migrate dev --name <descricao>` localmente; commite a pasta gerada em `backend/prisma/migrations/`.
+- Se o banco do ambiente foi criado com `db push` (sem tabela `_prisma_migrations`), o primeiro `migrate deploy` falha (P3005); faca o baseline com `prisma migrate resolve --applied <migration>` antes.

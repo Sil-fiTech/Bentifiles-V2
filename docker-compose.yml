@@ -70,6 +70,20 @@ services:
     networks:
       - bentifiles-network
 
+  # Roda `prisma migrate` no deploy (scripts/deploy.sh). Usa o estagio `builder` do Dockerfile porque a
+  # imagem final do backend nao tem o CLI do prisma (devDependency). So sobe via `docker compose run`.
+  backend-migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: builder
+    env_file:
+      - ./backend/.env
+    profiles:
+      - migrate
+    networks:
+      - bentifiles-network
+
   python-microservice:
     build:
       context: ./microservice
