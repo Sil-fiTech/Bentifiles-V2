@@ -37,6 +37,17 @@ enum DocumentStatus {
   rejected
 }
 
+enum StorageProvider {
+  R2
+  GDRIVE
+}
+
+enum FileAccessAction {
+  VIEW
+  DOWNLOAD
+  ZIP
+}
+
 model User {
   id         String              @id @default(uuid())
   email      String              @unique
@@ -87,6 +98,7 @@ model User {
 
   affiliate          Affiliate?          @relation("UserAffiliate")
   affiliateReferrals AffiliateReferral[] @relation("ReferredUserReferrals")
+  storageConnection StorageConnection? @relation("UserStorageConnection")
 }
 
 enum SubscriptionStatus {
@@ -156,6 +168,7 @@ model Subscription {
   updatedAt            DateTime               @updatedAt
 
   @@index([plan, status])
+  storageConnection StorageConnection?
 }
 
 model SubscriptionSeatMember {
@@ -237,6 +250,8 @@ model Project {
   template   Template? @relation(fields: [templateId], references: [id], onDelete: Restrict)
 
   status ProjectStatus @default(ACTIVE)
+  archivedAt         DateTime?
+  purgeWarningSentAt DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -273,10 +288,16 @@ model ProjectInvite {
 model File {
   id                  String               @id @default(uuid())
   filename            String
-  originalName        String
+  originalName        String // cifrado: enc:v<n>:<base64>
   mimetype            String
   size                Int
-  url                 String
+  storageProvider     StorageProvider      @default(R2)
+  storageRef          String // chave no R2 ou fileId no Drive
+  encryptedDek        String?
+  iv                  String?
+  authTag             String?
+  keyVersion          Int?
+  purgedAt            DateTime?
   userId              String
   user                User                 @relation(fields: [userId], references: [id])
   projectId           String
@@ -284,8 +305,23 @@ model File {
   verificationResults VerificationResult[]
   shareLinks          ShareLink[]
   clientDocuments     ClientDocument[]
+  accessLogs          FileAccessLog[]
   createdAt           DateTime             @default(now())
   updatedAt           DateTime             @updatedAt
+  storageConnectionId String?
+  storageConnection   StorageConnection? @relation(fields: [storageConnectionId], references: [id], onDelete: SetNull)
+}
+
+model FileAccessLog {
+  id        String           @id @default(uuid())
+  fileId    String
+  file      File             @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  userId    String
+  action    FileAccessAction
+  ip        String?
+  createdAt DateTime         @default(now())
+
+  @@index([fileId, createdAt])
 }
 
 model VerificationResult {
@@ -467,4 +503,39 @@ model AdminAuditLog {
 
   @@index([actorId, createdAt])
   @@index([targetUserId, createdAt])
+}
+
+enum StorageConnectionStatus {
+  ACTIVE
+  REVOKED
+}
+
+model StorageConnection {
+  id                    String                  @id @default(uuid())
+  provider              StorageProvider
+  subscriptionId        String?                 @unique
+  subscription          Subscription?           @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  userId                String?                 @unique
+  user                  User?                   @relation("UserStorageConnection", fields: [userId], references: [id], onDelete: Cascade)
+  connectedByUserId     String
+  googleAccountEmail    String
+  encryptedRefreshToken String
+  rootFolderId          String?
+  sharedDriveId         String?
+  status                StorageConnectionStatus @default(ACTIVE)
+  lastError             String?
+  folders               StorageFolder[]
+  files                 File[]
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+}
+
+model StorageFolder {
+  id           String            @id @default(uuid())
+  connectionId String
+  connection   StorageConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  projectId    String
+  folderId     String
+
+  @@unique([connectionId, projectId])
 }

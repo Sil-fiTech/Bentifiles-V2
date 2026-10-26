@@ -26,7 +26,6 @@ interface FileData {
     id: string;
     originalName: string;
     size: number;
-    url: string;
     mimetype: string;
     createdAt: string;
     projectId?: string;
@@ -468,17 +467,7 @@ export default function Dashboard() {
                                     return (
                                         <div key={file.id} className={styles.fileCard}>
                                             <div className={styles.fileThumb}>
-                                                {file.mimetype?.startsWith('image/') ? (
-                                                    <img
-                                                        src={file.url}
-                                                        alt={file.originalName}
-                                                        // @ts-ignore
-                                                        onClick={() => window.open(`${process.env.NEXT_PUBLIC_LOCAL_FRONT_URL || process.env.NEXT_PUBLIC_FRONT_URL || 'http://localhost:3000'}/projects/${file.projectId}`, '_blank')}
-                                                        className={styles.fileThumbImg}
-                                                    />
-                                                ) : (
-                                                    <FileIcon size={48} className={styles.fileIcon} />
-                                                )}
+                                                <FileIcon size={48} className={styles.fileIcon} />
                                             </div>
                                             <div className={styles.fileMeta}>
                                                 <div className={styles.fileInfo}>

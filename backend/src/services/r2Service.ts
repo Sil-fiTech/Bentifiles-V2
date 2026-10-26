@@ -1,6 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import crypto from "crypto";
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 
 const r2 = new S3Client({
     region: "auto",
@@ -11,74 +9,27 @@ const r2 = new S3Client({
     },
 });
 
-export const uploadToR2 = async (fileBody: any, mimetype: string, savedFilename: string): Promise<string> => {
+const requireBucket = (): string => {
     const bucketName = process.env.R2_BUCKET_NAME;
     if (!bucketName) throw new Error("R2_BUCKET_NAME not defined in environment");
-
-    // Map allowed MIME types to secure, hardcoded extensions
-    const mimeToExt: Record<string, string> = {
-        'image/jpeg': '.jpg',
-        'image/png': '.png',
-        'application/pdf': '.pdf',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx'
-    };
-
-    const command = new PutObjectCommand({
-        Bucket: bucketName,
-        Key: savedFilename,
-        Body: fileBody,
-        ContentType: mimetype,
-    });
-
-    await r2.send(command);
-    console.log("File uploaded to R2 successfully");
-    return savedFilename; // Store only the filename in the DB
+    return bucketName;
 };
 
-export const getFileUrl = async (filename: string): Promise<string> => {
-    const bucketName = process.env.R2_BUCKET_NAME;
-    if (!bucketName) throw new Error("R2_BUCKET_NAME not defined in environment");
-
-    if (process.env.R2_PUBLIC_URL) {
-        return `${process.env.R2_PUBLIC_URL}/${filename}`;
-    }
-
-    const command = new GetObjectCommand({
-        Bucket: bucketName,
-        Key: filename,
-    });
-
-    // Generate a pre-signed URL valid for 1 hour
-    return await getSignedUrl(r2, command, { expiresIn: 3600 });
+export const putObject = async (key: string, body: Buffer): Promise<void> => {
+    await r2.send(new PutObjectCommand({
+        Bucket: requireBucket(),
+        Key: key,
+        Body: body,
+        ContentType: 'application/octet-stream',
+    }));
 };
 
-export const getFileFromR2 = async (filename: string): Promise<{ buffer: Buffer, contentType: string }> => {
-    const bucketName = process.env.R2_BUCKET_NAME;
-    if (!bucketName) throw new Error("R2_BUCKET_NAME not defined in environment");
+export const getObject = async (key: string): Promise<Buffer> => {
+    const response = await r2.send(new GetObjectCommand({ Bucket: requireBucket(), Key: key }));
+    if (!response.Body) throw new Error("Empty response body from R2");
+    return Buffer.from(await response.Body.transformToByteArray());
+};
 
-    const command = new GetObjectCommand({
-        Bucket: bucketName,
-        Key: filename,
-    });
-
-    const response = await r2.send(command);
-
-    if (!response.Body) {
-        throw new Error("Empty response body from R2");
-    }
-
-    // Convert the readable stream to a buffer
-    const stream = response.Body as NodeJS.ReadableStream;
-    const buffer = await new Promise<Buffer>((resolve, reject) => {
-        const chunks: Buffer[] = [];
-        stream.on('data', chunk => chunks.push(chunk));
-        stream.on('error', reject);
-        stream.on('end', () => resolve(Buffer.concat(chunks)));
-    });
-
-    return {
-        buffer,
-        contentType: response.ContentType || 'application/octet-stream'
-    };
-
+export const deleteObject = async (key: string): Promise<void> => {
+    await r2.send(new DeleteObjectCommand({ Bucket: requireBucket(), Key: key }));
 };

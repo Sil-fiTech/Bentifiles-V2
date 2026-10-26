@@ -521,3 +521,119 @@ export const sendEndingReminderEmail = async (params: {
         throw new Error('Falha no envio de e-mail de lembrete');
     }
 };
+
+export const sendProjectPurgeWarningEmail = async (params: {
+    email: string;
+    name: string;
+    projectName: string;
+    projectId: string;
+    purgeAt: Date;
+}): Promise<boolean> => {
+    try {
+        const frontendUrl = getFrontendUrl();
+        const projectUrl = new URL(`/projects/${params.projectId}`, frontendUrl).toString();
+        const safeName = escapeHtml(params.name);
+        const safeProject = escapeHtml(params.projectName);
+        const formattedDate = params.purgeAt.toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+        const html = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin: 0; padding: 0; background-color: #f9f9f9; font-family: 'Space Grotesk', 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed; background-color: #f9f9f9; padding: 40px 20px;">
+        <tr><td align="center">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e4e4e7;">
+                <tr><td align="center" style="padding: 40px 0; border-bottom: 1px solid #e4e4e7;">
+                    <img src="${frontendUrl}/logo.png" alt="BentiFiles Logo" height="40" style="display: block; height: 40px; margin: 0 auto;" />
+                </td></tr>
+                <tr><td style="padding: 40px 40px 30px 40px;">
+                    <h2 style="color: #1a1c1c; margin: 0 0 20px 0; font-size: 22px; font-weight: 700;">Os arquivos do projeto serão apagados em breve</h2>
+                    <p style="margin: 0 0 16px 0; color: #3f3f46; font-size: 16px; line-height: 1.6;">Ola, <strong style="color: #18181b;">${safeName}</strong>!</p>
+                    <p style="margin: 0 0 32px 0; color: #52525b; font-size: 16px; line-height: 1.6;">
+                        O projeto <strong>${safeProject}</strong> está arquivado e, por segurança, os arquivos guardados no BentiFiles serão apagados definitivamente a partir de <strong>${formattedDate}</strong>. Se ainda precisar deles, baixe o ZIP agora ou desarquive o projeto.
+                    </p>
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td align="center" style="padding-bottom: 32px;">
+                        <a href="${projectUrl}" style="display: inline-block; background-color: #fbbf24; color: #1a1c1c; font-size: 16px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 8px; border: 1px solid #f59e0b;">Abrir projeto</a>
+                    </td></tr></table>
+                </td></tr>
+                <tr><td style="padding: 30px 40px; background-color: #f9f9f9; border-top: 1px solid #e4e4e7; text-align: center;">
+                    <p style="margin: 0; color: #71717a; font-size: 13px;">Equipe BentiFiles</p>
+                </td></tr>
+            </table>
+        </td></tr>
+    </table>
+</body>
+</html>
+        `;
+
+        await sendEmail({ to: params.email, subject: `BentiFiles: arquivos de "${params.projectName}" serão apagados a partir de ${formattedDate}`, html });
+        console.log(`[Purge Warning Email] sent to ${params.email} for project ${params.projectId}`);
+        return true;
+    } catch (error) {
+        console.error('Erro ao enviar aviso de expurgo:', error);
+        return false;
+    }
+};
+
+const STORAGE_ALERT_COPY: Record<'AUTH_REVOKED' | 'QUOTA' | 'UNAVAILABLE' | 'NOT_FOUND', { title: string; body: string }> = {
+    AUTH_REVOKED: {
+        title: 'Reconecte o Google Drive',
+        body: 'O BentiFiles perdeu o acesso ao Google Drive conectado. Os novos documentos estão sendo guardados com segurança no BentiFiles até você reconectar.',
+    },
+    QUOTA: {
+        title: 'Seu Google Drive está sem espaço',
+        body: 'Não foi possível salvar novos documentos no Google Drive por falta de espaço. Eles estão sendo guardados com segurança no BentiFiles até você liberar espaço.',
+    },
+    NOT_FOUND: {
+        title: 'Pasta do BentiFiles não encontrada no Google Drive',
+        body: 'A pasta onde o BentiFiles salvava os documentos não foi encontrada no seu Google Drive (ela pode ter sido apagada ou movida). Este documento foi guardado com segurança no BentiFiles e a pasta será recriada no próximo envio. Se você apagou a pasta principal, escolha uma nova pasta nas configurações de armazenamento.',
+    },
+    UNAVAILABLE: {
+        title: 'Google Drive instável',
+        body: 'O Google Drive não respondeu ao salvar um documento. Ele foi guardado com segurança no BentiFiles.',
+    },
+};
+
+export const sendStorageConnectionAlertEmail = async (params: {
+    email: string;
+    name: string;
+    reason: 'AUTH_REVOKED' | 'QUOTA' | 'UNAVAILABLE' | 'NOT_FOUND';
+}) => {
+    try {
+        const frontendUrl = getFrontendUrl();
+        const settingsUrl = new URL('/profile', frontendUrl).toString();
+        const copy = STORAGE_ALERT_COPY[params.reason];
+        const html = `
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin: 0; padding: 0; background-color: #f9f9f9; font-family: 'Space Grotesk', 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="table-layout: fixed; background-color: #f9f9f9; padding: 40px 20px;">
+        <tr><td align="center">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e4e4e7;">
+                <tr><td align="center" style="padding: 40px 0; border-bottom: 1px solid #e4e4e7;">
+                    <img src="${frontendUrl}/logo.png" alt="BentiFiles Logo" height="40" style="display: block; height: 40px; margin: 0 auto;" />
+                </td></tr>
+                <tr><td style="padding: 40px 40px 30px 40px;">
+                    <h2 style="color: #1a1c1c; margin: 0 0 20px 0; font-size: 22px; font-weight: 700;">${copy.title}</h2>
+                    <p style="margin: 0 0 16px 0; color: #3f3f46; font-size: 16px; line-height: 1.6;">Ola, <strong style="color: #18181b;">${escapeHtml(params.name)}</strong>!</p>
+                    <p style="margin: 0 0 32px 0; color: #52525b; font-size: 16px; line-height: 1.6;">${copy.body}</p>
+                    <table border="0" cellpadding="0" cellspacing="0" width="100%"><tr><td align="center" style="padding-bottom: 32px;">
+                        <a href="${settingsUrl}" style="display: inline-block; background-color: #fbbf24; color: #1a1c1c; font-size: 16px; font-weight: 700; text-decoration: none; padding: 14px 28px; border-radius: 8px; border: 1px solid #f59e0b;">Ver armazenamento</a>
+                    </td></tr></table>
+                </td></tr>
+                <tr><td style="padding: 30px 40px; background-color: #f9f9f9; border-top: 1px solid #e4e4e7; text-align: center;">
+                    <p style="margin: 0; color: #71717a; font-size: 13px;">Equipe BentiFiles</p>
+                </td></tr>
+            </table>
+        </td></tr>
+    </table>
+</body>
+</html>
+        `;
+        await sendEmail({ to: params.email, subject: `BentiFiles: ${copy.title}`, html });
+    } catch (error) {
+        console.error('Erro ao enviar alerta de armazenamento:', error);
+    }
+};

@@ -323,11 +323,11 @@ export default function ProjectPage() {
         }
     };
 
-    const handleViewFile = async (url: string) => {
+    const handleViewFile = async (fileId: string) => {
         try {
             const token = getAuthToken();
             toast.loading('Iniciando visualização', { id: 'loading-file' });
-            const response = await api.get(`/api/files/base64`, { params: { url }, headers: getAuthHeaders(token) });
+            const response = await api.get(`/api/files/base64`, { params: { fileId, purpose: 'view' }, headers: getAuthHeaders(token) });
             toast.dismiss('loading-file');
             const { base64, mimeType } = response.data;
             const byteCharacters = atob(base64);
@@ -335,7 +335,10 @@ export default function ProjectPage() {
             for (let i = 0; i < byteCharacters.length; i++) byteNumbers[i] = byteCharacters.charCodeAt(i);
             const blob = new Blob([new Uint8Array(byteNumbers)], { type: mimeType });
             window.open(URL.createObjectURL(blob), '_blank');
-        } catch { toast.dismiss('loading-file'); toast.error('Falha ao abrir arquivo'); }
+        } catch (error: any) {
+            toast.dismiss('loading-file');
+            toast.error(error.response?.data?.message || 'Falha ao abrir arquivo');
+        }
     };
 
     const updateDocStatus = async (docId: string, statusText: string, reason?: string) => {
@@ -356,7 +359,7 @@ export default function ProjectPage() {
             const fallbackFilenameBase = `${userSlug}_${typeSlug}`;
             const token = getAuthToken();
             const response = await api.get(`/api/files/base64`, {
-                params: { url: doc.file.url, format },
+                params: { fileId: doc.file.id, format },
                 headers: getAuthHeaders(token)
             });
             const { base64, mimeType, filename } = response.data;
@@ -374,7 +377,7 @@ export default function ProjectPage() {
             link.click();
             link.remove();
             window.URL.revokeObjectURL(urlObject);
-        } catch { toast.error('Falha ao baixar arquivo'); }
+        } catch (error: any) { toast.error(error.response?.data?.message || 'Falha ao baixar arquivo'); }
     };
 
     const handleDownloadAll = async (format: DownloadFormat = 'pdf') => {
@@ -391,6 +394,10 @@ export default function ProjectPage() {
             // Fetch all project files in a single request
             const response = await api.get(`/api/files/project/${id}/base64`, { params: { format }, headers });
             const { files: projectFiles } = response.data;
+
+            if (response.data.skipped > 0) {
+                toast.message(`${response.data.skipped} arquivo(s) expirado(s) ou indisponível(is) ficaram fora do ZIP.`);
+            }
 
             if (!projectFiles || projectFiles.length === 0) {
                 toast.error('Nenhum arquivo encontrado no servidor', { id: toastId });
@@ -720,9 +727,14 @@ export default function ProjectPage() {
                                                                     </span>
 
                                                                     <div className={styles.docActions}>
-                                                                        {doc && (
+                                                                        {doc && doc.file?.purgedAt && (
+                                                                            <span className={styles.docStatusBadge} title="O projeto foi arquivado há mais de 7 dias e o arquivo foi apagado.">
+                                                                                Expirado
+                                                                            </span>
+                                                                        )}
+                                                                        {doc && !doc.file?.purgedAt && (
                                                                             <>
-                                                                                <button onClick={() => handleViewFile(doc.file.url)} className={styles.docActionBtn}>
+                                                                                <button onClick={() => handleViewFile(doc.file.id)} className={styles.docActionBtn}>
                                                                                     <Eye size={14} /> Ver
                                                                                 </button>
                                                                                 <DownloadFormatButton

@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { Nav } from '@/components/Nav';
+import StorageCard from '@/components/storage/StorageCard';
 import { useAccessGate } from '@/lib/hooks/useAccessGate';
 import api from '@/lib/api';
 import { getAuthHeaders, performLogout } from '@/lib/authClient';
@@ -227,6 +228,10 @@ export default function ProfilePage() {
                         </div>
                     </div>
                 </div>
+
+                <Suspense fallback={null}>
+                    <StorageCard returnPath="/profile" />
+                </Suspense>
 
             </main>
         </div>
